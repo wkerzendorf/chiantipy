@@ -1,0 +1,4 @@
+include images/*.png
+include chiantirc
+include LICENSE
+include LICENSE.FortranFormat
