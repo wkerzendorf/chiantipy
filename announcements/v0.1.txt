@@ -1,0 +1,9 @@
+I am pleased to announce the initial release, version 0.1, of ChiantiPy, a Python interface to the CHIANTI atomic database for astrophysical spectroscopy.
+
+ChiantiPy is intended to provide all of the functionality of the Interactive Data Language (IDL) procedures that are distributed by the CHIANTI team.  Python is a modern, object-oriented, high-level programming language that is well suited for performing spectral calculations with the CHIANTI database.
+
+More detailed information is available at the ChiantiPy website:
+    
+http://chiantipy.sourceforge.net
+
+ChiantiPy has been developed on a Linux platform and has received some testing on MacOs but none on Windows.  Since this is the first release, it would be useful to hear about successes and problems with ChiantiPy.  The best place for this would be the mailing lists that are listed on the website above.
