@@ -13,7 +13,7 @@ What is CHIANTI
 ===============
 
 
-The CHIANTI provides a database of atomic data that can be used to interpret the emission of spectral lines and continus emitted from high-temperature, optically-thin astrophysical sources.  The CHIANTI project provides a suite of routines written in Interactive Data Language (IDL) to access the database and calculate various quantities for use in interpreting observed spectra or producing synthetic spectra.
+CHIANTI provides a database of atomic data that can be used to interpret the emission of spectral lines and continuua emitted from high-temperature, optically-thin astrophysical sources.  The CHIANTI project provides a suite of routines written in Interactive Data Language (IDL) to access the database and calculate various quantities for use in interpreting observed spectra or producing synthetic spectra.
 
 ==============================                                                                                                                
 Getting started with ChiantiPy                                                                                                                
@@ -22,7 +22,7 @@ Getting started with ChiantiPy
 Prerequisites
 =============
 
-* Python ( latext 2.X version; not compatible with version 3.X )
+* Python ( latest 2.X version; not compatible with version 3.X )
 
 * Numpy
 
