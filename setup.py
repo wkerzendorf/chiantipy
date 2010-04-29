@@ -1,5 +1,5 @@
 from distutils.core import setup
-setup(name = 'chianti',
+setup(name = 'ChiantiPy',
     version = '0.1',
     description = 'a Python interface to the CHIANTI atomic database for astrophysical spectroscopy',
     long_description = open('README').read(),
