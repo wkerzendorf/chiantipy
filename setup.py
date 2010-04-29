@@ -2,6 +2,7 @@ from distutils.core import setup
 setup(name = 'chianti',
     version = '0.1',
     description = 'a Python interface to the CHIANTI atomic database for astrophysical spectroscopy',
+    long_description = open('README').read(),
     author = 'Ken Dere',
     author_email = 'kdere@gmu.edu',
     url = 'http://chiantipy.sourceforge.net',

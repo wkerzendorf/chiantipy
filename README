@@ -20,9 +20,9 @@ Getting started with ChiantiPy
 ==============================                                                                                                                
 
 Prerequisites
--------------
+=============
 
-* Python ( version <= 2.6; not compatible with version 3.X )
+* Python ( latext 2.X version; not compatible with version 3.X )
 
 * Numpy
 
@@ -39,7 +39,7 @@ Prerequisites
 In addition, the FortranFormat module from Scientific Python, developed by Konrad Hinsen of the Centre de Biophysique Moleculaire (http://dirac.cnrs-orleans.fr/ScientificPython/), is included in this distribution for simplicity.
 
 Installing the CHIANTI database
-----------------------------
+-------------------------------
 
 The gzipped *data* tar ball can be downloaded from the CHIANTI website_
 
@@ -55,19 +55,13 @@ Some sites have the CHIANTI database maintained as part of a SolarSoft distribut
 
 
 Installing the ChiantiPy package
------------------------------
+--------------------------------
 
 The ChiantiPy package can be downloaded from the ChiantiPy, untar it, cd to the directory where it was unpacked, and then, as root
 
 > python setup.py install
 
 If you do not have root privileges, simply put the ChiantiPy directory (simply called 'chianti') in your PYTHONPATH
-
-
-ChiantiPy Defaults
-------------------
-
-To some degree, the ChiantiPy is governed by a small set of default values.  Some of these specify the abundance file and the ionization equilibrium file.  Others specify whether wavelengths are give in Angstroms, nm or kev, whether fluxes are given in photon fluxes or energy fluxes in ergs.  Finally, they specify whether the PyQT4 gui toolkit (qt) or the wxPython tookit (wx) are used for the various interactive dialogs.  The easiest way to specify these is to copy the chiantirc file in the source distribution into your ~/.chianti directory.  This is the text file and can be modified to specify these settings.  If ChiantiPy does not find this file, it uses its own builtin defaults.
 
 
 Running ChiantiPy
