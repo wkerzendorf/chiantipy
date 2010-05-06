@@ -2762,7 +2762,8 @@ class ion:
             pl.axis([wvlRange[0], wvlRange[1], ymin, emiss.max()])
         if saveFile:
             pl.savefig(saveFile)
-        return
+        #
+        self.Emiss['wvlTop':wvl, 'emissTop':emiss]
         #
         # ---------------------------------------------------------------------------
         #
