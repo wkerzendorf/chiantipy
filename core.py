@@ -2763,7 +2763,8 @@ class ion:
         if saveFile:
             pl.savefig(saveFile)
         #
-        self.Emiss['wvlTop':wvl, 'emissTop':emiss]
+        self.Emiss['wvlTop'] = wvl
+        self.Emiss['emissTop'] = emiss
         #
         # ---------------------------------------------------------------------------
         #
