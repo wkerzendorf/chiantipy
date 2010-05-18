@@ -4137,7 +4137,8 @@ class ionWeb(ion):
         igvl=np.take(igvl,wvl[igvl].argsort())
         # find the top most intense lines
         #
-        if top > nlines:  top=nlines
+        if (top > nlines) or (top == 0):
+            top=nlines
         maxEmiss=np.zeros(nlines,'Float32')
         for iline in range(nlines):
             maxEmiss[iline]=emiss[igvl[iline]].max()
