@@ -3596,7 +3596,7 @@ class ionWeb(ion):
     """
     a class that contains methods to be used for 'Chianti on the Web'
     """
-    def gofntSelectLines(self,wvlRange=0,top=10,  saveFile=0):
+    def gofntSelectLines(self,wvlRange=0, top=10,  saveFile=0):
         """Provide a selection of lines for calculating the 'so-called' G(T) function.
 
         Given as a function of both temperature and density.
@@ -3651,7 +3651,7 @@ class ionWeb(ion):
             return
         # find the top most intense lines
         #
-        if top > nlines:
+        if (top > nlines) or (top == 0):
             top=nlines
         maxEmiss=np.zeros(nlines,'Float32')
         for iline in range(nlines):
