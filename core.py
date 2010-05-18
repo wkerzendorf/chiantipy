@@ -3984,7 +3984,7 @@ class ionWeb(ion):
         # find which lines are in the wavelength range if it is set
         #
         #
-        if type(wvlRange) != type(1):
+        if not isinstance(wvlRange, int):
             igvl=util.between(wvl,wvlRange)
         else:
             igvl=range(len(wvl))
@@ -3997,7 +3997,7 @@ class ionWeb(ion):
             return
         # find the top most intense lines
         #
-        if top > nlines:
+        if (top > nlines) or (top == 0):
             top=nlines
         maxEmiss=np.zeros(nlines,'Float32')
         for iline in range(nlines):
