@@ -2763,8 +2763,9 @@ class ion:
         if saveFile:
             pl.savefig(saveFile)
         #
-        self.Emiss['wvlTop'] = wvl
-        self.Emiss['emissTop'] = emiss
+        idx = np.argsort(wvl)
+        self.Emiss['wvlTop'] = wvl[idx]
+        self.Emiss['emissTop'] = emiss[idx]
         #
         # ---------------------------------------------------------------------------
         #
