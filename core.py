@@ -2724,6 +2724,8 @@ class ion:
                 self.Error = 1
                 self.Message = 'No lines in this wavelength interval'
             return
+        elif top == 0:
+            top = wvl.size
         elif wvl.size > top:
             isrt = np.argsort(emiss)
             wvl = wvl[isrt[-top:]]
