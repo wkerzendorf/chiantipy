@@ -2949,21 +2949,36 @@ class ion:
         else:
             pl.ioff()
         #
+        #  maxAll is an array
+        ymax = np.max(1.2*emiss[top-1]/maxAll)
+        ymin = ymax
         pl.figure()
+        ax = pl.subplot(111)
         nxvalues=len(xvalues)
         for iline in range(top):
             tline=topLines[iline]
             pl.loglog(xvalues,emiss[tline]/maxAll)
+            if np.min(emiss[tline]/maxAll) < ymin:
+                ymin = np.min(emiss[tline]/maxAll)
             skip=2
             start=divmod(iline,nxvalues)[1]
             for ixvalue in range(start,nxvalues,nxvalues/skip):
                 pl.text(xvalues[ixvalue],emiss[tline,ixvalue]/maxAll[ixvalue],str(wvl[tline]))
         pl.xlim(xvalues.min(),xvalues.max())
-        yl=pl.ylim()
-#        pl.ylim(yl[0],1.2)
+        pl.ylim(ymin, ymax)
         pl.xlabel(xlabel,fontsize=fontsize)
         pl.ylabel(ylabel,fontsize=fontsize)
-        pl.title(title+desc_str,fontsize=fontsize)
+        if ndens == ntemp and ntemp > 1:
+            pl.text(0.07, 0.5,title, horizontalalignment='left', verticalalignment='center', fontsize=fontsize,  transform = ax.transAxes)
+            #
+            ax2 = pl.twiny()
+            xlabelDen=r'Electron Density (cm$^{-3}$)'
+            pl.xlabel(xlabelDen, fontsize=fontsize)
+            pl.loglog(density,emiss[topLines[top-1]]/maxAll, visible=False)
+            ax2.xaxis.tick_top()
+        else:
+            pl.ylim(ymin, ymax)
+            pl.title(title+desc_str,fontsize=fontsize)
         pl.draw()
         # get line selection
         #
@@ -2981,12 +2996,6 @@ class ion:
             print ' no denominator lines were selected'
             return
         #
-#       print ' num_idx = ', num_idx
-#       print ' toplines[num_idx] = ', topLines[num_idx]
-#       num_line= topLines[num_idx]
-#       den_line= topLines[den_idx]
-#       #
-#       print ' num_line = ', num_line
         numEmiss=np.zeros(len(xvalues),'float32')
         for aline in num_idx:
             numEmiss+=emiss[topLines[aline]]
@@ -2996,7 +3005,9 @@ class ion:
             denEmiss+=emiss[topLines[aline]]
         #
         # plot the desired ratio
+        #  maxAll is an array
         pl.figure()
+        ax = pl.subplot(111)
         pl.loglog(xvalues,numEmiss/denEmiss)
         pl.xlim(xvalues.min(),xvalues.max())
         pl.xlabel(xlabel,fontsize=fontsize)
@@ -3007,8 +3018,19 @@ class ion:
         desc +=' / '
         for aline in den_idx:
             desc += ' ' + str(wvl[topLines[aline]])
+        if ndens == ntemp and ntemp > 1:
+            pl.text(0.07, 0.5,desc, horizontalalignment='left', verticalalignment='center', fontsize=fontsize,  transform = ax.transAxes)
+            #
+            ax2 = pl.twiny()
+            xlabelDen=r'Electron Density (cm$^{-3}$)'
+            pl.xlabel(xlabelDen, fontsize=fontsize)
+            pl.loglog(density,numEmiss/denEmiss, visible=False)
+            ax2.xaxis.tick_top()
+        else:
+#            pl.ylim(ymin, ymax)
+            pl.title(desc,fontsize=fontsize)
 #       desc=title+' '+str(wvl[num_line])+' / '+str(wvl[den_line])+' '+desc_str
-        pl.title(desc, fontsize=fontsize)
+#        pl.title(desc, fontsize=fontsize)
 #       pl.title(title+' '+str(wvl[num_line])+' / '+str(wvl[den_line])+' '+desc_str,fontsize=fontsize)
 #        pl.draw()
 #        pl.ioff()
@@ -3232,7 +3254,6 @@ class ion:
         nxvalues=len(xvalues)
         #  maxAll is an array
         ymax = np.max(1.2*emiss[top-1]/maxAll)
-        print ' ymax = ', ymax
         ymin = ymax
         for iline in range(top):
             tline=topLines[iline]
@@ -3836,6 +3857,7 @@ class ionWeb(ion):
         nlines=len(igvl)
         if nlines ==0:
             print ' no lines in selected interval'
+            self.Message = ' no lines in selected interval '
             return
         # find the top most intense lines
         #
@@ -4096,21 +4118,37 @@ class ionWeb(ion):
         # put all actual plotting here
         #
 #        pl.ion()
+        ymax = np.max(1.2*emiss[top-1]/maxAll)
+        ymin = ymax
         pl.figure()
+        ax = pl.subplot(111)
         nxvalues=len(xvalues)
         for iline in range(top):
             tline=topLines[iline]
             pl.loglog(xvalues,emiss[tline]/maxAll)
+            if np.min(emiss[tline]/maxAll) < ymin:
+                ymin = np.min(emiss[tline]/maxAll)
             skip=2
             start=divmod(iline,nxvalues)[1]
             for ixvalue in range(start,nxvalues,nxvalues/skip):
                 pl.text(xvalues[ixvalue],emiss[tline,ixvalue]/maxAll[ixvalue],str(wvl[tline]))
         pl.xlim(xvalues.min(),xvalues.max())
+        pl.ylim(ymin, ymax)
 #       yl=pl.ylim()
 #       pl.ylim(yl[0],1.2)
         pl.xlabel(xlabel,fontsize=fontsize)
         pl.ylabel(ylabel,fontsize=fontsize)
-        pl.title(title+desc_str,fontsize=fontsize)
+        if ndens == ntemp and ntemp > 1:
+            pl.text(0.07, 0.5,title, horizontalalignment='left', verticalalignment='center', fontsize=fontsize,  transform = ax.transAxes)
+            #
+            ax2 = pl.twiny()
+            xlabelDen=r'Electron Density (cm$^{-3}$)'
+            pl.xlabel(xlabelDen, fontsize=fontsize)
+            pl.loglog(density,emiss[topLines[top-1]]/maxAll, visible=False)
+            ax2.xaxis.tick_top()
+        else:
+#            pl.ylim(ymin, ymax)
+            pl.title(title+desc_str,fontsize=fontsize)
         if saveFile:
             pl.savefig(saveFile)
         else:
@@ -4125,7 +4163,7 @@ class ionWeb(ion):
         #
         #   -----------------------------------
         #
-    def intensityRatioShow(self,numIdx, denIdx, wvlRange=0, top=10,  saveFile=0):
+    def intensityRatioShow(self,numIdx, denIdx, saveFile=0):
         """Plot the ratio of 2 lines or sums of lines.
 
         Shown as a function of density and/or temperature."""
@@ -4134,18 +4172,19 @@ class ionWeb(ion):
         #        "plotLabels":plotLabels}
         #
         #
+        em = self.Emiss
         #
-        doEmissCalc=False
-        try:
-            em=self.Emiss
-        except:
-            doEmissCalc=True
-        #
-        #
-        if doEmissCalc:
-            # new values of temperature or density
-            self.emissCalc()
-            em=self.Emiss
+#        doEmissCalc=False
+#        try:
+#            em=self.Emiss
+#        except:
+#            doEmissCalc=True
+#        #
+#        #
+#        if doEmissCalc:
+#            # new values of temperature or density
+#            self.emissCalc()
+#            em=self.Emiss
         #
         #
         try:
@@ -4162,34 +4201,35 @@ class ionWeb(ion):
         # find which lines are in the wavelength range if it is set
         #
         #
-        if not wvlRange:
-            igvl=range(len(wvl))
-        else:
-            igvl=util.between(wvl,wvlRange)
-        nlines=len(igvl)
+#        if not wvlRange:
+#            igvl=range(len(wvl))
+#        else:
+#            igvl=util.between(wvl,wvlRange)
+#        nlines=len(igvl)
         #
 #        print ' nlines = ',nlines
 #        print ' iglv = ',igvl
-        igvl=np.take(igvl,wvl[igvl].argsort())
+#        igvl=np.take(igvl,wvl[igvl].argsort())
         # find the top most intense lines
         #
-        if (top > nlines) or (top == 0):
-            top=nlines
-        maxEmiss=np.zeros(nlines,'Float32')
-        for iline in range(nlines):
-            maxEmiss[iline]=emiss[igvl[iline]].max()
-        for iline in range(nlines):
-            if maxEmiss[iline]==maxEmiss.max():
-                maxAll=emiss[igvl[iline]]
-        line=range(nlines)
-        igvlsort=np.take(igvl,np.argsort(maxEmiss))
-#        print 'igvlsort = ', igvlsort
-        topLines=igvlsort[-top:]
+#        if (top > nlines) or (top == 0):
+#            top=nlines
+#        maxEmiss=np.zeros(nlines,'Float32')
+#        for iline in range(nlines):
+#            maxEmiss[iline]=emiss[igvl[iline]].max()
+#        for iline in range(nlines):
+#            if maxEmiss[iline]==maxEmiss.max():
+#                maxAll=emiss[igvl[iline]]
+#        line=range(nlines)
+#        igvlsort=np.take(igvl,np.argsort(maxEmiss))
+##        print 'igvlsort = ', igvlsort
+#        topLines=igvlsort[-top:]
 #        print ' topLines = ', topLines
+#        topLines=topLines[wvl[topLines].argsort()]
+        topLines = self.topLines
         maxWvl='%5.3f' % wvl[topLines[-1]]
         maxline=topLines[-1]
         #
-        topLines=topLines[wvl[topLines].argsort()]
         #
         #
         # need to make sure there are no negative values before plotting
@@ -4277,6 +4317,7 @@ class ionWeb(ion):
         #
         # plot the desired ratio
         pl.figure()
+        ax = pl.subplot(111)
         pl.loglog(xvalues,numEmiss/denEmiss)
         pl.xlim(xvalues.min(),xvalues.max())
         pl.xlabel(xlabel,fontsize=fontsize)
@@ -4287,8 +4328,19 @@ class ionWeb(ion):
         desc +=' / '
         for aline in den_idx:
             desc += ' ' + str(wvl[topLines[aline]])
+        if ndens == ntemp and ntemp > 1:
+            pl.text(0.07, 0.5,desc, horizontalalignment='left', verticalalignment='center', fontsize=fontsize,  transform = ax.transAxes)
+            #
+            ax2 = pl.twiny()
+            xlabelDen=r'Electron Density (cm$^{-3}$)'
+            pl.xlabel(xlabelDen, fontsize=fontsize)
+            pl.loglog(outDensity,numEmiss/denEmiss, visible=False)
+            ax2.xaxis.tick_top()
+        else:
+#            pl.ylim(ymin, ymax)
+            pl.title(desc,fontsize=fontsize)
 #       desc=title+' '+str(wvl[num_line])+' / '+str(wvl[den_line])+' '+desc_str
-        pl.title(desc, fontsize=fontsize)
+#        pl.title(desc, fontsize=fontsize)
 #       pl.title(title+' '+str(wvl[num_line])+' / '+str(wvl[den_line])+' '+desc_str,fontsize=fontsize)
 #        pl.draw()
 #        pl.ioff()
