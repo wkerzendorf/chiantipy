@@ -2403,10 +2403,10 @@ class ion:
                 b=np.zeros(nlvls+ci+rec,'float64')
                 b[nlvls+ci+rec-1]=1.
                 thispop=np.linalg.solve(popmat,b)
-            if rec:
-                pop[itemp] = thispop[ci:-rec]
-            else:
-                pop[itemp] = thispop[ci:]
+                if rec:
+                    pop[itemp] = thispop[ci:-rec]
+                else:
+                    pop[itemp] = thispop[ci:]
             #
         pop=np.where(pop >0., pop,0.)
         self.Population={"temperature":temperature,"density":density,"population":pop, "protonDensity":protonDensity, "ci":ci, "rec":rec}
@@ -2498,6 +2498,7 @@ class ion:
             pl.ylim(yl[0],1.2)
         else:
 #            pl.figure()
+            ax = pl.subplot(111)
             for lvl in toplvl:
                 pl.loglog(temperature,pop[:,lvl-1])
                 skip = min(3, ntemp)
@@ -2507,25 +2508,31 @@ class ion:
             xlabel='Temperature (K)'
             pl.xlabel(xlabel,fontsize=fontsize)
             pl.ylabel(ylabel,fontsize=fontsize)
-            pl.title(title,fontsize=fontsize)
+#            pl.title(title,fontsize=fontsize)
             pl.xlim(temperature.min(),temperature.max())
             yl=pl.ylim()
             pl.ylim(yl[0],1.2)
+            pl.text(0.1, 0.5,title, horizontalalignment='center', verticalalignment='center', fontsize=fontsize,  transform = ax.transAxes)
             #
-#            pl.figure()
-            for lvl in toplvl:
-                pl.loglog(density,pop[:,lvl-1])
-                skip = min(3, ntemp)
-                start=divmod(lvl,ndens)[1]
-                for idens in range(start,ndens,ndens/skip):
-                    pl.text(density[idens],pop[idens,lvl-1],str(lvl))
+            ax2 = pl.twiny()
             xlabel=r'Electron Density (cm$^{-3}$)'
-            pl.xlabel(xlabel,fontsize=fontsize)
-            pl.ylabel(ylabel,fontsize=fontsize)
-            pl.title(title,fontsize=fontsize)
-            pl.xlim(density.min(),density.max())
-            yl=pl.ylim()
-            pl.ylim(yl[0],1.2)
+            pl.xlabel(xlabel, fontsize=fontsize)
+            pl.loglog(density,pop[:,toplvl[0]], visible=False)
+            ax2.xaxis.tick_top()
+#            pl.figure()
+#            for lvl in toplvl:
+#                pl.loglog(density,pop[:,lvl-1])
+#                skip = min(3, ntemp)
+#                start=divmod(lvl,ndens)[1]
+#                for idens in range(start,ndens,ndens/skip):
+#                    pl.text(density[idens],pop[idens,lvl-1],str(lvl))
+#            xlabel=r'Electron Density (cm$^{-3}$)'
+#            pl.xlabel(xlabel,fontsize=fontsize)
+#            pl.ylabel(ylabel,fontsize=fontsize)
+#            pl.title(title,fontsize=fontsize)
+#            pl.xlim(density.min(),density.max())
+#            yl=pl.ylim()
+#            pl.ylim(yl[0],1.2)
         if saveFile:
             pl.savefig(saveFile)
         return
@@ -3221,20 +3228,38 @@ class ion:
             pl.ioff()
         #
         pl.figure()
+        ax = pl.subplot(111)
         nxvalues=len(xvalues)
+        #  maxAll is an array
+        ymax = np.max(1.2*emiss[top-1]/maxAll)
+        print ' ymax = ', ymax
+        ymin = ymax
         for iline in range(top):
             tline=topLines[iline]
             pl.loglog(xvalues,emiss[tline]/maxAll)
+            if np.min(emiss[tline]/maxAll) < ymin:
+                ymin = np.min(emiss[tline]/maxAll)
             skip=2
             start=divmod(iline,nxvalues)[1]
             for ixvalue in range(start,nxvalues,nxvalues/skip):
                 pl.text(xvalues[ixvalue],emiss[tline,ixvalue]/maxAll[ixvalue],str(wvl[tline]))
         pl.xlim(xvalues.min(),xvalues.max())
+        pl.ylim(ymin, ymax)
 #       yl=pl.ylim()
 #       pl.ylim(yl[0],1.2)
         pl.xlabel(xlabel,fontsize=fontsize)
         pl.ylabel(ylabel,fontsize=fontsize)
-        pl.title(title+desc_str,fontsize=fontsize)
+        if ndens == ntemp and ntemp > 1:
+            pl.text(0.07, 0.5,title, horizontalalignment='left', verticalalignment='center', fontsize=fontsize,  transform = ax.transAxes)
+            #
+            ax2 = pl.twiny()
+            xlabelDen=r'Electron Density (cm$^{-3}$)'
+            pl.xlabel(xlabelDen, fontsize=fontsize)
+            pl.loglog(density,emiss[topLines[top-1]]/maxAll, visible=False)
+            ax2.xaxis.tick_top()
+        else:
+            pl.ylim(ymin, ymax)
+            pl.title(title+desc_str,fontsize=fontsize)
         pl.draw()
         #
 #        print ' topLInes = ', wvl[topLines]
@@ -3274,7 +3299,17 @@ class ion:
         pl.xlim(xvalues.min(),xvalues.max())
         pl.xlabel(xlabel,fontsize=fontsize)
         pl.ylabel('Gofnt',fontsize=fontsize)
-        pl.title(title+' '+str(wvl[g_line])+' '+desc_str, fontsize=fontsize)
+        if ndens == ntemp and ntemp > 1:
+            newTitle = title+' '+str(wvl[g_line])+' '+desc_str
+            pl.text(0.07, 0.5,newTitle, horizontalalignment='left', verticalalignment='center', fontsize=fontsize,  transform = ax.transAxes)
+            #
+            ax2 = pl.twiny()
+#            xlabel=r'Electron Density (cm$^{-3}$)'
+            pl.xlabel(xlabelDen, fontsize=fontsize)
+            pl.loglog(density,gofnt, visible=False)
+            ax2.xaxis.tick_top()
+        else:
+            pl.title(title+' '+str(wvl[g_line])+' '+desc_str, fontsize=fontsize)
         #pl.ioff()
         #pl.show()
 #        return
@@ -4086,6 +4121,7 @@ class ionWeb(ion):
         for one in wvl[topLines]:
             wvlChoices.append('%12.3f'%(one))
         self.wvlChoices = wvlChoices
+        self.topLines = topLines
         #
         #   -----------------------------------
         #
