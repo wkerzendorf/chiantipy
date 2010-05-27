@@ -2950,7 +2950,7 @@ class ion:
             pl.ioff()
         #
         #  maxAll is an array
-        ymax = np.max(1.2*emiss[topLines[0]]/maxAll)
+        ymax = np.max(emiss[topLines[0]]/maxAll)
         ymin = ymax
         pl.figure()
         ax = pl.subplot(111)
@@ -2960,6 +2960,8 @@ class ion:
             pl.loglog(xvalues,emiss[tline]/maxAll)
             if np.min(emiss[tline]/maxAll) < ymin:
                 ymin = np.min(emiss[tline]/maxAll)
+            if np.max(emiss[tline]/maxAll) > ymax:
+                ymax = np.max(emiss[tline]/maxAll)
             skip=2
             start=divmod(iline,nxvalues)[1]
             for ixvalue in range(start,nxvalues,nxvalues/skip):
@@ -2976,8 +2978,9 @@ class ion:
             pl.xlabel(xlabelDen, fontsize=fontsize)
             pl.loglog(density,emiss[topLines[top-1]]/maxAll, visible=False)
             ax2.xaxis.tick_top()
+            pl.ylim(ymin/1.2, 1.2*ymax)
         else:
-            pl.ylim(ymin, ymax)
+            pl.ylim(ymin/1.2, 1.2*ymax)
             pl.title(title+desc_str,fontsize=fontsize)
         pl.draw()
         # get line selection
