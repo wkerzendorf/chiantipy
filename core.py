@@ -4118,6 +4118,7 @@ class ionWeb(ion):
         # put all actual plotting here
         #
 #        pl.ion()
+        #  topLines are sorted by wavelength
         ymax = np.max(1.2*emiss[topLines[0]]/maxAll)
         ymin = ymax
         pl.figure()
@@ -4135,6 +4136,7 @@ class ionWeb(ion):
             for ixvalue in range(start,nxvalues,nxvalues/skip):
                 pl.text(xvalues[ixvalue],emiss[tline,ixvalue]/maxAll[ixvalue],str(wvl[tline]))
         pl.xlim(xvalues.min(),xvalues.max())
+#        print ' ymin, ymax = ', ymin, ymax
 #        pl.ylim(ymin, ymax)
 #       yl=pl.ylim()
 #       pl.ylim(yl[0],1.2)
@@ -4148,8 +4150,9 @@ class ionWeb(ion):
             pl.xlabel(xlabelDen, fontsize=fontsize)
             pl.loglog(density,emiss[topLines[top-1]]/maxAll, visible=False)
             ax2.xaxis.tick_top()
+            pl.ylim(ymin/1.2, 1.2*ymax)
         else:
-            pl.ylim(ymin, ymax)
+            pl.ylim(ymin/1.2, 1.2*ymax)
             pl.title(title+desc_str,fontsize=fontsize)
         if saveFile:
             pl.savefig(saveFile)
