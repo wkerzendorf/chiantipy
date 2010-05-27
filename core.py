@@ -4128,6 +4128,8 @@ class ionWeb(ion):
             pl.loglog(xvalues,emiss[tline]/maxAll)
             if np.min(emiss[tline]/maxAll) < ymin:
                 ymin = np.min(emiss[tline]/maxAll)
+            if np.max(emiss[tline]/maxAll) > ymax:
+                ymax = np.max(emiss[tline]/maxAll)
             skip=2
             start=divmod(iline,nxvalues)[1]
             for ixvalue in range(start,nxvalues,nxvalues/skip):
