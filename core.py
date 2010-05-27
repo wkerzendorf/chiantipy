@@ -2511,7 +2511,7 @@ class ion:
 #            pl.title(title,fontsize=fontsize)
             pl.xlim(temperature.min(),temperature.max())
             yl=pl.ylim()
-            pl.ylim(yl[0],1.2)
+#            pl.ylim(yl[0],1.2)
             pl.text(0.1, 0.5,title, horizontalalignment='center', verticalalignment='center', fontsize=fontsize,  transform = ax.transAxes)
             #
             ax2 = pl.twiny()
@@ -2532,7 +2532,7 @@ class ion:
 #            pl.title(title,fontsize=fontsize)
 #            pl.xlim(density.min(),density.max())
 #            yl=pl.ylim()
-#            pl.ylim(yl[0],1.2)
+            pl.ylim(yl[0],1.2)
         if saveFile:
             pl.savefig(saveFile)
         return
