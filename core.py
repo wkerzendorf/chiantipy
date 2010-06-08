@@ -250,12 +250,12 @@ class continuum:
                 ipLvlErg = const.ev2Erg*ipLvlEv
                 expf[ilvl] = np.exp((ipLvlErg - 1.e+8*const.planck*const.light/wvl)/(const.boltzmann*temperature))
                 fbrate[ilvl] = const.freeBound*ratg[ilvl]*(ipLvlErg**2/float(pqn[ilvl]))*gf/(temperature**1.5*(wvl)**2)
-                print ' ilvl, scaledE = ', ilvl, scaledE
-                print ' ilvl, thisGf = ', ilvl, thisGf
-                print ' ilvl, gf = ', ilvl, gf
-                print ' ilvl ratg = ', ilvl, ratg[ilvl]
-                print ' ilvl mask = ', ilvl, mask[ilvl]
-                print ' ilvl expf = ', ilvl, expf[ilvl]
+#                print ' ilvl, scaledE = ', ilvl, scaledE
+#                print ' ilvl, thisGf = ', ilvl, thisGf
+#                print ' ilvl, gf = ', ilvl, gf
+#                print ' ilvl ratg = ', ilvl, ratg[ilvl]
+#                print ' ilvl mask = ', ilvl, mask[ilvl]
+#                print ' ilvl expf = ', ilvl, expf[ilvl]
                 print ' fbrate = ', ilvl,  fbrate[ilvl]
             fbrma = np.ma.array(fbrate)
             fbrma.mask =  mask
@@ -3738,10 +3738,10 @@ class spectrum:
         wvlRange = [wavelength.min(), wavelength.max()]
         print ' wavelength range = ', wvlRange
         #
-        freeFree = np.zeros((nTempDen, nWvl), 'float64')
-        freeBound = np.zeros((nTempDen, nWvl), 'float64')
-        twoPhoton = np.zeros((nTempDen, nWvl), 'float64')
-        lineSpectrum = np.zeros((nTempDen, nWvl), 'float64')
+        freeFree = np.zeros((nTempDen, nWvl), 'float64').squeeze()
+        freeBound = np.zeros((nTempDen, nWvl), 'float64').squeeze()
+        twoPhoton = np.zeros((nTempDen, nWvl), 'float64').squeeze()
+        lineSpectrum = np.zeros((nTempDen, nWvl), 'float64').squeeze()
         #
         #
         for iz in range(31):
@@ -3774,13 +3774,19 @@ class spectrum:
                         cont.freeFree(wavelength)
     #                   print dir(thisIon)
     #                   print ' wvl = ', thisIon.FreeFree['wvl']
-                        for iTempDen in range(nTempDen):
-                            freeFree[iTempDen] += cont.FreeFree['rate'][iTempDen]
+                        if nTempDen ==1:
+                            freeFree += cont.FreeFree['rate']
+                        else:
+                            for iTempDen in range(nTempDen):
+                                freeFree[iTempDen] += cont.FreeFree['rate'][iTempDen]
                     #
                         cont.freeBound(wavelength)
                         if 'errorMessage' not in cont.FreeBound.keys():
                             #  an fblvl file exists for this ions
-                            freeBound[iTempDen] += cont.FreeBound['rate'][iTempDen]
+                            if nTempDen == 1:
+                                freeBound += cont.FreeBound['rate']
+                            else:
+                                freeBound[iTempDen] += cont.FreeBound['rate'][iTempDen]
                     if masterListTest and wvlTestMin and wvlTestMax and ioneqTest:
                         print ' calculating spectrum for  :  ', ionS
                         thisIon = chianti.core.ion(ionS, temperature, density)
