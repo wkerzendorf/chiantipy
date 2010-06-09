@@ -2685,7 +2685,7 @@ class ion:
         #
         title=self.Spectroscopic
         #
-        doEmissCalc=False
+        doEmiss=False
         try:
             em = self.Emiss
         except:
@@ -2861,25 +2861,25 @@ class ion:
         #        self.Emiss={"temperature":temperature,"density":density,"wvl":wvl,"emiss":em,
         #        "plotLabels":plotLabels}
         #
-        doEmissCalc=False
+        doEmiss=False
         try:
             em = self.Emiss
         except:
-            doEmissCalc = True
+            doEmiss = True
         #
         if temperature != None:
             self.Temperature=np.asarray(temperature,'float32')
-            doEmissCalc=True
+            doEmiss=True
         if density != None:
             self.Density=np.asarray(density,'float32')
-            doEmissCalc=True
+            doEmiss=True
         if pDensity:
             self.PDensity=pDensity
-            doEmissCalc=True
+            doEmiss=True
         #
-        if doEmissCalc:
+        if doEmiss:
             # new values of temperature or density
-            self.emissCalc(temperature=temperature, density=density, pDensity=pDensity)
+            self.emiss(temperature=temperature, density=density, pDensity=pDensity)
             em=self.Emiss
         #
         #
@@ -3155,25 +3155,25 @@ class ion:
         #self.emiss={"wvl":wvl,"emiss":em,"units":units,"plotLabels":plotLabels}
         #
         #
-        doEmissCalc=False
+        doEmiss=False
         try:
             em=self.Emiss
         except:
-            doEmissCalc=True
+            doEmiss=True
         #
         if temperature != None:
             self.Temperature=np.asarray(temperature,'float32')
-            doEmissCalc=True
+            doEmiss=True
         if density != None:
             self.Density=np.asarray(density,'float32')
-            doEmissCalc=True
+            doEmiss=True
         if pDensity:
             self.PDensity=pDensity
-            doEmissCalc=True
+            doEmiss=True
         #
-        if doEmissCalc:
+        if doEmiss:
             # new values of temperature or density
-            self.emissCalc()
+            self.emiss()
             em=self.Emiss
         #
         #
@@ -3918,16 +3918,16 @@ class ionWeb(ion):
         #self.emiss={"wvl":wvl,"emiss":em,"units":units,"plotLabels":plotLabels}
         #
         #
-        doEmissCalc=False
+        doEmiss=False
         try:
             em=self.Emiss
         except:
-            doEmissCalc=True
+            doEmiss=True
         #
         #
-        if doEmissCalc:
+        if doEmiss:
             # new values of temperature or density
-            self.emissCalc()
+            self.emiss()
             em=self.Emiss
         #
         #
@@ -4074,16 +4074,16 @@ class ionWeb(ion):
         #self.emiss={"wvl":wvl,"emiss":em,"units":units,"plotLabels":plotLabels}
         #
         #
-        doEmissCalc=False
+        doEmiss=False
         try:
             em=self.Emiss
         except:
-            doEmissCalc=True
+            doEmiss=True
         #
         #
-        if doEmissCalc:
+        if doEmiss:
             # new values of temperature or density
-            self.emissCalc()
+            self.emiss()
             em=self.Emiss
         #
         #
@@ -4265,16 +4265,16 @@ class ionWeb(ion):
         #self.emiss={"wvl":wvl,"emiss":em,"units":units,"plotLabels":plotLabels}
         #
         #
-        doEmissCalc=False
+        doEmiss=False
         try:
             em=self.Emiss
         except:
-            doEmissCalc=True
+            doEmiss=True
         #
         #
-        if doEmissCalc:
+        if doEmiss:
             # new values of temperature or density
-            self.emissCalc()
+            self.emiss()
             em=self.Emiss
         #
         #
@@ -4435,16 +4435,16 @@ class ionWeb(ion):
         #
         em = self.Emiss
         #
-#        doEmissCalc=False
+#        doEmiss=False
 #        try:
 #            em=self.Emiss
 #        except:
-#            doEmissCalc=True
+#            doEmiss=True
 #        #
 #        #
-#        if doEmissCalc:
+#        if doEmiss:
 #            # new values of temperature or density
-#            self.emissCalc()
+#            self.emiss()
 #            em=self.Emiss
         #
         #
