@@ -3,3 +3,4 @@ include chiantirc
 include LICENSE
 include LICENSE.FortranFormat
 include RELEASE_NOTES.txt
+include VERSION

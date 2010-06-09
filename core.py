@@ -3362,8 +3362,8 @@ class ion:
         #
         # - - - - - - - - - - - - - - - - - - - - - - -
         #
-    def twoPhotonEmiss(self, wvl):
-        ''' to calculate the two-photon continuum emissivity - only for hydrogen- and helium-like ions'''
+    def twoPhoton(self, wvl):
+        ''' to calculate the two-photon continuum rate coefficient - only for hydrogen- and helium-like ions'''
         wvl = np.array(wvl, 'float64')
         nWvl = wvl.size
         if self.Z -self.Ion > 1 or self.Dielectronic:
@@ -3379,13 +3379,13 @@ class ion:
                 pop = self.Population['population']
                 nTempDens = max(self.Temperature.size, self.Density.size)
             if nTempDens > 1:
-                em = np.zeros((nTempDens, nWvl), 'float64')
+                rate = np.zeros((nTempDens, nWvl), 'float64')
                 if self.Density.size == 1:
                     density = np.repeat(self.Density, nTempDens)
                 else:
                     density = self.Density
             else:
-                em = np.zeros(nWvl, 'float64')
+                rate = np.zeros(nWvl, 'float64')
                 density = self.Density
             if self.Z == self.Ion:
                 # H seq
@@ -3404,11 +3404,11 @@ class ion:
                 else:
                     f=1./(4.*const.pi)
                 if nTempDens == 1:
-                    em[goodWvl] = f*pop[l2]*distr/self.Density
+                    rate[goodWvl] = f*pop[l2]*distr/self.Density
                 else:
                     for it in range(nTempDens):
-                        em[it, goodWvl] = f*pop[it, l2]*distr/self.Density[it]
-                self.TwoPhotonEmiss = {'wvl':wvl, 'emiss':em}
+                        rate[it, goodWvl] = f*pop[it, l2]*distr/self.Density[it]
+                self.TwoPhotonEmiss = {'wvl':wvl, 'rate':rate}
             else:
                 # He seq
                 l1 = 1-1
@@ -3425,15 +3425,15 @@ class ion:
                 else:
                     f=1./(4.*const.pi)
                 if nTempDens == 1:
-                    em[goodWvl] = f*pop[l2]*distr/self.Density
+                    rate[goodWvl] = f*pop[l2]*distr/self.Density
                 else:
                     for it in range(nTempDens):
-                        em[it, goodWvl] = f*pop[it, l2]*distr/self.Density[it]
-                self.TwoPhotonEmiss = {'wvl':wvl, 'emiss':em}
+                        rate[it, goodWvl] = f*pop[it, l2]*distr/self.Density[it]
+                self.TwoPhotonEmiss = {'wvl':wvl, 'rate':rate}
         #
         #-----------------------------------------------------------------
         #
-    def twoPhoton(self, wvl):
+    def twoPhotonEmiss(self, wvl):
         ''' to calculate the two-photon continuum - only for hydrogen- and helium-like ions
         includes the elemental abundance and the ionization equilibrium'''
         wvl = np.array(wvl, 'float64')
@@ -3514,9 +3514,74 @@ class ion:
                         rate[it, goodWvl] = f*pop[it, l2]*distr*ab*thisIoneq[it]/density[it]
                 self.TwoPhoton = {'wvl':wvl, 'rate':rate}
         #
+        #-----------------------------------------------------------------
+        #
+    def twoPhotonLoss(self):
+        ''' to calculate the two-photon energy loss rate - only for hydrogen- and helium-like ions
+        includes the elemental abundance and the ionization equilibrium'''
+        if self.Z -self.Ion > 1 or self.Dielectronic:
+            # this is not a hydrogen-like or helium-like ion
+            print ' not doing 2 photon for ', self.Ions
+            self.TwoPhoton = {'emiss':np.zeros(nWvl, 'float64'), 'wvl':wvl}
+            return
+        else:
+            try:
+                ab=self.Abundance
+            except:
+                self.Abundance = util.abundanceRead()
+                ab=self.Abundance
+            try:
+                thisIoneq=self.IoneqOne
+            except:
+                self.ioneqOne()
+                thisIoneq=self.IoneqOne
+            try:
+                pop = self.Population['population']
+                nTempDens = max(self.Temperature.size, self.Density.size)
+            except:
+                self.populate()
+                pop = self.Population['population']
+                nTempDens = max(self.Temperature.size, self.Density.size)
+            if nTempDens > 1:
+                rate = np.zeros((nTempDens), 'float64')
+                if self.Density.size == 1:
+                    density = np.repeat(self.Density, nTempDens)
+                else:
+                    density = self.Density
+            else:
+                rate = 0.
+                density = self.Density
+            if self.Z == self.Ion:
+                # H seq
+                l1 = 1-1
+                l2 = 2 - 1
+                wvl0 = 1.e+8/(self.Elvlc['ecm'][l2] - self.Elvlc['ecm'][l1])
+                dist = util.twophotonHRead()
+                avalue = dist['avalue'][self.Z-1]
+                f = (avalue*const.light*const.planck*1.e+8)/(wvl0)
+                if nTempDens == 1:
+                    rate += f*pop[l2]*ab*thisIoneq/density
+                else:
+                   for it in range(nTempDens):
+                        rate[it] = f*pop[it, l2]*ab*thisIoneq[it]/density[it]
+                self.TwoPhotonLoss = {'temperature':self.Temperature,'density':self.Density,'rate':rate}
+            else:
+                # He seq
+                l1 = 1-1
+                l2 = 3 - 1
+                wvl0 = 1.e+8/(self.Elvlc['ecm'][l2] - self.Elvlc['ecm'][l1])
+                dist = util.twophotonHeRead()
+                avalue = dist['avalue'][self.Z-1]
+                f = (avalue*const.light*const.planck*1.e+8)/(wvl0)
+                if nTempDens == 1:
+                    rate = f*pop[l2]*ab*thisIoneq/density
+                else:
+                   for it in range(nTempDens):
+                        rate[it] = f*pop[it, l2]*ab*thisIoneq[it]/density[it]
+                self.TwoPhotonLoss = {'temperature':self.Temperature,'density':self.Density,'rate':rate}
+        #
         # ----------------------------------------------
         #
-
 class ioneq(ion):
     '''Calculates the ionization equilibrium for an element as a function of temperature.
     The variable z is the atomic number of the element.  Acceptable values are from 1 to 30.'''
