@@ -795,6 +795,15 @@ def cireclvlRead(ions, type):
         idat += 1
     return {'temperature':temp, 'ntemp':ntemp,'lvl1':lvl1, 'lvl2':lvl2, 'rate':ci,'ref':lines[ndata+1:-1]}
     #
+def dilution(radius):
+    ''' to calculate the dilution factor as a function distance from the center of a star in units of the stellar radius
+    a radius of less than 1.0 (incorrect) results in a dilution factor of 0.'''
+    if radius >= 1.:
+        d = 0.5*(1. - np.sqrt(1. - 1./radius**2))
+    else:
+        d = 0.
+    return d
+    #
 def diRead(ions):
     """read chianti direct ionization .params files and return
         {"info":info,"btf":btf,"ev1":ev1,"xsplom":xsplom,"ysplom":ysplom,"ref":hdr}
@@ -1255,6 +1264,50 @@ def vernerRead():
         yw[z,stage] = out[9]
     #
     return {'pqn':pqn, 'l':l, 'eth':eth, 'e0':e0, 'sig0':sig0, 'ya':ya, 'p':p, 'yw':yw}
+    #
+    #-----------------------------------------------------------
+    #
+def twophotonHRead():
+    ''' to read the two-photon A values and distribution function for the H seq'''
+    xuvtop = os.environ['XUVTOP']
+    fName = os.path.join(xuvtop, 'continuum', 'hseq_2photon.dat')
+    dFile = open(fName, 'r')
+    a = dFile.readline()
+    y0 = np.asarray(a.split())
+    a = dFile.readline()
+    z0 = np.asarray(a.split())
+    nz = 30
+    avalue = np.zeros(nz, 'float64')
+    asum = np.zeros(nz, 'float64')
+    psi0 = np.zeros((nz, 17), 'float64')
+    for iz in range(nz):
+        a=dFile.readline().split()
+        avalue[iz] = float(a[1])
+        asum[iz] = float(a[2])
+        psi = np.asarray(a[3:])
+        psi0[iz] = psi
+    dFile.close()
+    return {'y0':y0, 'z0':z0, 'avalue':avalue, 'asum':asum, 'psi0':psi0.reshape(30, 17)}
+    #
+    #-----------------------------------------------------------
+    #
+def twophotonHeRead():
+    ''' to read the two-photon A values and distribution function for the He seq'''
+    xuvtop = os.environ['XUVTOP']
+    fName = os.path.join(xuvtop, 'continuum', 'heseq_2photon.dat')
+    dFile = open(fName, 'r')
+    a = dFile.readline()
+    y0 = np.asarray(a.split())
+    nz = 30
+    avalue = np.zeros(nz, 'float64')
+    psi0 = np.zeros((nz, 41), 'float64')
+    for iz in range(1, nz):
+        a=dFile.readline().split()
+        avalue[iz] = float(a[1])
+        psi = np.asarray(a[2:])
+        psi0[iz] = psi
+    dFile.close()
+    return {'y0':y0, 'avalue':avalue, 'psi0':psi0.reshape(30, 41)}
     #
     #-----------------------------------------------------------
     #

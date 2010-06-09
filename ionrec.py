@@ -1,6 +1,6 @@
 import types
 import numpy as np
-import chianti.main as ch
+import chianti.core as ch
 from chianti import util
 class ioneq(ch.ion):
     def __init__(self,z, temperature, verbose=False):
@@ -210,13 +210,13 @@ class ioneq(ch.ion):
         self.Change = change[:iter]
         self.DeltaChange = deltaChange[:iter]
         self.Iter = iter
-        
-        
-        
-        
-        
-        
-        
+
+
+
+
+
+
+
 #    def plot(self, ions=None, xr=None, yr=None, oplot=False, label=True, title=True,  bw=False):
 #        ''' self.plot(xr=None, yr=None, oplot=False)
 #        ions = sequence of ions to be plotted, in spectroscopic notation

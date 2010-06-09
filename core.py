@@ -53,7 +53,7 @@ defaults = util.defaultsRead(verbose = chInteractive)
 #    import chianti.gui_wx.gui as gui
 #else:
 #    print ' unknown gui - ',defaults['gui']
-#    print ' the full functionality of the chianti.main.ion class will not be available'
+#    print ' the full functionality of the chiant.core.ion class will not be available'
     #
 if pl.rcParams['backend'].lower() == 'qt4agg':
     import chianti.gui_qt.gui as gui
@@ -74,7 +74,7 @@ else:
     print ' - in order to use the command line dialogs, the matlpotlib/pylab backend needs'
     print ' - to be GTKAgg or MacOSX - '
     print ' - current backend is ',pl.rcParams['backend']
-    print ' - the full functionality of the chianti.main.ion class may not be available'
+    print ' - the full functionality of the chianti.core.ion class may not be available'
     print ' - it would probably be better to set your matplotlib backend to either'
     print ' - Qt4Agg, WXAgg, GTKAgg, or MacOSX'
     print ' - using the command line dialogs for now but there could be problems -'
@@ -235,12 +235,12 @@ class continuum:
                 ipLvlErg = const.ev2Erg*ipLvlEv
                 expf[0] = np.exp((ipLvlErg - 1.e+8*const.planck*const.light/wvl)/(const.boltzmann*temperature))
                 fbrate[0] = (const.planck*const.light/(1.e-8*wvl))**5*const.verner*ratg[0]*vCross/temperature**1.5
-                print ' expf verner = ', expf[0]
-                print ' fbrate verner = ', fbrate[0]
+#                print ' expf verner = ', expf[0]
+#                print ' fbrate verner = ', fbrate[0]
             for ilvl in range(lvl1,nlvls):
                 # scaled energy is relative to the ionization potential of each individual level
                 ipLvlEv = self.Ip - const.invCm2Ev*ecm[ilvl]
-                print ' ilvl, ipLvlEv = ', ilvl, ipLvlEv
+#                print ' ilvl, ipLvlEv = ', ilvl, ipLvlEv
                 scaledE = np.log(const.ev2Ang/(ipLvlEv*wvl))
                 thisGf = klgfb['klgfb'][pqn[ilvl]-1, l[ilvl]]
                 spl = interpolate.splrep(klgfb['pe'], thisGf)
@@ -250,13 +250,13 @@ class continuum:
                 ipLvlErg = const.ev2Erg*ipLvlEv
                 expf[ilvl] = np.exp((ipLvlErg - 1.e+8*const.planck*const.light/wvl)/(const.boltzmann*temperature))
                 fbrate[ilvl] = const.freeBound*ratg[ilvl]*(ipLvlErg**2/float(pqn[ilvl]))*gf/(temperature**1.5*(wvl)**2)
-                print ' ilvl, scaledE = ', ilvl, scaledE
-                print ' ilvl, thisGf = ', ilvl, thisGf
-                print ' ilvl, gf = ', ilvl, gf
-                print ' ilvl ratg = ', ilvl, ratg[ilvl]
-                print ' ilvl mask = ', ilvl, mask[ilvl]
-                print ' ilvl expf = ', ilvl, expf[ilvl]
-                print ' fbrate = ', ilvl,  fbrate[ilvl]
+#                print ' ilvl, scaledE = ', ilvl, scaledE
+#                print ' ilvl, thisGf = ', ilvl, thisGf
+#                print ' ilvl, gf = ', ilvl, gf
+#                print ' ilvl ratg = ', ilvl, ratg[ilvl]
+#                print ' ilvl mask = ', ilvl, mask[ilvl]
+#                print ' ilvl expf = ', ilvl, expf[ilvl]
+#                print ' fbrate = ', ilvl,  fbrate[ilvl]
             fbrma = np.ma.array(fbrate)
             fbrma.mask =  mask
             fbrma.fill_value = 0.
@@ -1075,8 +1075,13 @@ class continuum:
 class ion:
     '''The top level class for performing spectral calculations for an ion in the CHIANTI database.
 
-    ionStr is a string corresponding such as 'c_5' that corresponds to the C VI ion.'''
-    def __init__(self,ionStr,temperature=None,density=None,pDensity='default',verbose=0, setup=True):
+    ionStr is a string corresponding such as 'c_5' that corresponds to the C VI ion.
+    temperature in Kelvin
+    density in cm^-3
+    radTemperature, the radiation black-body temperature in Kelvin
+    rPlot, the distance from the center of the star in stellar radii
+    '''
+    def __init__(self,ionStr,temperature=None,density=None,pDensity='default', radTemperature=0,rPhot=0,verbose=0, setup=True):
         #
         #
         self.__version__ = chianti.__version__
@@ -1091,6 +1096,8 @@ class ion:
         self.Spectroscopic=util.zion2spectroscopic(self.Z,self.Ion)
         self.FileName=util.zion2filename(self.Z, self.Ion,dielectronic=self.Dielectronic )
         #
+        self.RadTemperature = radTemperature
+        self.RPhot = rPhot
         #
         #  ip in eV, but don't read for bare ions
         if self.Ion <= self.Z:
@@ -2067,6 +2074,17 @@ class ion:
             l2 = self.Wgfa["lvl2"][iwgfa]-1
             rad[l1+ci,l2+ci] += self.Wgfa["avalue"][iwgfa]
             rad[l2+ci,l2+ci] -= self.Wgfa["avalue"][iwgfa]
+            if self.RadTemperature:
+                if not self.RPhot:
+                    dilute = 0.5
+                else:
+                    dilute = util.dilution(self.RPhot)
+                de = const.invCm2Erg*(self.Elvlc['ecm'][l2] - self.Elvlc['ecm'][l1])
+                dekt = de/(const.boltzmann*self.RadTemperature)
+                factor = dilute*(self.Elvlc['mult'][l2]/self.Elvlc['mult'][l1])/(np.exp(dekt)-1.)
+                rad[l2+ci,l1+ci] += self.Wgfa["avalue"][iwgfa]*factor
+                rad[l1+ci,l1+ci] -= self.Wgfa["avalue"][iwgfa]*factor
+
         #
         self.rad=rad
         #
@@ -2798,7 +2816,7 @@ class ion:
         try:
             ab=self.Abundance
         except:
-            self.Abundance = readAbundance()
+            self.Abundance = util.abundanceRead()
             ab=self.Abundance
         try:
             thisIoneq=self.IoneqOne
@@ -2811,18 +2829,22 @@ class ion:
             if thisIoneq.size == 1:
                 thisIoneq = np.ones(ntempden, 'float64')*thisIoneq
             for it in range(ntempden):
-                if self.Defaults['flux'] == 'energy':
-                    intensity[it] = (const.planck*const.light*1.e+8/wvl)*ab*thisIoneq[it]*em[:, it]
-                else:
-                    intensity[it] = ab*thisIoneq[it]*em[:, it]
+                #  already done in emissCalc
+#                if self.Defaults['flux'] == 'energy':
+#                    intensity[it] = (const.planck*const.light*1.e+8/wvl)*ab*thisIoneq[it]*em[:, it]
+#                else:
+#                    intensity[it] = ab*thisIoneq[it]*em[:, it]
+                intensity[it] = ab*thisIoneq[it]*em[:, it]
         except:
             nwvl=len(em)
             ntempden=1
-            intensity = np.zeros(nwvl,'Float32')
-            if self.Defaults['flux'] == 'energy':
-                intensity = (const.planck*const.light*1.e+8/wvl)*ab*thisIoneq*em
-            else:
-                intensity = ab*thisIoneq*em
+#            intensity = np.zeros(nwvl,'Float32')
+# this already done in emissCalc
+#            if self.Defaults['flux'] == 'energy':
+#                intensity = (const.planck*const.light*1.e+8/wvl)*ab*thisIoneq*em
+#            else:
+#                intensity = ab*thisIoneq*em
+            intensity = ab*thisIoneq*em
         self.Intensity = {'intensity':intensity, 'wvl':wvl}
         #
         # -------------------------------------------------------------------------------------
@@ -3158,7 +3180,7 @@ class ion:
         try:
             ab=self.Abundance
         except:
-            self.Abundance = readAbundance()
+            self.Abundance = util.abundanceRead()
             ab=self.Abundance
         #
         fontsize=12
@@ -3338,12 +3360,165 @@ class ion:
         #pl.show()
 #        return
         #
+        # - - - - - - - - - - - - - - - - - - - - - - -
+        #
+    def twoPhotonEmiss(self, wvl):
+        ''' to calculate the two-photon continuum emissivity - only for hydrogen- and helium-like ions'''
+        wvl = np.array(wvl, 'float64')
+        nWvl = wvl.size
+        if self.Z -self.Ion > 1 or self.Dielectronic:
+            # this is not a hydrogen-like or helium-like ion
+            self.TwoPhoton = {'emiss':np.zeros(nWvl, 'float4'), 'wvl':wvl}
+            return
+        else:
+            try:
+                pop = self.Population['population']
+                nTempDens = max(self.Temperature.size, self.Density.size)
+            except:
+                self.populate()
+                pop = self.Population['population']
+                nTempDens = max(self.Temperature.size, self.Density.size)
+            if nTempDens > 1:
+                em = np.zeros((nTempDens, nWvl), 'float64')
+                if self.Density.size == 1:
+                    density = np.repeat(self.Density, nTempDens)
+                else:
+                    density = self.Density
+            else:
+                em = np.zeros(nWvl, 'float64')
+                density = self.Density
+            if self.Z == self.Ion:
+                # H seq
+                l1 = 1-1
+                l2 = 2 - 1
+                wvl0 = 1.e+8/(self.Elvlc['ecm'][l2] - self.Elvlc['ecm'][l1])
+                goodWvl = wvl > wvl0
+                y = wvl0/wvl[goodWvl]
+                dist = util.twophotonHRead()
+                avalue = dist['avalue'][self.Z-1]
+                asum = dist['asum'][self.Z-1]
+                distr1 = interpolate.splrep(dist['y0'], dist['psi0'][self.Z-1], s=0)
+                distr = avalue*y*interpolate.splev(y, distr1)/(asum*wvl[goodWvl])
+                if self.Defaults['flux'] == 'energy':
+                    f = (const.light*const.planck*1.e+8)/(4.*const.pi*wvl[goodWvl])
+                else:
+                    f=1./(4.*const.pi)
+                if nTempDens == 1:
+                    em[goodWvl] = f*pop[l2]*distr/self.Density
+                else:
+                    for it in range(nTempDens):
+                        em[it, goodWvl] = f*pop[it, l2]*distr/self.Density[it]
+                self.TwoPhotonEmiss = {'wvl':wvl, 'emiss':em}
+            else:
+                # He seq
+                l1 = 1-1
+                l2 = 3 - 1
+                wvl0 = 1.e+8/(self.Elvlc['ecm'][l2] - self.Elvlc['ecm'][l1])
+                goodWvl = wvl > wvl0
+                y = wvl0/wvl[goodWvl]
+                dist = util.twophotonHeRead()
+                avalue = dist['avalue'][self.Z-1]
+                distr1 = interpolate.splrep(dist['y0'], dist['psi0'][self.Z-1], s=0)
+                distr = avalue*y*interpolate.splev(y, distr1)/wvl[goodWvl]
+                if self.Defaults['flux'] == 'energy':
+                    f = (const.light*const.planck*1.e+8)/(4.*const.pi*wvl[goodWvl])
+                else:
+                    f=1./(4.*const.pi)
+                if nTempDens == 1:
+                    em[goodWvl] = f*pop[l2]*distr/self.Density
+                else:
+                    for it in range(nTempDens):
+                        em[it, goodWvl] = f*pop[it, l2]*distr/self.Density[it]
+                self.TwoPhotonEmiss = {'wvl':wvl, 'emiss':em}
+        #
+        #-----------------------------------------------------------------
+        #
+    def twoPhoton(self, wvl):
+        ''' to calculate the two-photon continuum - only for hydrogen- and helium-like ions
+        includes the elemental abundance and the ionization equilibrium'''
+        wvl = np.array(wvl, 'float64')
+        nWvl = wvl.size
+        if self.Z -self.Ion > 1 or self.Dielectronic:
+            # this is not a hydrogen-like or helium-like ion
+            print ' not doing 2 photon for ', self.Ions
+            self.TwoPhoton = {'emiss':np.zeros(nWvl, 'float64'), 'wvl':wvl}
+            return
+        else:
+            try:
+                ab=self.Abundance
+            except:
+                self.Abundance = util.abundanceRead()
+                ab=self.Abundance
+            try:
+                thisIoneq=self.IoneqOne
+            except:
+                self.ioneqOne()
+                thisIoneq=self.IoneqOne
+            try:
+                pop = self.Population['population']
+                nTempDens = max(self.Temperature.size, self.Density.size)
+            except:
+                self.populate()
+                pop = self.Population['population']
+                nTempDens = max(self.Temperature.size, self.Density.size)
+            if nTempDens > 1:
+                rate = np.zeros((nTempDens, nWvl), 'float64')
+                if self.Density.size == 1:
+                    density = np.repeat(self.Density, nTempDens)
+                else:
+                    density = self.Density
+            else:
+                rate = np.zeros(nWvl, 'float64')
+                density = self.Density
+            if self.Z == self.Ion:
+                # H seq
+                l1 = 1-1
+                l2 = 2 - 1
+                wvl0 = 1.e+8/(self.Elvlc['ecm'][l2] - self.Elvlc['ecm'][l1])
+                goodWvl = wvl > wvl0
+                y = wvl0/wvl[goodWvl]
+                dist = util.twophotonHRead()
+                avalue = dist['avalue'][self.Z-1]
+                asum = dist['asum'][self.Z-1]
+                distr1 = interpolate.splrep(dist['y0'], dist['psi0'][self.Z-1], s=0)
+                distr = avalue*y*interpolate.splev(y, distr1)/(asum*wvl[goodWvl])
+                if self.Defaults['flux'] == 'energy':
+                    f = (const.light*const.planck*1.e+8)/(4.*const.pi*wvl[goodWvl])
+                else:
+                    f=1./(4.*const.pi)
+                if nTempDens == 1:
+                    rate[goodWvl] = f*pop[l2]*distr*ab*thisIoneq/density
+                else:
+                   for it in range(nTempDens):
+                        rate[it, goodWvl] = f*pop[it, l2]*distr*ab*thisIoneq[it]/density[it]
+                self.TwoPhoton = {'wvl':wvl, 'rate':rate}
+            else:
+                # He seq
+                l1 = 1-1
+                l2 = 3 - 1
+                wvl0 = 1.e+8/(self.Elvlc['ecm'][l2] - self.Elvlc['ecm'][l1])
+                goodWvl = wvl > wvl0
+                y = wvl0/wvl[goodWvl]
+                dist = util.twophotonHeRead()
+                avalue = dist['avalue'][self.Z-1]
+                distr1 = interpolate.splrep(dist['y0'], dist['psi0'][self.Z-1], s=0)
+                distr = avalue*y*interpolate.splev(y, distr1)/wvl[goodWvl]
+                if self.Defaults['flux'] == 'energy':
+                    f = (const.light*const.planck*1.e+8)/(4.*const.pi*wvl[goodWvl])
+                else:
+                    f=1./(4.*const.pi)
+                if nTempDens == 1:
+                    rate[goodWvl] = f*pop[l2]*distr*ab*thisIoneq/density
+                else:
+                   for it in range(nTempDens):
+                        rate[it, goodWvl] = f*pop[it, l2]*distr*ab*thisIoneq[it]/density[it]
+                self.TwoPhoton = {'wvl':wvl, 'rate':rate}
+        #
         # ----------------------------------------------
         #
 
 class ioneq(ion):
     '''Calculates the ionization equilibrium for an element as a function of temperature.
-
     The variable z is the atomic number of the element.  Acceptable values are from 1 to 30.'''
     def __init__(self,z, temperature, verbose=False):
 #        self.Defaults=defaults
@@ -3532,7 +3707,7 @@ class spectrum:
 
     em [for emission measure], can be a float or an array of the same length as the
     temperature/density.'''
-    def __init__(self, temperature, density, wavelength, filter=(chfilters.gaussianR, 1000.),  ionList = None, minAbund=1.e-4, doContinuum=1, em = None):
+    def __init__(self, temperature, density, wavelength, filter=(chfilters.gaussianR, 1000.),  ionList = None, minAbund=0., doContinuum=1, em = None):
         if type(ionList) == types.NoneType:
             masterlist = util.masterListRead()
         else:
@@ -3563,15 +3738,17 @@ class spectrum:
         self.Wavelength = wavelength
         wvlRange = [wavelength.min(), wavelength.max()]
         print ' wavelength range = ', wvlRange
-        freeFree = np.zeros((nTempDen, nWvl), 'float64')
-        freeBound = np.zeros((nTempDen, nWvl), 'float64')
-        lineSpectrum = np.zeros((nTempDen, nWvl), 'float64')
+        #
+        freeFree = np.zeros((nTempDen, nWvl), 'float64').squeeze()
+        freeBound = np.zeros((nTempDen, nWvl), 'float64').squeeze()
+        twoPhoton = np.zeros((nTempDen, nWvl), 'float64').squeeze()
+        lineSpectrum = np.zeros((nTempDen, nWvl), 'float64').squeeze()
         #
         #
         for iz in range(31):
             abundance = self.AbundanceAll['abundance'][iz-1]
             if abundance >= minAbund:
-                print ' %5i %5s abundance = %10.2e '%(iz, util.El[iz-1],  abundance)
+                print ' %5i %5s abundance = %10.2e '%(iz, const.El[iz-1],  abundance)
                 #
                 for ionstage in range(1, iz+2):
                     ionS = util.zion2name(iz, ionstage)
@@ -3594,20 +3771,26 @@ class spectrum:
                     if ionstageTest and ioneqTest and doContinuum:
                         # ionS is the target ion, cannot be the neutral for the continuum
                         print ' calculating continuum for :  ',  ionS
-                        cont = chianti.main.continuum(ionS, temperature)
+                        cont = chianti.core.continuum(ionS, temperature)
                         cont.freeFree(wavelength)
     #                   print dir(thisIon)
     #                   print ' wvl = ', thisIon.FreeFree['wvl']
-                        for iTempDen in range(nTempDen):
-                            freeFree[iTempDen] += cont.FreeFree['rate'][iTempDen]
+                        if nTempDen ==1:
+                            freeFree += cont.FreeFree['rate']
+                        else:
+                            for iTempDen in range(nTempDen):
+                                freeFree[iTempDen] += cont.FreeFree['rate'][iTempDen]
                     #
                         cont.freeBound(wavelength)
                         if 'errorMessage' not in cont.FreeBound.keys():
                             #  an fblvl file exists for this ions
-                            freeBound[iTempDen] += cont.FreeBound['rate'][iTempDen]
+                            if nTempDen == 1:
+                                freeBound += cont.FreeBound['rate']
+                            else:
+                                freeBound[iTempDen] += cont.FreeBound['rate'][iTempDen]
                     if masterListTest and wvlTestMin and wvlTestMax and ioneqTest:
                         print ' calculating spectrum for  :  ', ionS
-                        thisIon = chianti.main.ion(ionS, temperature, density)
+                        thisIon = chianti.core.ion(ionS, temperature, density)
 #                       print ' dir = ', dir(thisIon)
                         thisIon.intensityCalc(wvlRange = wvlRange)
                         # check that there are lines in this wavelength range
@@ -3619,10 +3802,14 @@ class spectrum:
                             else:
                                 for iTempDen in range(nTempDen):
                                     lineSpectrum[iTempDen] += thisIon.Spectrum['intensity'][iTempDen]
+                        # get 2 photon emission for H and He sequences
+                        if (iz - ionstage) in [0, 1]:
+                            thisIon.twoPhoton(wavelength)
+                            twoPhoton += thisIon.TwoPhoton['rate']
                     # get dielectronic lines
                     if masterListTestD and wvlTestMinD and wvlTestMaxD and ioneqTestD:
                         print ' calculating spectrum for  :  ', ionSd
-                        thisIon = chianti.main.ion(ionSd, temperature, density)
+                        thisIon = chianti.core.ion(ionSd, temperature, density)
 #                       print ' dir = ', dir(thisIon)
                         thisIon.intensityCalc(wvlRange = wvlRange)
                         # check that there are lines in this wavelength range - probably not redundant
@@ -3636,8 +3823,9 @@ class spectrum:
         self.FreeFree = {'wavelength':wavelength, 'intensity':freeFree.squeeze()}
         self.FreeBound = {'wavelength':wavelength, 'intensity':freeBound.squeeze()}
         self.LineSpectrum = {'wavelength':wavelength, 'intensity':lineSpectrum.squeeze()}
+        self.TwoPhoton = {'wavelength':wavelength, 'intensity':twoPhoton.squeeze()}
         #
-        total = freeFree + freeBound + lineSpectrum
+        total = freeFree + freeBound + lineSpectrum + twoPhoton
         if type(em) != types.NoneType:
             if nEm == 1:
                 integrated = total*em
@@ -3681,7 +3869,7 @@ class ionWeb(ion):
         try:
             ab=self.Abundance
         except:
-            self.Abundance = readAbundance()
+            self.Abundance = util.abundanceRead()
             ab=self.Abundance
         #
         fontsize=12
@@ -3837,7 +4025,7 @@ class ionWeb(ion):
         try:
             ab=self.Abundance
         except:
-            self.Abundance = readAbundance()
+            self.Abundance = util.abundanceRead()
             ab=self.Abundance
         #
         fontsize=12
@@ -4028,7 +4216,7 @@ class ionWeb(ion):
         try:
             ab=self.Abundance
         except:
-            self.Abundance = readAbundance()
+            self.Abundance = util.abundanceRead()
             ab=self.Abundance
         #
         fontsize=12
@@ -4198,7 +4386,7 @@ class ionWeb(ion):
         try:
             ab=self.Abundance
         except:
-            self.Abundance = readAbundance()
+            self.Abundance = util.abundanceRead()
             ab=self.Abundance
         emiss = em['emiss']
         wvl = em["wvl"]
