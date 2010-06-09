@@ -235,12 +235,12 @@ class continuum:
                 ipLvlErg = const.ev2Erg*ipLvlEv
                 expf[0] = np.exp((ipLvlErg - 1.e+8*const.planck*const.light/wvl)/(const.boltzmann*temperature))
                 fbrate[0] = (const.planck*const.light/(1.e-8*wvl))**5*const.verner*ratg[0]*vCross/temperature**1.5
-                print ' expf verner = ', expf[0]
-                print ' fbrate verner = ', fbrate[0]
+#                print ' expf verner = ', expf[0]
+#                print ' fbrate verner = ', fbrate[0]
             for ilvl in range(lvl1,nlvls):
                 # scaled energy is relative to the ionization potential of each individual level
                 ipLvlEv = self.Ip - const.invCm2Ev*ecm[ilvl]
-                print ' ilvl, ipLvlEv = ', ilvl, ipLvlEv
+#                print ' ilvl, ipLvlEv = ', ilvl, ipLvlEv
                 scaledE = np.log(const.ev2Ang/(ipLvlEv*wvl))
                 thisGf = klgfb['klgfb'][pqn[ilvl]-1, l[ilvl]]
                 spl = interpolate.splrep(klgfb['pe'], thisGf)
@@ -256,7 +256,7 @@ class continuum:
 #                print ' ilvl ratg = ', ilvl, ratg[ilvl]
 #                print ' ilvl mask = ', ilvl, mask[ilvl]
 #                print ' ilvl expf = ', ilvl, expf[ilvl]
-                print ' fbrate = ', ilvl,  fbrate[ilvl]
+#                print ' fbrate = ', ilvl,  fbrate[ilvl]
             fbrma = np.ma.array(fbrate)
             fbrma.mask =  mask
             fbrma.fill_value = 0.
@@ -3366,7 +3366,7 @@ class ion:
         ''' to calculate the two-photon continuum emissivity - only for hydrogen- and helium-like ions'''
         wvl = np.array(wvl, 'float64')
         nWvl = wvl.size
-        if self.Z -self.Ion > 1:
+        if self.Z -self.Ion > 1 or self.Dielectronic:
             # this is not a hydrogen-like or helium-like ion
             self.TwoPhoton = {'emiss':np.zeros(nWvl, 'float4'), 'wvl':wvl}
             return
@@ -3425,19 +3425,20 @@ class ion:
                 else:
                     f=1./(4.*const.pi)
                 if nTempDens == 1:
-                    em[goodWvl] = f*pop[l2]*distr
+                    em[goodWvl] = f*pop[l2]*distr/self.Density
                 else:
                     for it in range(nTempDens):
-                        em[it, goodWvl] = f*pop[it, l2]*distr
+                        em[it, goodWvl] = f*pop[it, l2]*distr/self.Density[it]
                 self.TwoPhotonEmiss = {'wvl':wvl, 'emiss':em}
         #
         #-----------------------------------------------------------------
         #
     def twoPhoton(self, wvl):
-        ''' to calculate the two-photon continuum - only for hydrogen- and helium-like ions'''
+        ''' to calculate the two-photon continuum - only for hydrogen- and helium-like ions
+        includes the elemental abundance and the ionization equilibrium'''
         wvl = np.array(wvl, 'float64')
         nWvl = wvl.size
-        if self.Z -self.Ion > 1:
+        if self.Z -self.Ion > 1 or self.Dielectronic:
             # this is not a hydrogen-like or helium-like ion
             print ' not doing 2 photon for ', self.Ions
             self.TwoPhoton = {'emiss':np.zeros(nWvl, 'float64'), 'wvl':wvl}
