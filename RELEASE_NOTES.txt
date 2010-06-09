@@ -1,0 +1,14 @@
+==============================
+ Release notes for ChiantiPy
+==============================
+
+:Author: Ken Dere
+:Contact: kdere@gmu.edu
+
+
+Changes from 0.1 to 0.1.1
+--------------------------
+
+Added photo-excitation
+
+Added two-photon continuum
