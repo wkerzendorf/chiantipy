@@ -111,14 +111,14 @@ class continuum:
         #
         #----------------------------------------------------------------------------------------
         #
-    def freeBound(self, wvl, verner=1):
+    def freeBoundEmiss(self, wvl, verner=1):
         '''Calculates the free-bound (radiative recombination) continuum emissivity of an ion.
 
         Uses the Gaunt factors of Karzas, W.J, Latter, R, 1961, ApJS, 6, 167
         for recombination to the ground level, the photoionization cross sections of
         Verner and Yakovlev, 1995, A&ASS, 109, 125
         are used to develop the free-bound cross section
-        provides rate = ergs cm^-2 s^-1 str^-1 Angstrom ^-1 for an individual ion
+        provides emissivity = ergs cm^-2 s^-1 str^-1 Angstrom ^-1 for an individual ion
         does not include the elemental abundance or ionization fraction
         the specified ion is the target ion'''
         #
@@ -266,7 +266,7 @@ class continuum:
             # factor of 1.e-8 converts to Angstrom^-1, otherwise it would be cm^-1
             fbRate = (expf*fbrma).sum(axis=0)
             fbRate.fill_value = 0.
-            self.FreeBound = {'rate':fbRate.data, 'temperature':temperature,'wvl':wvl}
+            self.FreeBoundEmiss = {'emiss':fbRate.data, 'temperature':temperature,'wvl':wvl}
         else:
             mask = np.zeros((nlvls,nTemp),'Bool')
             fbrate = np.zeros((nlvls,nTemp),'float64')
@@ -300,11 +300,11 @@ class continuum:
             # factor of 1.e-8 converts to Angstrom^-1, otherwise it would be cm^-1
             fbRate = (fbrma).sum(axis=0)
             fbRate.fill_value = 0.
-            self.FreeBound = {'rate':fbRate.data, 'temperature':temperature,'wvl':wvl}
+            self.FreeBoundEmiss = {'emiss':fbRate.data, 'temperature':temperature,'wvl':wvl}
             #
             # ----------------------------------------------------------------------------
             #
-    def freeBoundEmiss(self, wvl, verner=1):
+    def freeBound(self, wvl, verner=1):
         '''to calculate the free-bound (radiative recombination) continuum rate coefficient of an ion, where
         the ion is taken to be the recombined iion,
         including the elemental abundance and the ionization equilibrium population
@@ -484,7 +484,7 @@ class continuum:
             # factor of 1.e-8 converts to Angstrom^-1, otherwise it would be cm^-1
             fbRate = abund*gIoneq*fbrma.sum(axis=0)
             fbRate.fill_value = 0.
-            self.FreeBoundEmiss = {'emiss':fbRate.data, 'temperature':temperature,'wvl':wvl}
+            self.FreeBound = {'rate':fbRate.data, 'temperature':temperature,'wvl':wvl}
         #elif (nTemp > 1) and (nWvl == 1):
         else:
             mask = np.zeros((nlvls,nTemp),'Bool')
@@ -518,7 +518,7 @@ class continuum:
             # factor of 1.e-8 converts to Angstrom^-1, otherwise it would be cm^-1
             fbRate = abund*gIoneq*(fbrma).sum(axis=0)
             fbRate.fill_value = 0.
-            self.FreeBound = {'emiss':fbRate.data, 'temperature':temperature,'wvl':wvl}
+            self.FreeBound = {'rate':fbRate.data, 'temperature':temperature,'wvl':wvl}
         #
         # ----------------------------------------------------------------------------------------
         #
@@ -653,7 +653,7 @@ class continuum:
         #
         # ----------------------------------------------------------------------------------------
         #
-    def freeFreeEmiss(self, wvl):
+    def freeFree(self, wvl):
         '''Calculates the free-free emission for a single ion.
 
         Includes elemental abundance and ionization equilibrium population.
@@ -680,12 +680,12 @@ class continuum:
             # only one temperature specified
             if gIoneq == 0.:
                 ffRate = np.zeros(wvl.size)
-                self.FreeFreeEmiss = {'emiss':ffRate, 'temperature':self.Temperature,'wvl':wvl}
+                self.FreeFree = {'rate':ffRate, 'temperature':self.Temperature,'wvl':wvl}
                 return
         else:
             if gIoneq.sum() == 0.:
                 ffRate = np.zeros((self.Temperature.size, wvl.size), 'float64')
-                self.FreeFreeEmiss = {'emiss':ffRate, 'temperature':self.Temperature,'wvl':wvl}
+                self.FreeFree = {'rate':ffRate, 'temperature':self.Temperature,'wvl':wvl}
                 return
 #       print ' gIoneq = ', gIoneq
         if wvl.size > 1:
@@ -699,16 +699,16 @@ class continuum:
                 abund = self.Abundance
                 #
             ffRate = (const.freeFree*(self.Z)**2*abund*gIoneq*ff).squeeze()
-            self.FreeFreeEmiss = {'emiss':ffRate, 'temperature':self.Temperature,'wvl':wvl}
+            self.FreeFree = {'rate':ffRate, 'temperature':self.Temperature,'wvl':wvl}
         #
         # ----------------------------------------------------------------------------------------
         #
-    def freeFree(self, wvl):
+    def freeFreeEmiss(self, wvl):
         '''Calculates the free-free emissivity for a single ion.
-
+        does not include element abundance or ionization fraction
         Uses Itoh where valid and Sutherland elsewhere'''
         if self.Ion == 1:
-            self.FreeFree = {'errorMessage':' freefree is not produced by neutrals'}
+            self.FreeFreeEmiss = {'errorMessage':' freefree is not produced by neutrals'}
         else:
             wvl = np.asarray(wvl, 'float64')
             ffs = self.sutherland(wvl)
@@ -720,7 +720,7 @@ class continuum:
                 ff[itohMask] = iff[itohMask]
             #
             ffRate = (const.freeFree*(self.Z)**2*ff).squeeze()
-            self.FreeFreeEmiss = {'rate':ffRate, 'temperature':self.Temperature,'wvl':wvl}
+            self.FreeFree = {'rate':ffRate, 'temperature':self.Temperature,'wvl':wvl}
         #
         # ----------------------------------------------------------------------------------------
         #
