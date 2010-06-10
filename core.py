@@ -2573,6 +2573,7 @@ class ion:
 
         Wavelengths are sorted """
         #
+        #
         doPopulate=False
         try:
             pop=self.Population['population']
@@ -2644,10 +2645,10 @@ class ion:
             plotLabels["xLabel"] = "kev"
         #
         if self.Defaults['flux'] == 'energy':
-            factor=const.planck*const.light/(1.e-8*wvl)
+            factor=const.planck*const.light/(4.*const.pi*1.e-8*wvl)
             plotLabels["yLabel"]="ergs cm^-3 s^-1"
         elif self.Defaults['flux'] == 'photon':
-            factor=np.ones((nwvl),'Float32')
+            factor=np.ones((nwvl),'Float32')/(4.*const.pi)
             plotLabels["yLabel"]="photons cm^-3 s^-1"
         #
         if ntempden > 1:
