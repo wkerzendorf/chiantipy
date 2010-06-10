@@ -111,7 +111,7 @@ class continuum:
         #
         #----------------------------------------------------------------------------------------
         #
-    def freeBoundEmiss(self, wvl, verner=1):
+    def freeBound(self, wvl, verner=1):
         '''Calculates the free-bound (radiative recombination) continuum emissivity of an ion.
 
         Uses the Gaunt factors of Karzas, W.J, Latter, R, 1961, ApJS, 6, 167
@@ -119,6 +119,7 @@ class continuum:
         Verner and Yakovlev, 1995, A&ASS, 109, 125
         are used to develop the free-bound cross section
         provides rate = ergs cm^-2 s^-1 str^-1 Angstrom ^-1 for an individual ion
+        does not include the elemental abundance or ionization fraction
         the specified ion is the target ion'''
         #
         wvl = np.asarray(wvl, 'float64')
@@ -142,9 +143,10 @@ class continuum:
                 # then we looking for the bare ion
                 rFblvl = {'mult':[1., 1.]}
             else:
-                rfblvlname = util.zion2filename(self.Z,self.Ion)+'.fblvl'
+                rfblvlname = util.zion2filename(self.Z,self.Ion)+'.fblvl'  # previously self.Ion)
                 self.rFblvl = util.fblvlRead(rfblvlname)
                 rFblvl = self.rFblvl
+        #  6/9/2010 the recombining iion is the present ion
         #
         # for the ionization potential, Ip, must use that of the recombined ion
         ipcm = self.Ip/const.invCm2Ev
@@ -156,7 +158,8 @@ class continuum:
         l = fblvl['l']
         # energy level in inverse cm
         ecm = fblvl['ecm']
-        print ' ecm = ',ecm
+        for i in range(nlvls):
+            print ' lvl ecm wvl = ',i, ecm[i], 1.e+8/(ipcm-ecm[i])
         # statistical weigths/multiplicities
         mult = fblvl['mult']
         multr = rFblvl['mult']
@@ -217,7 +220,7 @@ class continuum:
             fbrma.fill_value = 0.
             fbRate = (fbrma).sum(axis=0)
             fbRate.fill_value = 0.
-            self.FreeBoundEmiss = {'rate':fbRate.data, 'temperature':temperature,'wvl':wvl}
+            self.FreeBoundEmiss = {'emiss':fbRate.data, 'temperature':temperature,'wvl':wvl}
             #
         elif (nTemp == 1) and (nWvl > 1):
             mask = np.zeros((nlvls,nWvl),'Bool')
@@ -263,7 +266,7 @@ class continuum:
             # factor of 1.e-8 converts to Angstrom^-1, otherwise it would be cm^-1
             fbRate = (expf*fbrma).sum(axis=0)
             fbRate.fill_value = 0.
-            self.FreeBoundEmiss = {'rate':fbRate.data, 'temperature':temperature,'wvl':wvl}
+            self.FreeBound = {'rate':fbRate.data, 'temperature':temperature,'wvl':wvl}
         else:
             mask = np.zeros((nlvls,nTemp),'Bool')
             fbrate = np.zeros((nlvls,nTemp),'float64')
@@ -297,18 +300,19 @@ class continuum:
             # factor of 1.e-8 converts to Angstrom^-1, otherwise it would be cm^-1
             fbRate = (fbrma).sum(axis=0)
             fbRate.fill_value = 0.
-            self.FreeBoundEmiss = {'rate':fbRate.data, 'temperature':temperature,'wvl':wvl}
+            self.FreeBound = {'rate':fbRate.data, 'temperature':temperature,'wvl':wvl}
             #
             # ----------------------------------------------------------------------------
             #
-    def freeBound(self, wvl, verner=1):
+    def freeBoundEmiss(self, wvl, verner=1):
         '''to calculate the free-bound (radiative recombination) continuum rate coefficient of an ion, where
         the ion is taken to be the recombined iion,
         including the elemental abundance and the ionization equilibrium population
         uses the Gaunt factors of Karzas, W.J, Latter, R, 1961, ApJS, 6, 167
         for recombination to the ground level, the photoionization cross sections of Verner and Yakovlev, 1995, A&ASS, 109, 125
         are used to develop the free-bound cross section
-        provides rate = ergs cm^-2 s^-1 str^-1 Angstrom ^-1'''
+        includes the elemental abundance and the ionization fraction
+        provides emissivity = ergs cm^-2 s^-1 str^-1 Angstrom ^-1'''
         wvl = np.asarray(wvl, 'float64')
         #
         #  ip in eV, for freebound
@@ -480,7 +484,7 @@ class continuum:
             # factor of 1.e-8 converts to Angstrom^-1, otherwise it would be cm^-1
             fbRate = abund*gIoneq*fbrma.sum(axis=0)
             fbRate.fill_value = 0.
-            self.FreeBound = {'rate':fbRate.data, 'temperature':temperature,'wvl':wvl}
+            self.FreeBoundEmiss = {'emiss':fbRate.data, 'temperature':temperature,'wvl':wvl}
         #elif (nTemp > 1) and (nWvl == 1):
         else:
             mask = np.zeros((nlvls,nTemp),'Bool')
@@ -514,7 +518,7 @@ class continuum:
             # factor of 1.e-8 converts to Angstrom^-1, otherwise it would be cm^-1
             fbRate = abund*gIoneq*(fbrma).sum(axis=0)
             fbRate.fill_value = 0.
-            self.FreeBound = {'rate':fbRate.data, 'temperature':temperature,'wvl':wvl}
+            self.FreeBound = {'emiss':fbRate.data, 'temperature':temperature,'wvl':wvl}
         #
         # ----------------------------------------------------------------------------------------
         #
@@ -649,7 +653,7 @@ class continuum:
         #
         # ----------------------------------------------------------------------------------------
         #
-    def freeFree(self, wvl):
+    def freeFreeEmiss(self, wvl):
         '''Calculates the free-free emission for a single ion.
 
         Includes elemental abundance and ionization equilibrium population.
@@ -676,12 +680,12 @@ class continuum:
             # only one temperature specified
             if gIoneq == 0.:
                 ffRate = np.zeros(wvl.size)
-                self.FreeFree = {'rate':ffRate, 'temperature':self.Temperature,'wvl':wvl}
+                self.FreeFreeEmiss = {'emiss':ffRate, 'temperature':self.Temperature,'wvl':wvl}
                 return
         else:
             if gIoneq.sum() == 0.:
                 ffRate = np.zeros((self.Temperature.size, wvl.size), 'float64')
-                self.FreeFree = {'rate':ffRate, 'temperature':self.Temperature,'wvl':wvl}
+                self.FreeFreeEmiss = {'emiss':ffRate, 'temperature':self.Temperature,'wvl':wvl}
                 return
 #       print ' gIoneq = ', gIoneq
         if wvl.size > 1:
@@ -695,11 +699,11 @@ class continuum:
                 abund = self.Abundance
                 #
             ffRate = (const.freeFree*(self.Z)**2*abund*gIoneq*ff).squeeze()
-            self.FreeFree = {'rate':ffRate, 'temperature':self.Temperature,'wvl':wvl}
+            self.FreeFreeEmiss = {'emiss':ffRate, 'temperature':self.Temperature,'wvl':wvl}
         #
         # ----------------------------------------------------------------------------------------
         #
-    def freeFreeEmiss(self, wvl):
+    def freeFree(self, wvl):
         '''Calculates the free-free emissivity for a single ion.
 
         Uses Itoh where valid and Sutherland elsewhere'''
@@ -1946,7 +1950,7 @@ class ion:
     def spectrum(self,wavelength, filter=(chfilters.gaussianR,1000.)):
         '''Calculates the line emission spectrum for the specified ion.
 
-        Convolves the results of intensityCalc to make them look like an observed spectrum
+        Convolves the results of intensity to make them look like an observed spectrum
         the default filter is the gaussianR filter with a resolving power of 1000.  Other choices
         include chianti.filters.box and chianti.filters.gaussian.  When using the box filter,
         the width should equal the wavelength interval to keep the units of the continuum and line
@@ -1960,7 +1964,7 @@ class ion:
         try:
             intensity = self.Intensity
         except:
-            self.intensityCalc()
+            self.intensity()
             intensity = self.Intensity
         #
         if (nTemp == 1) and (nDens == 1):
@@ -2557,7 +2561,7 @@ class ion:
         #
         # -------------------------------------------------------------------------------------
         #
-    def emissCalc(self,temperature=None,density=None,pDensity=None,  wvlRange = None):
+    def emiss(self,temperature=None,density=None,pDensity=None,  wvlRange = None):
         #
         """Calculate and the emissivities for lines of the specified ion.
 
@@ -2640,11 +2644,11 @@ class ion:
             plotLabels["xLabel"] = "kev"
         #
         if self.Defaults['flux'] == 'energy':
-            factor=const.planck*const.light/(4.*const.pi*1.e-8*wvl)
-            plotLabels["yLabel"]="ergs cm^-3 s^-1 str^-1"
+            factor=const.planck*const.light/(1.e-8*wvl)
+            plotLabels["yLabel"]="ergs cm^-3 s^-1"
         elif self.Defaults['flux'] == 'photon':
-            factor=np.ones((nwvl),'Float32')/(4.*const.pi)
-            plotLabels["yLabel"]="photons cm^-3 s^-1 str^-1"
+            factor=np.ones((nwvl),'Float32')
+            plotLabels["yLabel"]="photons cm^-3 s^-1"
         #
         if ntempden > 1:
             for itempden in range(ntempden):
@@ -2690,10 +2694,10 @@ class ion:
             em = self.Emiss
         except:
             try:
-                self.emissCalc()
+                self.emiss()
                 em = self.Emiss
             except:
-                print ' emissivities not calculated and emissCalc() is unable to calculate them'
+                print ' emissivities not calculated and emiss() is unable to calculate them'
                 print ' perhaps the temperature and/or density are not set'
                 return
         emiss = em['emiss']
@@ -2796,7 +2800,7 @@ class ion:
         #
         # ---------------------------------------------------------------------------
         #
-    def intensityCalc(self,  wvlRange = None):
+    def intensity(self,  wvlRange = None):
         """Calculate  the intensities for lines of the specified ion.
 
         wvlRange, a 2 element tuple, list or array determines the wavelength range
@@ -2806,7 +2810,7 @@ class ion:
         includes elemental abundance and ionization fraction."""
         # emiss ={"wvl":wvl, "emiss":em, "plotLabels":plotLabels}
         #
-        self.emissCalc(wvlRange = wvlRange)
+        self.emiss(wvlRange = wvlRange)
         emiss = self.Emiss
         if 'errorMessage'  in emiss.keys():
             self.Intensity = {'errorMessage': self.Spectroscopic+' no lines in this wavelength region'}
@@ -2829,22 +2833,22 @@ class ion:
             if thisIoneq.size == 1:
                 thisIoneq = np.ones(ntempden, 'float64')*thisIoneq
             for it in range(ntempden):
-                #  already done in emissCalc
+                #  already done in emiss
 #                if self.Defaults['flux'] == 'energy':
 #                    intensity[it] = (const.planck*const.light*1.e+8/wvl)*ab*thisIoneq[it]*em[:, it]
 #                else:
 #                    intensity[it] = ab*thisIoneq[it]*em[:, it]
-                intensity[it] = ab*thisIoneq[it]*em[:, it]
+                intensity[it] = ab*thisIoneq[it]*em[:, it]/(4.*const.pi)
         except:
             nwvl=len(em)
             ntempden=1
 #            intensity = np.zeros(nwvl,'Float32')
-# this already done in emissCalc
+# this already done in emiss
 #            if self.Defaults['flux'] == 'energy':
 #                intensity = (const.planck*const.light*1.e+8/wvl)*ab*thisIoneq*em
 #            else:
 #                intensity = ab*thisIoneq*em
-            intensity = ab*thisIoneq*em
+            intensity = ab*thisIoneq*em/(4.*const.pi)
         self.Intensity = {'intensity':intensity, 'wvl':wvl}
         #
         # -------------------------------------------------------------------------------------
@@ -3362,7 +3366,7 @@ class ion:
         #
         # - - - - - - - - - - - - - - - - - - - - - - -
         #
-    def twoPhoton(self, wvl):
+    def twoPhotonEmiss(self, wvl):
         ''' to calculate the two-photon continuum rate coefficient - only for hydrogen- and helium-like ions'''
         wvl = np.array(wvl, 'float64')
         nWvl = wvl.size
@@ -3379,13 +3383,13 @@ class ion:
                 pop = self.Population['population']
                 nTempDens = max(self.Temperature.size, self.Density.size)
             if nTempDens > 1:
-                rate = np.zeros((nTempDens, nWvl), 'float64')
+                emiss = np.zeros((nTempDens, nWvl), 'float64')
                 if self.Density.size == 1:
                     density = np.repeat(self.Density, nTempDens)
                 else:
                     density = self.Density
             else:
-                rate = np.zeros(nWvl, 'float64')
+                emiss = np.zeros(nWvl, 'float64')
                 density = self.Density
             if self.Z == self.Ion:
                 # H seq
@@ -3400,15 +3404,15 @@ class ion:
                 distr1 = interpolate.splrep(dist['y0'], dist['psi0'][self.Z-1], s=0)
                 distr = avalue*y*interpolate.splev(y, distr1)/(asum*wvl[goodWvl])
                 if self.Defaults['flux'] == 'energy':
-                    f = (const.light*const.planck*1.e+8)/(4.*const.pi*wvl[goodWvl])
+                    f = (const.light*const.planck*1.e+8)/wvl[goodWvl]
                 else:
-                    f=1./(4.*const.pi)
+                    f=1.
                 if nTempDens == 1:
-                    rate[goodWvl] = f*pop[l2]*distr/self.Density
+                    emiss[goodWvl] = f*pop[l2]*distr/self.Density
                 else:
                     for it in range(nTempDens):
-                        rate[it, goodWvl] = f*pop[it, l2]*distr/self.Density[it]
-                self.TwoPhotonEmiss = {'wvl':wvl, 'rate':rate}
+                        emiss[it, goodWvl] = f*pop[it, l2]*distr/self.Density[it]
+                self.TwoPhotonEmiss = {'wvl':wvl, 'emiss':emiss}
             else:
                 # He seq
                 l1 = 1-1
@@ -3421,19 +3425,19 @@ class ion:
                 distr1 = interpolate.splrep(dist['y0'], dist['psi0'][self.Z-1], s=0)
                 distr = avalue*y*interpolate.splev(y, distr1)/wvl[goodWvl]
                 if self.Defaults['flux'] == 'energy':
-                    f = (const.light*const.planck*1.e+8)/(4.*const.pi*wvl[goodWvl])
+                    f = (const.light*const.planck*1.e+8)/wvl[goodWvl]
                 else:
-                    f=1./(4.*const.pi)
+                    f=1.
                 if nTempDens == 1:
-                    rate[goodWvl] = f*pop[l2]*distr/self.Density
+                    emiss[goodWvl] = f*pop[l2]*distr/self.Density
                 else:
                     for it in range(nTempDens):
-                        rate[it, goodWvl] = f*pop[it, l2]*distr/self.Density[it]
-                self.TwoPhotonEmiss = {'wvl':wvl, 'rate':rate}
+                        emiss[it, goodWvl] = f*pop[it, l2]*distr/self.Density[it]
+                self.TwoPhotonEmiss = {'wvl':wvl, 'emiss':emiss}
         #
         #-----------------------------------------------------------------
         #
-    def twoPhotonEmiss(self, wvl):
+    def twoPhoton(self, wvl):
         ''' to calculate the two-photon continuum - only for hydrogen- and helium-like ions
         includes the elemental abundance and the ionization equilibrium'''
         wvl = np.array(wvl, 'float64')
@@ -3549,7 +3553,6 @@ class ion:
                 else:
                     density = self.Density
             else:
-                rate = 0.
                 density = self.Density
             if self.Z == self.Ion:
                 # H seq
@@ -3558,9 +3561,9 @@ class ion:
                 wvl0 = 1.e+8/(self.Elvlc['ecm'][l2] - self.Elvlc['ecm'][l1])
                 dist = util.twophotonHRead()
                 avalue = dist['avalue'][self.Z-1]
-                f = (avalue*const.light*const.planck*1.e+8)/(wvl0)
+                f = (avalue*const.light*const.planck*1.e+8)/wvl0
                 if nTempDens == 1:
-                    rate += f*pop[l2]*ab*thisIoneq/density
+                    rate = f*pop[l2]*ab*thisIoneq/density
                 else:
                    for it in range(nTempDens):
                         rate[it] = f*pop[it, l2]*ab*thisIoneq[it]/density[it]
@@ -3572,7 +3575,7 @@ class ion:
                 wvl0 = 1.e+8/(self.Elvlc['ecm'][l2] - self.Elvlc['ecm'][l1])
                 dist = util.twophotonHeRead()
                 avalue = dist['avalue'][self.Z-1]
-                f = (avalue*const.light*const.planck*1.e+8)/(wvl0)
+                f = (avalue*const.light*const.planck*1.e+8)/wvl0
                 if nTempDens == 1:
                     rate = f*pop[l2]*ab*thisIoneq/density
                 else:
@@ -3857,7 +3860,7 @@ class spectrum:
                         print ' calculating spectrum for  :  ', ionS
                         thisIon = chianti.core.ion(ionS, temperature, density)
 #                       print ' dir = ', dir(thisIon)
-                        thisIon.intensityCalc(wvlRange = wvlRange)
+                        thisIon.intensity(wvlRange = wvlRange)
                         # check that there are lines in this wavelength range
                         if 'errorMessage' not in  thisIon.Intensity.keys():
                             thisIon.spectrum(wavelength, filter=filter)
@@ -3876,7 +3879,7 @@ class spectrum:
                         print ' calculating spectrum for  :  ', ionSd
                         thisIon = chianti.core.ion(ionSd, temperature, density)
 #                       print ' dir = ', dir(thisIon)
-                        thisIon.intensityCalc(wvlRange = wvlRange)
+                        thisIon.intensity(wvlRange = wvlRange)
                         # check that there are lines in this wavelength range - probably not redundant
                         if 'errorMessage' not in  thisIon.Intensity.keys():
                             thisIon.spectrum(wavelength, filter=filter)
