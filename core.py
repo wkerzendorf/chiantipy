@@ -3107,12 +3107,12 @@ class ion:
             s='%12.3e %12.3e  %12.3e ' % (temperature[ivalue],density[ivalue],ratio[ivalue])
             out.write(s+os.linesep)
         out.close()
-        return
         #
         # -------------------------------------------------------------------------------------
         #
     def ioneqOne(self):
-        '''Provide the ionization equilibrium for the selected ion as a function of temperature.'''
+        '''Provide the ionization equilibrium for the selected ion as a function of temperature.
+        returned in self.IoneqOne'''
         #
         try:
             temperature = self.Temperature
@@ -3145,8 +3145,6 @@ class ion:
             gIoneq=0.
         #
         self.IoneqOne=gIoneq
-#       return  # gIoneq
-
         #
         # -------------------------------------------------------------------------------------
         #
@@ -3155,7 +3153,8 @@ class ion:
 
         Given as a function of both temperature and density.
 
-        Only the top( set by 'top') brightest lines are plotted."""
+        Only the top( set by 'top') brightest lines are plotted.
+        the G(T) function is returned in a dictionary self.Gofnt"""
         #
         #self.emiss={"wvl":wvl,"emiss":em,"units":units,"plotLabels":plotLabels}
         #
