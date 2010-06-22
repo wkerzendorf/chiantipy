@@ -1085,7 +1085,7 @@ class ion:
     radTemperature, the radiation black-body temperature in Kelvin
     rPlot, the distance from the center of the star in stellar radii
     '''
-    def __init__(self,ionStr,temperature=None,density=None,pDensity='default', radTemperature=0,rPhot=0,verbose=0, setup=True):
+    def __init__(self,ionStr,temperature=None,density=None,pDensity='default', radTemperature=0,rPhot=1.,verbose=0, setup=True):
         #
         #
         self.__version__ = chianti.__version__
@@ -1981,7 +1981,7 @@ class ion:
         #
         # -------------------------------------------------------------------------------------
         #
-    def populate(self,temperature=None,density=None,pDensity=None, popCorrect=1):
+    def populate(self,temperature=None,density=None,pDensity=None, popCorrect=1, radTemperature=0,rPhot=1.):
         """Calculate level populations for specified ion."""
         #
         nlvls=self.Nlvls
@@ -2022,6 +2022,10 @@ class ion:
             if self.PDensity.size == 1:
                 self.PDensity = self.PDensity.repeat(self.Density.size)
             protonDensity = self.PDensity
+        #
+        if radTemperature:
+            self.RadTemperature = radTemperature
+            self.RPhot = rPhot
         #
         if popCorrect and (not self.Dielectronic):
             self.upsilonDescale(ci=1)
