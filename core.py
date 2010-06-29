@@ -3863,7 +3863,8 @@ class spectrum:
                             else:
                                 freeBound[iTempDen] += cont.FreeBound['rate'][iTempDen]
                     if masterListTest and wvlTestMin and wvlTestMax and ioneqTest:
-                        print ' calculating spectrum for  :  ', ionS
+                        if chInteractive:
+                            print ' calculating spectrum for  :  ', ionS
                         thisIon = chianti.core.ion(ionS, temperature, density)
 #                       print ' dir = ', dir(thisIon)
                         thisIon.intensity(wvlRange = wvlRange)
