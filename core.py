@@ -3779,8 +3779,8 @@ class spectrum:
 
     em [for emission measure], can be a float or an array of the same length as the
     temperature/density.'''
-    def __init__(self, temperature, density, wavelength, filter=(chfilters.gaussianR, 1000.),  ionList = None, minAbund=0., doContinuum=1, em = None):
-        if type(ionList) == types.NoneType:
+    def __init__(self, temperature, density, wavelength, filter=(chfilters.gaussianR, 1000.),  ionList = 0, minAbund=0., doContinuum=1, em = None):
+        if ionList == 0:
             masterlist = util.masterListRead()
         else:
             masterlist = ionList
