@@ -3784,6 +3784,7 @@ class spectrum:
             masterlist = util.masterListRead()
         else:
             masterlist = ionList
+        self.Defaults=defaults
         self.Temperature = np.asarray(temperature, 'float64')
         nTemp = self.Temperature.size
         self.Density = np.asarray(density, 'float64')
@@ -3809,7 +3810,6 @@ class spectrum:
         nWvl = wavelength.size
         self.Wavelength = wavelength
         wvlRange = [wavelength.min(), wavelength.max()]
-        print ' wavelength range = ', wvlRange
         #
         freeFree = np.zeros((nTempDen, nWvl), 'float64').squeeze()
         freeBound = np.zeros((nTempDen, nWvl), 'float64').squeeze()
@@ -3820,7 +3820,8 @@ class spectrum:
         for iz in range(31):
             abundance = self.AbundanceAll['abundance'][iz-1]
             if abundance >= minAbund:
-                print ' %5i %5s abundance = %10.2e '%(iz, const.El[iz-1],  abundance)
+                if chInteractive:
+                    print ' %5i %5s abundance = %10.2e '%(iz, const.El[iz-1],  abundance)
                 #
                 for ionstage in range(1, iz+2):
                     ionS = util.zion2name(iz, ionstage)
@@ -3842,7 +3843,8 @@ class spectrum:
                     ionstageTest = ionstage > 1
                     if ionstageTest and ioneqTest and doContinuum:
                         # ionS is the target ion, cannot be the neutral for the continuum
-                        print ' calculating continuum for :  ',  ionS
+                        if chInteractive:
+                            print ' calculating continuum for :  ',  ionS
                         cont = chianti.core.continuum(ionS, temperature)
                         cont.freeFree(wavelength)
     #                   print dir(thisIon)
@@ -3908,6 +3910,33 @@ class spectrum:
             self.Spectrum ={'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1], 'integrated':integrated, 'em':em}
         else:
             self.Spectrum ={'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1]}
+    #
+    # -------------------------------------------------------------------------
+    #
+    def lineSpectrumPlot(self, saveFile=0, plotContinuum=0, linLog = 'lin'):
+        ''' to plot the spectrum as a function of wavelength'''
+        # must follow setting top
+        #
+        pl.figure()
+        ylabel = 'Intensity'
+#        if relative:
+#            emiss = emiss/emiss[:top].max()
+#            ylabel += ' (Relative)'
+        #
+        xlabel = 'Wavelength ('+self.Defaults['wavelength'] +')'
+        #
+#        ymin = 10.**(np.log10(emiss.min()).round(0))
+        #
+        if chInteractive:
+            pl.ion()
+        else:
+            pl.ioff()
+        #
+        pl.plot(self.LineSpectrum['wavelength'], self.LineSpectrum['intensity'])
+        pl.xlabel(xlabel)
+        pl.ylabel(ylabel)
+        if saveFile:
+            pl.savefig(saveFile)
     #
     # -------------------------------------------------------------------------
     #
