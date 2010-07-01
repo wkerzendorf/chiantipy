@@ -3494,42 +3494,45 @@ class ion:
                 l2 = 2 - 1
                 wvl0 = 1.e+8/(self.Elvlc['ecm'][l2] - self.Elvlc['ecm'][l1])
                 goodWvl = wvl > wvl0
-                y = wvl0/wvl[goodWvl]
-                dist = util.twophotonHRead()
-                avalue = dist['avalue'][self.Z-1]
-                asum = dist['asum'][self.Z-1]
-                distr1 = interpolate.splrep(dist['y0'], dist['psi0'][self.Z-1], s=0)
-                distr = avalue*y*interpolate.splev(y, distr1)/(asum*wvl[goodWvl])
-                if self.Defaults['flux'] == 'energy':
-                    f = (const.light*const.planck*1.e+8)/(4.*const.pi*wvl[goodWvl])
-                else:
-                    f=1./(4.*const.pi)
-                if nTempDens == 1:
-                    rate[goodWvl] = f*pop[l2]*distr*ab*thisIoneq/density
-                else:
-                   for it in range(nTempDens):
-                        rate[it, goodWvl] = f*pop[it, l2]*distr*ab*thisIoneq[it]/density[it]
-                self.TwoPhoton = {'wvl':wvl, 'rate':rate}
+                if goodWvl.sum() > 0:
+                    y = wvl0/wvl[goodWvl]
+                    dist = util.twophotonHRead()
+                    avalue = dist['avalue'][self.Z-1]
+                    asum = dist['asum'][self.Z-1]
+                    distr1 = interpolate.splrep(dist['y0'], dist['psi0'][self.Z-1], s=0)
+                    distr = avalue*y*interpolate.splev(y, distr1)/(asum*wvl[goodWvl])
+                    if self.Defaults['flux'] == 'energy':
+                        f = (const.light*const.planck*1.e+8)/(4.*const.pi*wvl[goodWvl])
+                    else:
+                        f=1./(4.*const.pi)
+                    if nTempDens == 1:
+                        rate[goodWvl] = f*pop[l2]*distr*ab*thisIoneq/density
+                    else:
+                       for it in range(nTempDens):
+                            rate[it, goodWvl] = f*pop[it, l2]*distr*ab*thisIoneq[it]/density[it]
+                    self.TwoPhoton = {'wvl':wvl, 'rate':rate}
+
             else:
                 # He seq
                 l1 = 1-1
                 l2 = 3 - 1
                 wvl0 = 1.e+8/(self.Elvlc['ecm'][l2] - self.Elvlc['ecm'][l1])
                 goodWvl = wvl > wvl0
-                y = wvl0/wvl[goodWvl]
-                dist = util.twophotonHeRead()
-                avalue = dist['avalue'][self.Z-1]
-                distr1 = interpolate.splrep(dist['y0'], dist['psi0'][self.Z-1], s=0)
-                distr = avalue*y*interpolate.splev(y, distr1)/wvl[goodWvl]
-                if self.Defaults['flux'] == 'energy':
-                    f = (const.light*const.planck*1.e+8)/(4.*const.pi*wvl[goodWvl])
-                else:
-                    f=1./(4.*const.pi)
-                if nTempDens == 1:
-                    rate[goodWvl] = f*pop[l2]*distr*ab*thisIoneq/density
-                else:
-                   for it in range(nTempDens):
-                        rate[it, goodWvl] = f*pop[it, l2]*distr*ab*thisIoneq[it]/density[it]
+                if goodWvl.sum() > 0:
+                    y = wvl0/wvl[goodWvl]
+                    dist = util.twophotonHeRead()
+                    avalue = dist['avalue'][self.Z-1]
+                    distr1 = interpolate.splrep(dist['y0'], dist['psi0'][self.Z-1], s=0)
+                    distr = avalue*y*interpolate.splev(y, distr1)/wvl[goodWvl]
+                    if self.Defaults['flux'] == 'energy':
+                        f = (const.light*const.planck*1.e+8)/(4.*const.pi*wvl[goodWvl])
+                    else:
+                        f=1./(4.*const.pi)
+                    if nTempDens == 1:
+                        rate[goodWvl] = f*pop[l2]*distr*ab*thisIoneq/density
+                    else:
+                       for it in range(nTempDens):
+                            rate[it, goodWvl] = f*pop[it, l2]*distr*ab*thisIoneq[it]/density[it]
                 self.TwoPhoton = {'wvl':wvl, 'rate':rate}
         #
         #-----------------------------------------------------------------
@@ -4004,7 +4007,7 @@ class mspectrum:
         for iz in range(31):
             abundance = self.AbundanceAll['abundance'][iz-1]
             if abundance >= minAbund:
-                if chInteractive:
+                if chInteractive and verbose:
                     print ' %5i %5s abundance = %10.2e '%(iz, const.El[iz-1],  abundance)
                 #
                 for ionstage in range(1, iz+2):
@@ -4026,18 +4029,19 @@ class mspectrum:
                     ionstageTest = ionstage > 1
                     if ionstageTest and ioneqTest and doContinuum:
                         # ionS is the target ion, cannot be the neutral for the continuum
-                        if chInteractive:
+                        if chInteractive and verbose:
                             print ' setting up continuum calculation for :  ',  ionS
                         ffInputs.append([ionS, temperature, wavelength])
                         fbInputs.append([ionS, temperature, wavelength])
                         #
                     if masterListTest and wvlTestMin and wvlTestMax and ioneqTest:
-                        if chInteractive:
+                        if chInteractive and verbose:
                             print ' setting up spectrum calculation for  :  ', ionS
                         ionInputs.append((ionS, temperature, density, wavelength, filter))
                     # get dielectronic lines
                     if masterListTestD and wvlTestMinD and wvlTestMaxD and ioneqTestD:
-                        print ' setting up  spectrum calculation for  :  ', ionSd
+                        if chInteractive and verbose:
+                            print ' setting up  spectrum calculation for  :  ', ionSd
                         dielInputs.append((ionSd, temperature, density, wavelength, filter))
         ff = ffPool.imap(mputil.doFf, ffInputs)
         for iff in range(len(ffInputs)):
@@ -4065,10 +4069,10 @@ class mspectrum:
                 print ' fb exception'
         #
         allions = ionPool.imap(mputil.doIon, ionInputs)
+        timeout = 10.
         for ixy in range(len(ionInputs)):
             try:
-                thisIon = allions.next()
-                print 'finished ion =', thisIon.IonStr  #, thisIon.Population['population'][0]
+                thisIon = allions.next(timeout = timeout)
                 thisIon.spectrum(wavelength, filter=filter)
                 if nTempDen == 1:
                     lineSpectrum += thisIon.Spectrum['intensity']
@@ -4083,16 +4087,19 @@ class mspectrum:
                         for iTempDen in range(nTempDen):
                             twoPhoton[iTempDen] += thisIon.TwoPhoton['rate'][iTempDen]
             except:
-                print ' exception in ion pool'
+                print ' exception in ion pool', ixy, ionInputs[ixy][0]
         #
         allDiel = dielPool.imap(mputil.doDiel, dielInputs)
         for idiel in range(len(dielInputs)):
-            thisIon = allDiel.next()
-            if nTempDen == 1:
-                lineSpectrum += thisIon.Spectrum['intensity']
-            else:
-                for iTempDen in range(nTempDen):
-                    lineSpectrum[iTempDen] += thisIon.Spectrum['intensity'][iTempDen]
+            try:
+                thisIon = allDiel.next()
+                if nTempDen == 1:
+                    lineSpectrum += thisIon.Spectrum['intensity']
+                else:
+                    for iTempDen in range(nTempDen):
+                        lineSpectrum[iTempDen] += thisIon.Spectrum['intensity'][iTempDen]
+            except:
+                print ' exception in diel pool', dielInputs[idiel][0]
         #
         self.FreeFree = {'wavelength':wavelength, 'intensity':freeFree.squeeze()}
         self.FreeBound = {'wavelength':wavelength, 'intensity':freeBound.squeeze()}
