@@ -1,4 +1,5 @@
 ''' functions needed for multiprocessing module mspectrum'''
+import chianti
 def doFf(inputs):
     ''' helper for freefree'''
     ionS = inputs[0]
