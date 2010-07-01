@@ -17,9 +17,9 @@ def gaussianR(wvl,wvl0, factor=None):
         print ' the resolving power of the gaussianR filter is undefined'
         return None
     wvl = np.asarray(wvl, 'float64')
-    dwvl = wvl - np.roll(wvl, 1)
-    dwvl[0] = dwvl[1]
-    return np.exp(-((wvl - wvl0)/(2.*std))**2)/(dwvl*np.sqrt(2.*np.pi)*std)
+#    dwvl = wvl - np.roll(wvl, 1)
+#    dwvl[0] = dwvl[1]
+    return np.exp(-0.5*((wvl - wvl0)/std)**2)/(np.sqrt(2.*np.pi)*std)
 
 def gaussian(wvl,wvl0, factor=None):
     '''a gaussian filter where factor is the gaussian width (standard deviation)'''
@@ -31,7 +31,7 @@ def gaussian(wvl,wvl0, factor=None):
     wvl = np.asarray(wvl, 'float64')
     dwvl = wvl - np.roll(wvl, 1)
     dwvl[0] = dwvl[1]
-    return np.exp(-((wvl - wvl0)/(2.*std))**2)/(dwvl*np.sqrt(2.*np.pi)*std)
+    return np.exp(-0.5*((wvl - wvl0)/std)**2)/(np.sqrt(2.*np.pi)*std)
 
 def boxcar(wvl, wvl0, factor=None):
     ''' box-car filter, factor is the full width of the box filter'''
@@ -43,13 +43,14 @@ def boxcar(wvl, wvl0, factor=None):
     if type(factor) != types.NoneType:
         # width must be at least equal to the wavelength step
         width = max(factor, dwvl.min())
+        print ' width = ', width
     else:
         print ' the width of the box filter is undefined'
         return None
     good1 = (wvl > wvl0 - width/2.)
     good2 = (wvl < wvl0 + width/2.)
     realgood = np.logical_and(good1, good2)
-    return np.where(realgood, one, zed)/(dwvl*width)
+    return np.where(realgood, one, zed)/(width)
 
 def lorentz(wvl, wvl0, factor=None):
     '''the lorentz profile with the exception that all factors are in wavelength units
