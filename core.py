@@ -20,6 +20,7 @@ except:
     chInteractive = 1
 #
 try:
+    import multiprocessing
     from multiprocessing import Pool
 except:
     if chInteractive:
@@ -4068,12 +4069,13 @@ class mspectrum:
             except:
                 print ' fb exception'
         #
-        allions = ionPool.imap(mputil.doIon, ionInputs)
+        allions = ionPool.imap_unordered(mputil.doIon, ionInputs)
         timeout = 10.
         for ixy in range(len(ionInputs)):
+#        for thisIon in allions.get(timeout=timeout):
             try:
                 thisIon = allions.next(timeout = timeout)
-                thisIon.spectrum(wavelength, filter=filter)
+#                thisIon.spectrum(wavelength, filter=filter)
                 if nTempDen == 1:
                     lineSpectrum += thisIon.Spectrum['intensity']
                 else:
@@ -4086,8 +4088,11 @@ class mspectrum:
                     else:
                         for iTempDen in range(nTempDen):
                             twoPhoton[iTempDen] += thisIon.TwoPhoton['rate'][iTempDen]
+            except multiprocessing.TimeoutError:
+                print ' timeout error in ion pool', ixy, ionInputs[ixy][0]
             except:
-                print ' exception in ion pool', ixy, ionInputs[ixy][0]
+                print '  error in ion pool', ixy, ionInputs[ixy][0]
+                
         #
         allDiel = dielPool.imap(mputil.doDiel, dielInputs)
         for idiel in range(len(dielInputs)):
@@ -4116,7 +4121,7 @@ class mspectrum:
                     integrated += total[iTempDen]*em[iTempDen]
             self.Spectrum ={'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1], 'integrated':integrated, 'em':em}
         else:
-            self.Spectrum ={'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1]}
+            self.Spectrum ={'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1], 'allions':allions}
     #
     # -------------------------------------------------------------------------
     #
