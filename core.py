@@ -1968,6 +1968,7 @@ class ion:
         aspectrum = np.zeros_like(wavelength)
         nTemp = self.Temperature.size
         nDens = self.Density.size
+        nTempDens = max([nTemp, nDens])
         useFilter = filter[0]
         useFactor= filter[1]
         try:
@@ -1982,9 +1983,9 @@ class ion:
                 for iwvl, wvlCalc in enumerate(intensity['wvl']):
                     aspectrum += useFilter(wavelength, wvlCalc, factor=useFactor)*intensity['intensity'][iwvl]
         else:
-            aspectrum = np.zeros((nTemp, wavelength.size), 'float64')
+            aspectrum = np.zeros((nTempDens, wavelength.size), 'float64')
             if not 'errorMessage' in self.Intensity.keys():
-                for itemp in xrange(nTemp):
+                for itemp in xrange(nTempDens):
                     for iwvl, wvlCalc in enumerate(self.Intensity['wvl']):
                         aspectrum[itemp] += useFilter(wavelength, wvlCalc, factor=useFactor)*self.Intensity['intensity'][itemp, iwvl]
         self.Spectrum = {'intensity':aspectrum,  'wvl':wavelength, 'filter':useFilter.__name__, 'filterWidth':useFactor}
@@ -2588,12 +2589,8 @@ class ion:
         Wavelengths are sorted """
         #
         #
-        doPopulate=False
-        try:
-            pop=self.Population['population']
-        except:
-            doPopulate=True
         #
+        doPopulate = False
         if temperature != None:
             self.Temperature=np.asarray(temperature,'float32')
             doPopulate=True
@@ -2604,6 +2601,16 @@ class ion:
             self.PDensity=pDensity
             doPopulate=True
         density = self.Density
+        #
+        if doPopulate:
+            self.populate()
+            pop=self.Population["population"]
+        else:
+            try:
+                pop=self.Population['population']
+            except:
+                self.populate()
+                pop=self.Population["population"]
         #
 #       nlvls=len(self.Elvlc['lvl'])
 ##        good=self.Wgfa['avalue'] > 0.
@@ -2616,11 +2623,11 @@ class ion:
         # make sure there are lines in the wavelength range, if specified
         #wvl = [wvl for wvl in mg2.Wgfa['wvl'] if wvl > 400. and wvl < 2000.]
         if type(wvlRange) != types.NoneType:
-            l1 = [self.Wgfa['lvl1'][idx] for idx, wvl in enumerate(self.Wgfa['wvl']) if wvl > wvlRange[0] and  wvl < wvlRange[1]]
-            l2 = [self.Wgfa['lvl2'][idx] for idx, wvl in enumerate(self.Wgfa['wvl']) if wvl > wvlRange[0] and  wvl < wvlRange[1]]
-            avalue = [self.Wgfa['avalue'][idx] for idx, wvl in enumerate(self.Wgfa['wvl']) if wvl > wvlRange[0] and  wvl < wvlRange[1]]
-        # this must be at the end
-            wvl = [wvl for wvl in self.Wgfa['wvl']if wvl > wvlRange[0] and  wvl < wvlRange[1]]
+            idx = util.between(self.Wgfa['wvl'], wvlRange)
+            l1 = [self.Wgfa['lvl1'][i] for i in idx]
+            l2 = [self.Wgfa['lvl2'][i] for i in idx]
+            avalue = [self.Wgfa['avalue'][i] for i in idx]
+            wvl = [self.Wgfa['wvl'][i]  for i in idx]
         #
         # two-photon decays have wvl=0 and nonzero avalues
         zed = wvl.count(0.)
@@ -2636,14 +2643,13 @@ class ion:
         if nwvl == 0:
             self.Emiss = {'errorMessage':self.Spectroscopic+' no lines in this wavelength range'}
             return
-        #
-        if doPopulate:
-            # new values of temperature or density
-            self.populate()
-            pop=self.Population["population"]
         try:
             ntempden,nlvls=pop.shape
             em=np.zeros((nwvl, ntempden),'Float32')
+            if self.Temperature.size < ntempden:
+                temperature = np.repeat(self.Temperature, ntempden)
+            if self.Density.size < ntempden:
+                density = np.repeat(self.Density, ntempden)
         except:
             nlvls=len(pop)
             ntempden=1
