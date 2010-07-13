@@ -9,6 +9,7 @@ that is found in the LICENSE file
 '''
 import os
 import types
+from datetime import *
 #from ConfigParser import *
 import numpy as np
 from scipy import interpolate
@@ -20,8 +21,10 @@ except:
     chInteractive = 1
 #
 try:
-    import multiprocessing
-    from multiprocessing import Pool
+#    from Queue.Queue import *
+    import multiprocessing as mp
+#    from multiprocessing import Pool as mp.Pool
+#    from multiprocessing import Process,  Queue
 except:
     if chInteractive:
         print ' your version of Python does not support multiprocessing \n you will not be able to use mspectrum'
@@ -1234,8 +1237,8 @@ class ion:
                     dum=np.ones(len(energy))
                     btenergy, btdum=util.scale_bti(energy[goode],dum[goode], self.DiParams['btf'][ifac], self.DiParams['ev1'][ifac] )
                     # these interpolations were made with the scipy routine used here
-                    y2=interpolate.splrep(self.DiParams['xsplom'][ifac], self.DiParams['ysplom'][ifac], s=0.)
-                    btcross=interpolate.splev(btenergy, y2, der=0.)
+                    y2=interpolate.splrep(self.DiParams['xsplom'][ifac], self.DiParams['ysplom'][ifac], s=0)
+                    btcross=interpolate.splev(btenergy, y2, der=0)
                     energy1, cross1=util.descale_bti(btenergy, btcross,self.DiParams['btf'][ifac], self.DiParams['ev1'][ifac] )
                     offset=len(energy)-goode.sum()
                     if verbose:
@@ -1262,7 +1265,7 @@ class ion:
             except:
                 print ' temperature is not defined'
                 return
-        elif type(temperature) != numpy.ndarray:
+        elif type(temperature) != np.ndarray:
             temperature = np.array(temperature,'float64')
         #
         #   gauss laguerre n=12
@@ -1632,7 +1635,6 @@ class ion:
                 for itrans in range(len(self.Reclvl['lvl1'])):
                     lvl2 = self.Reclvl['lvl2'][itrans]
                     nrecTemp = self.Reclvl['ntemp'][itrans]
-#                   print ' nrecTemp = ', nrecTemp
                     y2 = interpolate.splrep(np.log(self.Reclvl['temperature'][itrans, :nrecTemp]), np.log(self.Reclvl['rate'][itrans, :nrecTemp]))
                     rec = np.exp(interpolate.splev(np.log(temperature),y2))
                     recRate[itrans] = rec.squeeze()
@@ -1690,6 +1692,7 @@ class ion:
 #                       print ' index, idx = ', index,  idx
                         newRec[index] = highRec[idx]
                         index += 1
+                recRate[itrans] = newRec
         self.ReclvlRate = {'rate':recRate, 'lvl2':reclvl['lvl2']}
         #
         # -------------------------------------------------------------------------------------
@@ -1968,7 +1971,6 @@ class ion:
         aspectrum = np.zeros_like(wavelength)
         nTemp = self.Temperature.size
         nDens = self.Density.size
-        nTempDens = max([nTemp, nDens])
         useFilter = filter[0]
         useFactor= filter[1]
         try:
@@ -1983,9 +1985,9 @@ class ion:
                 for iwvl, wvlCalc in enumerate(intensity['wvl']):
                     aspectrum += useFilter(wavelength, wvlCalc, factor=useFactor)*intensity['intensity'][iwvl]
         else:
-            aspectrum = np.zeros((nTempDens, wavelength.size), 'float64')
+            aspectrum = np.zeros((nTemp, wavelength.size), 'float64')
             if not 'errorMessage' in self.Intensity.keys():
-                for itemp in xrange(nTempDens):
+                for itemp in xrange(nTemp):
                     for iwvl, wvlCalc in enumerate(self.Intensity['wvl']):
                         aspectrum[itemp] += useFilter(wavelength, wvlCalc, factor=useFactor)*self.Intensity['intensity'][itemp, iwvl]
         self.Spectrum = {'intensity':aspectrum,  'wvl':wavelength, 'filter':useFilter.__name__, 'filterWidth':useFactor}
@@ -2047,7 +2049,7 @@ class ion:
                 self.recombRate()
                 lowers = util.zion2name(self.Z, self.Ion-1)
                 # get the lower ionization stage
-                lower = ion(lowers, temperature=self.Temperature)
+                lower = ion(lowers, temperature=self.Temperature, density = self.Density)
                 lower.ionizRate()
                 # need to get multiplicity of lower ionization stage
                 lowMult = lower.Elvlc['mult']
@@ -2055,12 +2057,15 @@ class ion:
                 ci = 0
             try:
                 if self.Nreclvl > 0:
-                    self.reclvlDescale()
+                    if not self.ReclvlRate:
+                        print ' doing reclvlDescale in populate'
+                        self.reclvlDescale()
+                    reclvl = self.Reclvl
                     rec = 1
                     self.ionizRate()
                     #  get the higher ionization stage
-                    highers = convertname(self.Z, self.Ion+1)
-                    higher = ion(highers, temperature=self.Temperature)
+                    highers = util.zion2name(self.Z, self.Ion+1)
+                    higher = ion(highers, temperature=self.Temperature, density=self.Density)
                     higher.recombRate()
                 else:
                     rec = 0
@@ -2074,7 +2079,7 @@ class ion:
                     #  get the higher ionization stage
                     highers = util.zion2name(self.Z, self.Ion+1)
 #                   print ' highers = ', highers
-                    higher = ion(highers, temperature=self.Temperature)
+                    higher = ion(highers, temperature=self.Temperature, density=self.Density)
                     higher.recombRate()
                 else:
                     rec = 0
@@ -2082,8 +2087,6 @@ class ion:
             ci = 0
             rec = 0
         #
-#       print ' dir(lower) = ', dir(lower)
-#       print ' dir(higher) = ', dir(higher)
         #
         rad=np.zeros((nlvls+ci+rec,nlvls+ci+rec),"float64")  #  the populating matrix for radiative transitions
         #
@@ -2576,7 +2579,7 @@ class ion:
         #
         # -------------------------------------------------------------------------------------
         #
-    def emiss(self,temperature=None,density=None,pDensity=None,  wvlRange = None):
+    def emiss(self,temperature=None,density=None,pDensity=None,  wvlRange = None,  allLines=1):
         #
         """Calculate and the emissivities for lines of the specified ion.
 
@@ -2586,11 +2589,17 @@ class ion:
 
         Does not include elemental abundance or ionization fraction
 
-        Wavelengths are sorted """
+        Wavelengths are sorted
+        set allLines = 1 to include unidentified lines
+        """
         #
         #
+        doPopulate=False
+        try:
+            pop=self.Population['population']
+        except:
+            doPopulate=True
         #
-        doPopulate = False
         if temperature != None:
             self.Temperature=np.asarray(temperature,'float32')
             doPopulate=True
@@ -2602,47 +2611,43 @@ class ion:
             doPopulate=True
         density = self.Density
         #
-        if doPopulate:
-            self.populate()
-            pop=self.Population["population"]
-        else:
-            try:
-                pop=self.Population['population']
-            except:
-                self.populate()
-                pop=self.Population["population"]
-        #
 #       nlvls=len(self.Elvlc['lvl'])
 ##        good=self.Wgfa['avalue'] > 0.
         # using [:] to make a copy things don't change elsewhere
-        wvl = self.Wgfa["wvl"][:]
-        l1 = self.Wgfa['lvl1'][:]
-        l2 = self.Wgfa["lvl2"][:]
-        avalue = self.Wgfa["avalue"][:]
+        wvl = np.asarray(self.Wgfa["wvl"][:], 'float64')
+        if allLines:
+            wvl=np.abs(wvl)
+        l1 = np.asarray(self.Wgfa['lvl1'][:], 'int64')
+        l2 = np.asarray(self.Wgfa["lvl2"][:], 'int64')
+        avalue = np.asarray(self.Wgfa["avalue"][:], 'float64')
         #
         # make sure there are lines in the wavelength range, if specified
-        #wvl = [wvl for wvl in mg2.Wgfa['wvl'] if wvl > 400. and wvl < 2000.]
+
         if type(wvlRange) != types.NoneType:
-            idx = util.between(self.Wgfa['wvl'], wvlRange)
-            l1 = [self.Wgfa['lvl1'][i] for i in idx]
-            l2 = [self.Wgfa['lvl2'][i] for i in idx]
-            avalue = [self.Wgfa['avalue'][i] for i in idx]
-            wvl = [self.Wgfa['wvl'][i]  for i in idx]
+            realgood = util.between(wvl, wvlRange)
+            l1 = l1[realgood]
+            l2 = l2[realgood]
+            wvl = wvl[realgood]
+            avalue = avalue[realgood]
         #
         # two-photon decays have wvl=0 and nonzero avalues
-        zed = wvl.count(0.)
-        for one in range(zed):
-            idx = wvl.index(0.)
-            bad = wvl.pop(idx)
-            bad = avalue.pop(idx)
-            bad = l1.pop(idx)
-            bad = l2.pop(idx)
-        wvl=np.abs(np.asarray(wvl))
+#        zed = wvl.count(0.)
+        nonzed = wvl != 0.
+        wvl = wvl[nonzed]
+        l1 = l1[nonzed]
+        l2 = l2[nonzed]
+        avalue = avalue[nonzed]
         nwvl=len(wvl)
         #
         if nwvl == 0:
             self.Emiss = {'errorMessage':self.Spectroscopic+' no lines in this wavelength range'}
             return
+        #
+        if doPopulate:
+            # new values of temperature or density
+            self.populate()
+            pop=self.Population["population"]
+        #
         try:
             ntempden,nlvls=pop.shape
             em=np.zeros((nwvl, ntempden),'Float32')
@@ -2654,7 +2659,6 @@ class ion:
             nlvls=len(pop)
             ntempden=1
             em=np.zeros(nwvl,'Float32')
-        #
         #
         plotLabels={}
         #
@@ -2822,7 +2826,7 @@ class ion:
         #
         # ---------------------------------------------------------------------------
         #
-    def intensity(self,  wvlRange = None):
+    def intensity(self,  wvlRange = None,  allLines=1):
         """Calculate  the intensities for lines of the specified ion.
 
         wvlRange, a 2 element tuple, list or array determines the wavelength range
@@ -2832,7 +2836,7 @@ class ion:
         includes elemental abundance and ionization fraction."""
         # emiss ={"wvl":wvl, "emiss":em, "plotLabels":plotLabels}
         #
-        self.emiss(wvlRange = wvlRange)
+        self.emiss(wvlRange = wvlRange, allLines=allLines)
         emiss = self.Emiss
         if 'errorMessage'  in emiss.keys():
             self.Intensity = {'errorMessage': self.Spectroscopic+' no lines in this wavelength region'}
@@ -3492,9 +3496,15 @@ class ion:
                     density = np.repeat(self.Density, nTempDens)
                 else:
                     density = self.Density
+                if self.Temperature.size == 1:
+                    temperature = np.repeat(self.Temperature, nTempDens)
+                    thisIoneq = np.repeat(thisIoneq, nTempDens)
+                else:
+                    temperature = self.Temperature
             else:
                 rate = np.zeros(nWvl, 'float64')
                 density = self.Density
+                temperature = self.Temperature
             if self.Z == self.Ion:
                 # H seq
                 l1 = 1-1
@@ -3517,7 +3527,7 @@ class ion:
                     else:
                        for it in range(nTempDens):
                             rate[it, goodWvl] = f*pop[it, l2]*distr*ab*thisIoneq[it]/density[it]
-                    self.TwoPhoton = {'wvl':wvl, 'rate':rate}
+                self.TwoPhoton = {'wvl':wvl, 'rate':rate}
 
             else:
                 # He seq
@@ -3799,11 +3809,20 @@ class spectrum:
 
     em [for emission measure], can be a float or an array of the same length as the
     temperature/density.'''
-    def __init__(self, temperature, density, wavelength, filter=(chfilters.gaussianR, 1000.),  ionList = 0, minAbund=0., doContinuum=1, em = None):
-        if ionList == 0:
-            masterlist = util.masterListRead()
-        else:
-            masterlist = ionList
+    def __init__(self, temperature, density, wavelength, filter=(chfilters.gaussianR, 1000.),  ionList = 0, minAbund=0., doContinuum=1, em = None,  verbose=0):
+        t1 = datetime.now()
+        masterlist = util.masterListRead()
+        # use the ionList but make sure the ions are in the database
+        if ionList:
+            alist=[]
+            for one in ionList:
+                if masterlist.count(one):
+                    alist.append(one)
+                else:
+                    if chInteractive and verbose:
+                        pstring = ' %s not in CHIANTI database'%(one)
+                        print('')
+            masterlist = alist
         self.Defaults=defaults
         self.Temperature = np.asarray(temperature, 'float64')
         nTemp = self.Temperature.size
@@ -3825,6 +3844,12 @@ class spectrum:
                     return
         self.AbundanceName = defaults['abundfile']
         self.AbundanceAll = util.abundanceRead(abundancename = self.AbundanceName)
+        abundAll = self.AbundanceAll['abundance']
+        nonzed = abundAll > 0.
+        minAbundAll = abundAll[nonzed].min()
+        if minAbund < minAbundAll:
+            minAbund = minAbundAll
+        self.minAbund = minAbund
         ionInfo = util.masterListInfo()
         wavelength = np.asarray(wavelength)
         nWvl = wavelength.size
@@ -3921,6 +3946,9 @@ class spectrum:
         self.TwoPhoton = {'wavelength':wavelength, 'intensity':twoPhoton.squeeze()}
         #
         total = freeFree + freeBound + lineSpectrum + twoPhoton
+        t2 = datetime.now()
+        dt=t2-t1
+        print ' elapsed seconds = ', dt.seconds
         if type(em) != types.NoneType:
             if nEm == 1:
                 integrated = total*em
@@ -3931,6 +3959,290 @@ class spectrum:
             self.Spectrum ={'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1], 'integrated':integrated, 'em':em}
         else:
             self.Spectrum ={'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1]}
+    #
+    # -------------------------------------------------------------------------
+    #
+class mspectrum:
+    ''' this is the multiprocessing version of spectrum
+    Calculate the emission spectrum as a function of temperature and density.
+
+    temperature and density can be arrays but, unless the size of either is one (1),
+    the two must have the same size
+
+    the returned spectrum will be convolved with a filter of the specified width on the
+    specified wavelength array
+
+    the default filter is gaussianR with a resolving power of 100.  Other filters,
+    such as gaussian, box and lorentz, are available in chianti.filters.  When using the box filter,
+    the width should equal the wavelength interval to keep the units of the continuum and line
+    spectrum the same.
+
+    A selection of ions can be make with ionList containing the names of
+    the desired lines in Chianti notation, i.e. C VI = c_6
+
+    a minimum abundance can be specified so that the calculation can be speeded up by excluding
+    elements with a low abundance.  Setting doContinuum =0 will skip the continuum calculation.
+
+    Setting em will multiply the spectrum at each temperature by the value of em.
+
+    em [for emission measure], can be a float or an array of the same length as the
+    temperature/density.
+    proc = the number of processors to use
+    timeout - a small but non-zero value seems to be necessary
+    '''
+    def __init__(self, temperature, density, wavelength, filter=(chfilters.gaussianR, 1000.),  ionList = 0, minAbund=0., doContinuum=1, em = None,  proc=3,  verbose = 0,  timeout=0.1):
+        t1 = datetime.now()
+        masterlist = util.masterListRead()
+        # use the ionList but make sure the ions are in the database
+        if ionList:
+            alist=[]
+            for one in ionList:
+                if masterlist.count(one):
+                    alist.append(one)
+                else:
+                    if chInteractive and verbose:
+                        pstring = ' %s not in CHIANTI database'%(one)
+                        print('')
+            masterlist = alist
+        self.Defaults=defaults
+        self.Temperature = np.asarray(temperature, 'float64')
+        nTemp = self.Temperature.size
+        self.Density = np.asarray(density, 'float64')
+        nDen = self.Density.size
+        nTempDen = max([nTemp, nDen])
+        if type(em) != types.NoneType:
+            if type(em) == types.FloatType:
+                if nTempDen > 1:
+                    em = np.ones_like(self.Temperature)*em
+                    nEm = nTempDen
+                else:
+                    nEm = 1
+            else:
+                em = np.asarray(em, 'float64')
+                nEm = em.size
+                if nEm != nTempDen:
+                    print ' the emission measure array must be the same size as the temperature/density array'
+                    return
+        self.AbundanceName = defaults['abundfile']
+        self.AbundanceAll = util.abundanceRead(abundancename = self.AbundanceName)
+        abundAll = self.AbundanceAll['abundance']
+        nonzed = abundAll > 0.
+        minAbundAll = abundAll[nonzed].min()
+        if minAbund < minAbundAll:
+            minAbund = minAbundAll
+        ionInfo = util.masterListInfo()
+        wavelength = np.asarray(wavelength)
+        nWvl = wavelength.size
+        self.Wavelength = wavelength
+        wvlRange = [wavelength.min(), wavelength.max()]
+        #
+        proc = min([proc, mp.cpu_count()])
+        #
+        freeFree = np.zeros((nTempDen, nWvl), 'float64').squeeze()
+        freeBound = np.zeros((nTempDen, nWvl), 'float64').squeeze()
+        twoPhoton = np.zeros((nTempDen, nWvl), 'float64').squeeze()
+        lineSpectrum = np.zeros((nTempDen, nWvl), 'float64').squeeze()
+        #
+        #  free-free multiprocessing setup
+        ffWorkerQ = mp.Queue()
+        ffDoneQ = mp.Queue()
+        #
+        #  free-bound multiprocessing setup
+        #
+        fbWorkerQ = mp.Queue()
+        fbDoneQ = mp.Queue()
+        #
+        #  ion multiprocessing setup
+        ionWorkerQ = mp.Queue()
+        ionDoneQ = mp.Queue()
+        #
+        #
+        self.Todo = []
+        for iz in range(31):
+            abundance = self.AbundanceAll['abundance'][iz-1]
+            if abundance >= minAbund:
+                if chInteractive and verbose:
+                    print ' %5i %5s abundance = %10.2e '%(iz, const.El[iz-1],  abundance)
+                #
+                for ionstage in range(1, iz+2):
+                    ionS = util.zion2name(iz, ionstage)
+                    masterListTest = ionS in masterlist
+                    masterListInfoTest = ionS in ionInfo.keys()
+                    if masterListTest or masterListInfoTest:
+                        wvlTestMin = self.Wavelength.min() <= ionInfo[ionS]['wmax']
+                        wvlTestMax = self.Wavelength.max() >= ionInfo[ionS]['wmin']
+                        ioneqTest = (self.Temperature.max() >= ionInfo[ionS]['tmin']) and (self.Temperature.min() <= ionInfo[ionS]['tmax'])
+                    # construct similar test for the dielectronic files
+                    ionSd = util.zion2name(iz, ionstage, dielectronic=1)
+                    masterListTestD = ionSd in masterlist
+                    masterListInfoTestD = ionSd in ionInfo.keys()
+                    if masterListTestD or masterListInfoTestD:
+                        wvlTestMinD = self.Wavelength.min() <= ionInfo[ionSd]['wmax']
+                        wvlTestMaxD = self.Wavelength.max() >= ionInfo[ionSd]['wmin']
+                        ioneqTestD = (self.Temperature.max() >= ionInfo[ionSd]['tmin']) and (self.Temperature.min() <=ionInfo[ionSd]['tmax'])
+                    ionstageTest = ionstage > 1
+                    if ionstageTest and ioneqTest and doContinuum:
+                        # ionS is the target ion, cannot be the neutral for the continuum
+                        if chInteractive and verbose:
+                            print ' setting up continuum calculation for :  ',  ionS
+                        ffWorkerQ.put((ionS, temperature, wavelength))
+                        fbWorkerQ.put((ionS, temperature, wavelength))
+#                        fbInputs.append([ionS, temperature, wavelength])
+                        #
+                    if masterListTest and wvlTestMin and wvlTestMax and ioneqTest:
+                        if chInteractive and verbose:
+                            print ' setting up spectrum calculation for  :  ', ionS
+                        ionWorkerQ.put((ionS, temperature, density, wavelength, filter))
+                        self.Todo.append(ionS)
+                    # get dielectronic lines
+                    if masterListTestD and wvlTestMinD and wvlTestMaxD and ioneqTestD:
+                        if chInteractive and verbose:
+                            print ' setting up  spectrum calculation for  :  ', ionSd
+#                        dielWorkerQ.put((ionSd, temperature, density, wavelength, filter))
+                        ionWorkerQ.put((ionSd, temperature, density, wavelength, filter))
+                        self.Todo.append(ionSd)
+        #
+        ffWorkerQSize = ffWorkerQ.qsize()
+        fbWorkerQSize = fbWorkerQ.qsize()
+        ionWorkerQSize = ionWorkerQ.qsize()
+        if doContinuum:
+            ffProcesses = []
+            for i in range(proc):
+                p = mp.Process(target=mputil.doFfQ, args=(ffWorkerQ, ffDoneQ))
+                p.start()
+                ffProcesses.append(p)
+    #       timeout is not necessary
+            for p in ffProcesses:
+                if p.is_alive():
+                    p.join(timeout=timeout)
+#            for i in range(proc):
+#                ffProcesses.append('STOP')
+            #
+            for iff in range(ffWorkerQSize):
+                thisFreeFree =ffDoneQ.get()
+                if nTempDen ==1:
+                    freeFree += thisFreeFree['rate']
+                else:
+                    for iTempDen in range(nTempDen):
+                        freeFree[iTempDen] += thisFreeFree['rate'][iTempDen]
+            for p in ffProcesses:
+                if not isinstance(p, str):
+                    p.terminate()
+        #
+            fbProcesses = []
+            for i in range(proc):
+                p = mp.Process(target=mputil.doFbQ, args=(fbWorkerQ, fbDoneQ))
+                p.start()
+                fbProcesses.append(p)
+    #       timeout is not necessary
+            for p in fbProcesses:
+                if p.is_alive():
+                    p.join(timeout=timeout)
+#            for i in range(proc):
+#                fbProcesses.append('STOP')
+            #
+            for ifb in range(fbWorkerQSize):
+                thisFreeBound = fbDoneQ.get()
+                if thisFreeBound.has_key('rate'):
+                    if nTempDen ==1:
+                        freeBound += thisFreeBound['rate']
+                    else:
+                        for iTempDen in range(nTempDen):
+                            freeBound[iTempDen] += thisFreeBound['rate'][iTempDen]
+            for p in fbProcesses:
+                if not isinstance(p, str):
+                    p.terminate()
+        #
+        ionProcesses = []
+        if ionWorkerQSize < proc:
+            nproc = ionWorkerQSize
+        for i in range(proc):
+            p = mp.Process(target=mputil.doIonQ, args=(ionWorkerQ, ionDoneQ))
+            p.start()
+            ionProcesses.append(p)
+#            ionWorkerQ.put('STOP')
+#       timeout is not necessary
+        for p in ionProcesses:
+#            print' process is alive:  ', p.is_alive()
+            if p.is_alive():
+#                p.join()
+                p.join(timeout=timeout)
+#        for i in range(proc):
+#            ionProcesses.append('STOP')
+        self.Finished = []
+        #
+        for ijk in range(ionWorkerQSize):
+            out = ionDoneQ.get()
+            ions = out[0]
+            self.Finished.append(ions)
+            aspectrum = out[1]
+            try:
+                if nTempDen == 1:
+                    lineSpectrum += aspectrum['intensity']
+                else:
+                    for iTempDen in range(nTempDen):
+                        lineSpectrum[iTempDen] += aspectrum['intensity'][iTempDen]
+               # check for two-photon emission
+                if len(out) == 3:
+                    tp = out[2]
+                    if nTempDen == 1:
+                        twoPhoton += tp['rate']
+                    else:
+                        for iTempDen in range(nTempDen):
+                            twoPhoton[iTempDen] += tp['rate'][iTempDen]
+            except:
+                print '  error in ion pool'
+        #
+        for p in ionProcesses:
+            if not isinstance(p, str):
+                p.terminate()
+        #
+        #
+        #
+        self.FreeFree = {'wavelength':wavelength, 'intensity':freeFree.squeeze()}
+        self.FreeBound = {'wavelength':wavelength, 'intensity':freeBound.squeeze()}
+        self.LineSpectrum = {'wavelength':wavelength, 'intensity':lineSpectrum.squeeze()}
+        self.TwoPhoton = {'wavelength':wavelength, 'intensity':twoPhoton.squeeze()}
+        #
+        total = freeFree + freeBound + lineSpectrum + twoPhoton
+        t2 = datetime.now()
+        dt=t2-t1
+        if chInteractive and verbose:
+            print ' elapsed seconds = ', dt.seconds
+        if type(em) != types.NoneType:
+            if nEm == 1:
+                integrated = total*em
+            else:
+                integrated = np.zeros_like(wavelength)
+                for iTempDen in range(nTempDen):
+                    integrated += total[iTempDen]*em[iTempDen]
+            self.Spectrum ={'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1], 'integrated':integrated, 'em':em}
+        else:
+            self.Spectrum ={'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1], 'worker':ionWorkerQ, 'done':ionDoneQ}
+    #
+    # -------------------------------------------------------------------------
+    #
+    def lineSpectrumPlot(self, saveFile=0, plotContinuum=0, linLog = 'lin'):
+        ''' to plot the spectrum as a function of wavelength'''
+        # must follow setting top
+        #
+        pl.figure()
+        ylabel = 'Intensity'
+        #
+        xlabel = 'Wavelength ('+self.Defaults['wavelength'] +')'
+        #
+#        ymin = 10.**(np.log10(emiss.min()).round(0))
+        #
+        if chInteractive:
+            pl.ion()
+        else:
+            pl.ioff()
+        #
+        pl.plot(self.LineSpectrum['wavelength'], self.LineSpectrum['intensity'])
+        pl.xlabel(xlabel)
+        pl.ylabel(ylabel)
+        if saveFile:
+            pl.savefig(saveFile)
     #
     # -------------------------------------------------------------------------
     #
