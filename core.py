@@ -1156,8 +1156,6 @@ class ion:
                 nlvlWgfa = max(self.Wgfa['lvl2'])
                 nlvlSplups = max(self.Splups['lvl2'])
                 self.Nlvls = min([nlvlElvlc, nlvlWgfa, nlvlSplups])
-#               self.Cilvl = util.cireclvlRead(self.IonStr, 'cilvl')
-                #  .cisplups may not exist
                 #
                 self.CiSplups = util.splupsRead(self.IonStr,ci=1)
                 if type(self.CiSplups) != types.NoneType:
@@ -1976,20 +1974,25 @@ class ion:
         try:
             intensity = self.Intensity
         except:
-            self.intensity()
+            self.intensity(wvlRange=[wavelength.min(), wavelength.max()])
             intensity = self.Intensity
         #
+        idx = util.between(self.Intensity['wvl'], [wavelength.min(), wavelength.max()])
         if (nTemp == 1) and (nDens == 1):
             aspectrum = np.zeros_like(wavelength)
             if not 'errorMessage' in self.Intensity.keys():
-                for iwvl, wvlCalc in enumerate(intensity['wvl']):
+                for iwvl in idx:
+                    wvlCalc = self.Intensity['wvl'][iwvl]
                     aspectrum += useFilter(wavelength, wvlCalc, factor=useFactor)*intensity['intensity'][iwvl]
         else:
             aspectrum = np.zeros((nTemp, wavelength.size), 'float64')
             if not 'errorMessage' in self.Intensity.keys():
                 for itemp in xrange(nTemp):
-                    for iwvl, wvlCalc in enumerate(self.Intensity['wvl']):
+                    for iwvl in idx:
+                        wvlCalc = self.Intensity['wvl'][iwvl]
                         aspectrum[itemp] += useFilter(wavelength, wvlCalc, factor=useFactor)*self.Intensity['intensity'][itemp, iwvl]
+#                    for iwvl, wvlCalc in enumerate(self.Intensity['wvl']):
+#                        aspectrum[itemp] += useFilter(wavelength, wvlCalc, factor=useFactor)*self.Intensity['intensity'][itemp, iwvl]
         self.Spectrum = {'intensity':aspectrum,  'wvl':wavelength, 'filter':useFilter.__name__, 'filterWidth':useFactor}
         #
         # -------------------------------------------------------------------------------------
@@ -2734,7 +2737,10 @@ class ion:
         ndens = density.size
         ntemp = temperature.size
         #
-        if ndens == 1 and ntemp > 1:
+        if ndens == 1 and ntemp == 1:
+            dstr=' -  Density = %10.2e (cm$^{-3}$)' % density
+            tstr=' -  T = %10.2e (K)' % temperature
+        elif ndens == 1 and ntemp > 1:
             if type(index) == types.NoneType:
                 index = ntemp/2
             if chInteractive:
