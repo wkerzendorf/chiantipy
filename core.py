@@ -1319,7 +1319,6 @@ class ion:
             #-----------------------------------------------------------
             #
     def eaDescale(self,temperature=None):
-        #
         """Calculates the effective collision strengths (upsilon) for excitation-autoionization as a function of temperature."""
         #
         #  xt=kt/de
@@ -1801,7 +1800,6 @@ class ion:
         # -------------------------------------------------------------------------------------
         #
     def upsilonDescale(self,temperature=None,prot=0, ci=0):
-        #
         """Provides the temperatures and effective collision strengths (upsilons)."""
         #
         #  xt=kt/de
