@@ -23,6 +23,7 @@ except:
 try:
 #    from Queue.Queue import *
     import multiprocessing as mp
+    from chianti import mputil
 #    from multiprocessing import Pool as mp.Pool
 #    from multiprocessing import Process,  Queue
 except:
@@ -41,7 +42,6 @@ except:
     from scikits.delaunay.triangulate import Triangulation
 import chianti
 from chianti import util
-from chianti import mputil
 import chianti.constants as const
 import chianti.filters as chfilters
 #
@@ -1091,13 +1091,21 @@ class continuum:
 class ion:
     '''The top level class for performing spectral calculations for an ion in the CHIANTI database.
 
-    ionStr is a string corresponding such as 'c_5' that corresponds to the C VI ion.
+    ionStr is a string corresponding such as 'c_5' that corresponds to the C V ion.
     temperature in Kelvin
     density in cm^-3
     radTemperature, the radiation black-body temperature in Kelvin
     rPlot, the distance from the center of the star in stellar radii
     '''
     def __init__(self,ionStr,temperature=None,density=None,pDensity='default', radTemperature=0,rPhot=1.,verbose=0, setup=True):
+        '''The top level class for performing spectral calculations for an ion in the CHIANTI database.
+
+        ionStr is a string corresponding such as 'c_5' that corresponds to the C V ion.
+        temperature in Kelvin
+        density in cm^-3
+        radTemperature, the radiation black-body temperature in Kelvin
+        rPlot, the distance from the center of the star in stellar radii
+        '''
         #
         #
         self.__version__ = chianti.__version__
@@ -1311,7 +1319,6 @@ class ion:
             #-----------------------------------------------------------
             #
     def eaDescale(self,temperature=None):
-        #
         """Calculates the effective collision strengths (upsilon) for excitation-autoionization as a function of temperature."""
         #
         #  xt=kt/de
@@ -1793,7 +1800,6 @@ class ion:
         # -------------------------------------------------------------------------------------
         #
     def upsilonDescale(self,temperature=None,prot=0, ci=0):
-        #
         """Provides the temperatures and effective collision strengths (upsilons)."""
         #
         #  xt=kt/de
@@ -2584,7 +2590,6 @@ class ion:
         # -------------------------------------------------------------------------------------
         #
     def emiss(self,temperature=None,density=None,pDensity=None,  wvlRange = None,  allLines=1):
-        #
         """Calculate and the emissivities for lines of the specified ion.
 
         wvlRange can be set to limit the calculation to a particular wavelength range
