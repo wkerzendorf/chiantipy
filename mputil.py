@@ -44,3 +44,18 @@ def doIonQ(inQueue, outQueue):
                 outList.append(thisIon.TwoPhoton)
         outQueue.put(outList)
     return
+    #
+    # ----------------------------------------------
+    #
+def doDemGofntQ(inQueue, outQueue):
+    ''' helper for ion, also does two-photon'''
+    for inputs in iter(inQueue.get, 'STOP'):
+        ionS = inputs[0]
+        temperature = inputs[1]
+        density = inputs[2]
+        allLines = inputs[3]
+        thisIon = chianti.core.ion(ionS, temperature, density)
+        thisIon.emiss(allLines = allLines)
+        outList = [ionS, thisIon.Abundance, thisIon.IoneqOne, thisIon.Emiss]
+        outQueue.put(outList)
+    return

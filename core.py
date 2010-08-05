@@ -54,8 +54,6 @@ xuvtop=os.environ['XUVTOP']
 #
 ip = util.ipRead()
 MasterList = util.masterListRead()
-# zn_25.elvlc does not have as many levels as the splups file
-MasterList.remove('zn_25')
 #
 defaults = util.defaultsRead(verbose = chInteractive)
 #
@@ -1084,9 +1082,265 @@ class continuum:
         #
         self.IoneqOne=gIoneq
         return  # gIoneq
-
         #
         # -------------------------------------------------------------------------------------
+        #
+class dem:
+    '''a class for calculating differential emission measures'''
+    def __init__(self, int, wvl, dwvl, ionList=0, allLines=0, minAbund=0):
+        '''input a list of wavelengths and a wavelength difference
+        find a list of predicted spectral lines for each wavelength
+        all = 0 -> only previously observed wavelengths are used'''
+        #
+        # -------------------------------------------------------------------------------------
+        #
+        self.Intensity = int
+        self.Wvl = wvl
+        self.Dwvl = dwvl
+        self.AllLines = allLines
+        masterlist = util.masterListRead()
+#        matches = [{'ion':[], 'wvl':[]}]*len(wvl) - it won't work this way
+        matches = []
+        for iwvl in range(len(wvl)):
+            matches.append({'ion':[], 'wvl':[], 'lineIdx':[]})
+#        print ' initial matches = ', matches
+#        for iwvl, match in enumerate(matches):
+#            print ' iwvl, iwvl0 = ', iwvl, wvl[iwvl]
+#            print ' matches[iwvl] = ',match
+        # use the ionList but make sure the ions are in the database
+        if ionList:
+            alist=[]
+            for one in ionList:
+                if masterlist.count(one):
+                    alist.append(one)
+                else:
+                    if chInteractive and verbose:
+                        pstring = ' %s not in CHIANTI database'%(one)
+                        print('')
+            masterlist = alist
+        #
+        if minAbund:
+            self.MinAbund = minAbund
+            abundanceName = defaults['abundfile']
+            abundanceAll = util.abundanceRead(abundancename = abundanceName)
+            revList = []
+            for one in masterlist:
+                params = util.convertName(one)
+                z = params['Z']
+                if abundanceAll['abundance'][z-1] > minAbund:
+                    revList.append(one)
+            masterlist = revList
+        for thision in masterlist:
+#            print ' - - - - - - - - - - - '
+#            print ' thision = ', thision
+            wgfa = util.wgfaRead(thision)
+            thesewvl = np.asarray(wgfa['wvl'])
+            nonzed = thesewvl != 0.
+            thesewvl =thesewvl[nonzed]
+            if allLines:
+                thesewvl = np.abs(thesewvl)
+            # sorting is necessary since they will be sorted in emiss()
+            thesewvl.sort()
+            for iwvl, awvl in enumerate(wvl):
+#                print ' iwvl,awvl = ', iwvl, awvl
+#                print '  in matches[iwvl][ion] = ', matches[iwvl]['ion']
+#                print '  in matches[iwvl][wvl] = ', matches[iwvl]['wvl']
+                diff = np.abs(thesewvl - awvl)
+                match = diff < dwvl
+                if match.sum():
+#                    print '    ion = ', thision
+#                    print '    wvl = ', thesewvl[match].tolist()
+                    matches[iwvl]['ion'].append(thision)
+                    matches[iwvl]['wvl'].append(thesewvl[match].tolist())
+                    matches[iwvl]['lineIdx'].append(np.arange(len(thesewvl))[match].tolist())
+#                    print '     out matches[iwvl][ion] = ', matches[iwvl]['ion']
+#                    print '     out matches[iwvl][wvl] = ', matches[iwvl]['wvl']
+#                print ' thisMatch = ',  thisMatch
+#                matches[iwvl].append(thisMatch)
+        self.match = matches
+        #
+        # ----------------------------------------------------------------------------------------------
+        #
+    def gofnt(self, temperature, density):
+        ''' calculate the gofnt function for each of the matched lines
+        do each ion only once'''
+        #  quick and dirty
+        if not np.iterable(temperature):
+            temperature = [temperature]
+        if not np.iterable(density):
+            density = [density]
+        self.Temperature = np.asarray(temperature)
+        self.Density = np.asarray(density)
+        nTempDen = max([len(temperature), len(density)])
+        self.NTempDen = nTempDen
+        ionList = []
+        for iwvl, amatch in enumerate(self.match):
+            for someIon in amatch['ion']:
+#                print 'someIon = ', someIon
+                if someIon not in ionList:
+                    ionList.append(someIon)
+        self.ionList = ionList
+        for iwvl in range(len(self.match)):
+            self.match[iwvl]['gofnt'] = np.zeros(nTempDen, 'float64')
+        for someIon in ionList:
+            # already know this ion is needed
+            print ' someIon = ', someIon
+            thisIon = ion(someIon, temperature, density)
+            thisIon.emiss(allLines=self.AllLines)
+            emiss = thisIon.Emiss['emiss']
+            if len(emiss.shape) == 1:
+                nTempDen = 1
+            else:
+                nTempDen = emiss.shape[1]
+            for iwvl, amatch in enumerate(self.match):
+#                self.match[iwvl]['gofnt'] = np.zeros(nTempDen, 'float64')
+                #  this is data for each line
+                if someIon in amatch['ion']:
+                    kon = amatch['ion'].index(someIon)
+#                    print ' using someIon = ', someIon
+#                for kon, anIon in enumerate(amatch['ion']):
+#
+    #                print ' linIdx = ', amatch['lineIdx'], amatch
+                    for aline in amatch['lineIdx'][kon]:
+    #                    print ' ion, lineIdx = ', anIon, aline
+                        self.match[iwvl]['gofnt'] += thisIon.Abundance*thisIon.IoneqOne*emiss[aline]/density
+        for iwvl, amatch in enumerate(self.match):
+            gfun = amatch['gofnt']
+            peak = gfun == gfun.max()
+            self.match[iwvl]['tmax'] = temperature[peak]
+        #
+    def mgofnt(self, temperature, density, proc=4,  timeout=0.1):
+        ''' calculate the gofnt function for each of the matched lines
+        this is the multiprocessing version
+        do each ion only once'''
+        #  quick and dirty
+        if not np.iterable(temperature):
+            temperature = [temperature]
+        if not np.iterable(density):
+            density = [density]
+        self.Temperature = np.asarray(temperature)
+        self.Density = np.asarray(density)
+        nTempDen = max([len(temperature), len(density)])
+        self.NTempDen = nTempDen
+        ionList = []
+        for iwvl, amatch in enumerate(self.match):
+            for someIon in amatch['ion']:
+#                print 'someIon = ', someIon
+                if someIon not in ionList:
+                    ionList.append(someIon)
+        self.ionList = ionList
+        for iwvl in range(len(self.match)):
+            self.match[iwvl]['gofnt'] = np.zeros(nTempDen, 'float64')
+        #
+        #  ion multiprocessing setup
+        ionWorkerQ = mp.Queue()
+        ionDoneQ = mp.Queue()
+        proc = min([proc, mp.cpu_count()])
+        #
+        #
+        self.Todo = []
+        for someIon in ionList:
+            # already know this ion is needed
+            print ' someIon = ', someIon
+            ionWorkerQ.put((someIon, temperature, density, self.AllLines))
+            self.Todo.append(someIon)
+        #
+        ionWorkerQSize = ionWorkerQ.qsize()
+        ionProcesses = []
+        if ionWorkerQSize < proc:
+            nproc = ionWorkerQSize
+        for i in range(proc):
+            p = mp.Process(target=mputil.doDemGofntQ, args=(ionWorkerQ, ionDoneQ))
+            p.start()
+            ionProcesses.append(p)
+#            ionWorkerQ.put('STOP')
+#       timeout is not necessary
+        for p in ionProcesses:
+#            print' process is alive:  ', p.is_alive()
+            if p.is_alive():
+#                p.join()
+                p.join(timeout=timeout)
+#        for i in range(proc):
+#            ionProcesses.append('STOP')
+        self.Finished = []
+        #
+        for ijk in range(ionWorkerQSize):
+            out = ionDoneQ.get()
+            someIon = out[0]
+            print 'processing ion = ', someIon
+            self.Finished.append(someIon)
+            abundance = out[1]
+            ioneqone = out[2]
+            emiss = out[3]['emiss']
+
+#            thisIon = ion(someIon, temperature, density)
+#            thisIon.emiss()
+#            emiss = thisIon.Emiss['emiss']
+            if len(emiss.shape) == 1:
+                nTempDen = 1
+            else:
+                nTempDen = emiss.shape[1]
+            for iwvl, amatch in enumerate(self.match):
+#                self.match[iwvl]['gofnt'] = np.zeros(nTempDen, 'float64')
+                #  this is data for each line
+                if someIon in amatch['ion']:
+                    kon = amatch['ion'].index(someIon)
+#                    print ' using someIon = ', someIon
+#                for kon, anIon in enumerate(amatch['ion']):
+#
+    #                print ' linIdx = ', amatch['lineIdx'], amatch
+                    for aline in amatch['lineIdx'][kon]:
+    #                    print ' ion, lineIdx = ', anIon, aline
+                        self.match[iwvl]['gofnt'] += abundance*ioneqone*emiss[aline]/density
+        #
+        self.Tmax = np.zeros_like(self.Wvl)
+        for iwvl, amatch in enumerate(self.match):
+            gfun = amatch['gofnt']
+            peak = gfun == gfun.max()
+            self.match[iwvl]['tmax'] = temperature[peak]
+            self.Tmax[iwvl] = temperature[peak]
+        #
+        #
+        for p in ionProcesses:
+            if not isinstance(p, str):
+                p.terminate()
+        #
+    def emPlot(self):
+        '''to plot line intensities divided by gofnt'''
+        nInt = len(self.Intensity)
+        em = np.zeros((nInt, len(self.Temperature)), 'float64')
+        for idx in range(nInt):
+            nonzed = self.match[idx]['gofnt'] > 0.
+            em[idx][nonzed] = self.Intensity[idx]/self.match[idx]['gofnt'][nonzed]
+            pl.loglog(self.Temperature[nonzed], em[idx][nonzed])
+#            minv = em[idx][nonzed] == em[idx][nonzed].min()
+            lblx = self.match[idx]['tmax']
+#            lbly = em[idx][nonzed][minv[0]]
+            lbly = np.min(em[idx][nonzed])
+            wvlstr = ' %8.3f'%(self.Wvl[idx])
+##            lbl = self.match[idx]['ion'] + wvlstr
+#            print ' lblx,lbly,wvlstr, minv = ', lblx, lbly, wvlstr,  minv
+            pl.text(lblx, lbly, wvlstr.strip())
+        #
+    def predict(self, em):
+        '''to predict the intensities of the observed lines from an emission measure'''
+        if np.iterable(em):
+            if len(em) != self.NTempDen:
+                print ' length of emission measure not equal to that of temperature/density'
+                return
+        else:
+            if self.NTempDen != 1:
+                em = np.repeat(em, self.NTempDen)
+        #
+        self.Predicted = np.zeros_like(self.Intensity)
+        self.Tmax = np.zeros_like(self.Intensity)
+        for iwvl, amatch in enumerate(self.match):
+            pred = np.sum(amatch['gofnt']*em)
+            self.match[iwvl]['pred'] = pred
+            self.Predicted[iwvl] = pred
+            self.Tmax[iwvl] = amatch['tmax']
+        #
+        # ----------------------------------------------------------------------------------------------
         #
 class ion:
     '''The top level class for performing spectral calculations for an ion in the CHIANTI database.
@@ -3377,10 +3631,10 @@ class ion:
         g_line= topLines[gline_idx]#  [0]
         ##        print ' g_line = ',g_line
         #
-        gofnt=np.zeros(ngofnt,'float32')
+        gofnt=np.zeros(ngofnt,'float64')
         for aline in g_line:
             gofnt+=gAbund*gIoneq*emiss[aline].squeeze()
-        self.Gofnt={'temperature':outTemperature,'density':outDensity,'gofnt':gofnt}
+        self.Gofnt={'temperature':outTemperature,'density':outDensity,'gofnt':gofnt, 'index':g_line, 'wvl':wvl[g_line]}
         #
         pl.loglog(xvalues,gofnt)
         pl.xlim(xvalues.min(),xvalues.max())
