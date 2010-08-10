@@ -1500,7 +1500,7 @@ class ion:
         # -------------------------------------------------------------------------------------
         #
     def emiss(self,temperature=None,density=None,pDensity=None,  wvlRange = None,  allLines=1):
-        """Calculate and the emissivities for lines of the specified ion.
+        """Calculate the emissivities for lines of the specified ion.
 
         wvlRange can be set to limit the calculation to a particular wavelength range
 

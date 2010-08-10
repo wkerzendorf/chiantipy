@@ -46,8 +46,8 @@ class mspectrum:
         self.Density = np.asarray(density, 'float64')
         nDen = self.Density.size
         nTempDen = max([nTemp, nDen])
-        if type(em) != types.NoneType:
-            if type(em) == types.FloatType:
+        if em:
+            if isinstance(em, float):
                 if nTempDen > 1:
                     em = np.ones_like(self.Temperature)*em
                     nEm = nTempDen
@@ -59,6 +59,7 @@ class mspectrum:
                 if nEm != nTempDen:
                     print ' the emission measure array must be the same size as the temperature/density array'
                     return
+            self.Em = em
         self.AbundanceName = defaults['abundfile']
         self.AbundanceAll = util.abundanceRead(abundancename = self.AbundanceName)
         abundAll = self.AbundanceAll['abundance']
