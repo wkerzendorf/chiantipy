@@ -26,7 +26,7 @@ class mspectrum:
     proc = the number of processors to use
     timeout - a small but non-zero value seems to be necessary
     '''
-    def __init__(self, temperature, density, wavelength, filter=(chfilters.gaussianR, 1000.),  ionList = 0, minAbund=0., doContinuum=1, em = None,  proc=3,  verbose = 0,  timeout=0.1):
+    def __init__(self, temperature, density, wavelength, filter=(chfilters.gaussianR, 1000.),  ionList = 0, minAbund=0., doContinuum=1, allLines = 1, em = None,  proc=3,  verbose = 0,  timeout=0.1):
         t1 = datetime.now()
         masterlist = util.masterListRead()
         # use the ionList but make sure the ions are in the database
@@ -60,6 +60,7 @@ class mspectrum:
                     print ' the emission measure array must be the same size as the temperature/density array'
                     return
             self.Em = em
+        self.AllLines = allLines
         self.AbundanceName = defaults['abundfile']
         self.AbundanceAll = util.abundanceRead(abundancename = self.AbundanceName)
         abundAll = self.AbundanceAll['abundance']
@@ -129,14 +130,14 @@ class mspectrum:
                     if masterListTest and wvlTestMin and wvlTestMax and ioneqTest:
                         if chInteractive and verbose:
                             print ' setting up spectrum calculation for  :  ', ionS
-                        ionWorkerQ.put((ionS, temperature, density, wavelength, filter))
+                        ionWorkerQ.put((ionS, temperature, density, wavelength, filter, allLines))
                         self.Todo.append(ionS)
                     # get dielectronic lines
                     if masterListTestD and wvlTestMinD and wvlTestMaxD and ioneqTestD:
                         if chInteractive and verbose:
                             print ' setting up  spectrum calculation for  :  ', ionSd
 #                        dielWorkerQ.put((ionSd, temperature, density, wavelength, filter))
-                        ionWorkerQ.put((ionSd, temperature, density, wavelength, filter))
+                        ionWorkerQ.put((ionSd, temperature, density, wavelength, filter, allLines))
                         self.Todo.append(ionSd)
         #
         ffWorkerQSize = ffWorkerQ.qsize()
@@ -253,9 +254,9 @@ class mspectrum:
                 integrated = np.zeros_like(wavelength)
                 for iTempDen in range(nTempDen):
                     integrated += total[iTempDen]*em[iTempDen]
-            self.Spectrum ={'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1], 'integrated':integrated, 'em':em}
+            self.Spectrum ={'temperature':temperature, 'density':density, 'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1], 'integrated':integrated, 'em':em, 'minAbund':minAbund, 'masterlist':masterlist}
         else:
-            self.Spectrum ={'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1], 'worker':ionWorkerQ, 'done':ionDoneQ}
+            self.Spectrum ={'temperature':temperature, 'density':density, 'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1], 'minAbund':minAbund, 'masterlist':masterlist}
     #
     # -------------------------------------------------------------------------
     #

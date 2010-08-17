@@ -716,7 +716,7 @@ class continuum:
         try:
             itohCoef = self.ItohCoef
         except:
-            self.ItohCoef = util.itohRead()['itohCoef'][self.Z].reshape(11, 11)
+            self.ItohCoef = util.itohRead()['itohCoef'][self.Z-1].reshape(11, 11)
             itohCoef = self.ItohCoef
         try:
             t = (np.log10(self.Temperature) -7.25)/1.25

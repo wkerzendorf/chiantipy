@@ -22,7 +22,7 @@ class spectrum:
 
     em [for emission measure], can be a float or an array of the same length as the
     temperature/density.'''
-    def __init__(self, temperature, density, wavelength, filter=(chfilters.gaussianR, 1000.),  ionList = 0, minAbund=0., doContinuum=1, em = None,  verbose=0):
+    def __init__(self, temperature, density, wavelength, filter=(chfilters.gaussianR, 1000.),  ionList = 0, minAbund=0., doContinuum=1, em = None,  verbose=0, allLine=1):
         t1 = datetime.now()
         masterlist = util.masterListRead()
         # use the ionList but make sure the ions are in the database
@@ -144,6 +144,7 @@ class spectrum:
                         print ' calculating spectrum for  :  ', ionSd
                         thisIon = chianti.core.ion(ionSd, temperature, density)
 #                       print ' dir = ', dir(thisIon)
+                        thisIon.emiss(allLines=allLines)
                         thisIon.intensity(wvlRange = wvlRange)
                         # check that there are lines in this wavelength range - probably not redundant
                         if 'errorMessage' not in  thisIon.Intensity.keys():
