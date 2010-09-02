@@ -72,9 +72,8 @@ def letg(wvl, wvl0, factor=2.5):
     if not factor:
         factor = 2.5
     wvl = np.asarray(wvl, 'float64')
-    dwvl = wvl - np.roll(wvl, 1)
-    dwvl[0] = dwvl[1]
-    moffat = 1./(1.+(wvl/wvl0))**factor
+    dwvl = np.abs(wvl[1] - wvl[0])
+    moffat = 1./(1.+((wvl - wvl0)/0.0275)**2)**factor
     return moffat/(dwvl*moffat.sum())
 
 

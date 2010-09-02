@@ -37,7 +37,7 @@ def doIonQ(inQueue, outQueue):
         filter = inputs[4]
         allLines = inputs[5]
         thisIon = chianti.core.ion(ionS, temperature, density)
-        thisIon.emiss(allLines = allLines)
+        thisIon.intensity(wvlRange = wvlRange, allLines = allLines)
         thisIon.spectrum(wavelength,  filter=filter)
         outList = [ionS, thisIon.Spectrum]
         if not thisIon.Dielectronic:

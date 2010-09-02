@@ -8,7 +8,7 @@ setup(name = 'ChiantiPy',
     url = 'http://chiantipy.sourceforge.net',
     download_url = 'http://sourceforge.net/projects/chiantipy',
     package_dir = {'chianti':''},
-    packages = ['chianti','chianti.gui_qt','chianti.gui_wx','chianti.gui_cl'],
+    packages = ['chianti','chianti.core','chianti.gui_qt','chianti.gui_wx','chianti.gui_cl'],
     classifiers = [
     'Development Status :: 3 - Alpha',
     'Environment :: Console',

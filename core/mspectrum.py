@@ -1,3 +1,28 @@
+from datetime import datetime
+import types
+#
+try:
+    import multiprocessing as mp
+    from chianti import mputil
+    import chianti.mputil as mputil
+except:
+    if chInteractive:
+        print ' your version of Python does not support multiprocessing \n you will not be able to use mspectrum'
+#
+import numpy as np
+import chianti
+import chianti.constants as const
+import chianti.filters as chfilters
+import chianti.util as util
+#
+defaults = chianti.Defaults
+#
+# the following is necessary to make chiantipy non interactive for the web
+try:
+    chInteractive = int(os.environ['CHIANTIPY_INTERACTIVE'])
+except:
+    chInteractive = 1
+#
 class mspectrum:
     ''' this is the multiprocessing version of spectrum
     Calculate the emission spectrum as a function of temperature and density.
@@ -23,12 +48,15 @@ class mspectrum:
 
     em [for emission measure], can be a float or an array of the same length as the
     temperature/density.
+    allLines = 1 will include lines with either theoretical or observed wavelengths.  allLines=0 will
+    include only those lines with observed wavelengths
+
     proc = the number of processors to use
     timeout - a small but non-zero value seems to be necessary
     '''
     def __init__(self, temperature, density, wavelength, filter=(chfilters.gaussianR, 1000.),  ionList = 0, minAbund=0., doContinuum=1, allLines = 1, em = None,  proc=3,  verbose = 0,  timeout=0.1):
         t1 = datetime.now()
-        masterlist = util.masterListRead()
+        masterlist = chianti.MasterList
         # use the ionList but make sure the ions are in the database
         if ionList:
             alist=[]
@@ -40,13 +68,13 @@ class mspectrum:
                         pstring = ' %s not in CHIANTI database'%(one)
                         print('')
             masterlist = alist
-        self.Defaults=defaults
+        self.Defaults = defaults
         self.Temperature = np.asarray(temperature, 'float64')
         nTemp = self.Temperature.size
         self.Density = np.asarray(density, 'float64')
         nDen = self.Density.size
         nTempDen = max([nTemp, nDen])
-        if em:
+        if type(em) != types.NoneType:
             if isinstance(em, float):
                 if nTempDen > 1:
                     em = np.ones_like(self.Temperature)*em
@@ -61,7 +89,7 @@ class mspectrum:
                     return
             self.Em = em
         self.AllLines = allLines
-        self.AbundanceName = defaults['abundfile']
+        self.AbundanceName = self.Defaults['abundfile']
         self.AbundanceAll = util.abundanceRead(abundancename = self.AbundanceName)
         abundAll = self.AbundanceAll['abundance']
         nonzed = abundAll > 0.
@@ -137,7 +165,8 @@ class mspectrum:
                         if chInteractive and verbose:
                             print ' setting up  spectrum calculation for  :  ', ionSd
 #                        dielWorkerQ.put((ionSd, temperature, density, wavelength, filter))
-                        ionWorkerQ.put((ionSd, temperature, density, wavelength, filter, allLines))
+                        # set allLines fo dielectronic
+                        ionWorkerQ.put((ionSd, temperature, density, wavelength, filter, 1))
                         self.Todo.append(ionSd)
         #
         ffWorkerQSize = ffWorkerQ.qsize()

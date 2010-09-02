@@ -1,3 +1,16 @@
+import types
+import numpy as np
+from scipy import interpolate
+try:
+    from matplotlib.delaunay.triangulate import Triangulation
+except:
+    from scikits.delaunay.triangulate import Triangulation
+import chianti
+import chianti.util as util
+import chianti.constants as const
+ip = chianti.Ip
+MasterList = chianti.MasterList
+import chianti
 class continuum:
     '''The top level class for continuum calculations.
 
@@ -8,9 +21,9 @@ class continuum:
         self.Ion = nameDict['Ion']
         self.IonStr = ionStr
         self.Dielectronic = 0
-        self.Defaults=defaults
-        self.AbundanceName = defaults['abundfile']
-        self.IoneqName = defaults['ioneqfile']
+        self.Defaults = chianti.Defaults
+        self.AbundanceName = self.Defaults['abundfile']
+        self.IoneqName = self.Defaults['ioneqfile']
         #
         #  ip in eV, reading Ip of next lower level, needed for freeBound
 

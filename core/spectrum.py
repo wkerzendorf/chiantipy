@@ -1,3 +1,13 @@
+import types
+from datetime import datetime
+import numpy as np
+import chianti
+import chianti.constants as const
+import chianti.filters as chfilters
+import chianti.util as util
+#
+defaults = chianti.Defaults
+chInteractive = chianti.chInteractive
 class spectrum:
     '''Calculate the emission spectrum as a function of temperature and density.
 
@@ -22,9 +32,9 @@ class spectrum:
 
     em [for emission measure], can be a float or an array of the same length as the
     temperature/density.'''
-    def __init__(self, temperature, density, wavelength, filter=(chfilters.gaussianR, 1000.),  ionList = 0, minAbund=0., doContinuum=1, em = None,  verbose=0, allLine=1):
+    def __init__(self, temperature, density, wavelength, filter=(chfilters.gaussianR, 1000.),  ionList = 0, minAbund=0, doContinuum=1, em = None,  verbose=0, allLines=1):
         t1 = datetime.now()
-        masterlist = util.masterListRead()
+        masterlist = chianti.MasterList
         # use the ionList but make sure the ions are in the database
         if ionList:
             alist=[]
@@ -56,7 +66,7 @@ class spectrum:
                     print ' the emission measure array must be the same size as the temperature/density array'
                     return
         self.AbundanceName = defaults['abundfile']
-        self.AbundanceAll = util.abundanceRead(abundancename = self.AbundanceName)
+        self.AbundanceAll = chianti.AbundanceAll
         abundAll = self.AbundanceAll['abundance']
         nonzed = abundAll > 0.
         minAbundAll = abundAll[nonzed].min()
@@ -125,7 +135,8 @@ class spectrum:
                             print ' calculating spectrum for  :  ', ionS
                         thisIon = chianti.core.ion(ionS, temperature, density)
 #                       print ' dir = ', dir(thisIon)
-                        thisIon.intensity(wvlRange = wvlRange)
+#                        thisIon.emiss(wvlRange = wvlRange, allLines=allLines)
+                        thisIon.intensity(wvlRange = wvlRange, allLines=allLines)
                         # check that there are lines in this wavelength range
                         if 'errorMessage' not in  thisIon.Intensity.keys():
                             thisIon.spectrum(wavelength, filter=filter)
@@ -144,8 +155,9 @@ class spectrum:
                         print ' calculating spectrum for  :  ', ionSd
                         thisIon = chianti.core.ion(ionSd, temperature, density)
 #                       print ' dir = ', dir(thisIon)
-                        thisIon.emiss(allLines=allLines)
-                        thisIon.intensity(wvlRange = wvlRange)
+#                       have to do all lines for the dielectronic satellites
+#                        thisIon.emiss(allLines=1)
+                        thisIon.intensity(wvlRange = wvlRange, allLines=allLines)
                         # check that there are lines in this wavelength range - probably not redundant
                         if 'errorMessage' not in  thisIon.Intensity.keys():
                             thisIon.spectrum(wavelength, filter=filter)
