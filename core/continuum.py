@@ -971,12 +971,12 @@ class continuum:
         # ----------------------------------------------------------------------------------------
         #
     def ioneqOne(self):
-        '''Determine the ionization equilibrium for the selected ion as a function of temperature.'''
+        '''Provide the ionization equilibrium for the selected ion as a function of temperature.
+        returned in self.IoneqOne'''
         #
         try:
             temperature = self.Temperature
         except:
-            print ' self.Temperature undefined in ioneqOne'
             return
         #
         try:
@@ -989,23 +989,25 @@ class continuum:
         Z=self.Z
         Ion=self.Ion
         Dielectronic=self.Dielectronic
+        ioneqOne = np.zeros_like(temperature)
         #
-        thisIoneq=ioneqAll['ioneqAll'][Z-1,Ion-1].squeeze()
+        thisIoneq=ioneqAll['ioneqAll'][Z-1,Ion-1-Dielectronic].squeeze()
 #        thisIoneq = self.Ioneq
-        gioneq = thisIoneq > 0.
-        y2 = interpolate.splrep(np.log(ioneqTemperature[gioneq]),np.log(thisIoneq[gioneq]),s=0)
-        goodt1 = self.Temperature >= ioneqTemperature[gioneq].min()
-        goodt2 = self.Temperature <= ioneqTemperature[gioneq].max()
-        goodt = np.logical_and(goodt1,goodt2)
+        gioneq=thisIoneq > 0.
+        goodt1=self.Temperature >= ioneqTemperature[gioneq].min()
+        goodt2=self.Temperature <= ioneqTemperature[gioneq].max()
+        goodt=np.logical_and(goodt1,goodt2)
+        y2=interpolate.splrep(np.log(ioneqTemperature[gioneq]),np.log(thisIoneq[gioneq]),s=0)
         #
         if goodt.sum() > 0:
-            gIoneq=interpolate.splev(np.log(self.Temperature),y2)   #,der=0)
+            gIoneq=interpolate.splev(np.log(self.Temperature[goodt]),y2)   #,der=0)
             gIoneq=np.exp(gIoneq)
         else:
             gIoneq=0.
         #
-        self.IoneqOne=gIoneq
-        return  # gIoneq
+        ioneqOne[goodt]=gIoneq
+        self.IoneqOne = ioneqOne
         #
         # -------------------------------------------------------------------------------------
+        #
         #
