@@ -16,12 +16,14 @@ import chianti.filters as chfilters
 import chianti.util as util
 #
 defaults = chianti.Defaults
+Abundanceall = chianti.AbundanceAll
+chInteractive = chianti.chInteractive
 #
 # the following is necessary to make chiantipy non interactive for the web
-try:
-    chInteractive = int(os.environ['CHIANTIPY_INTERACTIVE'])
-except:
-    chInteractive = 1
+#try:
+#    chInteractive = int(os.environ['CHIANTIPY_INTERACTIVE'])
+#except:
+#    chInteractive = 1
 #
 class mspectrum:
     ''' this is the multiprocessing version of spectrum
@@ -90,7 +92,7 @@ class mspectrum:
             self.Em = em
         self.AllLines = allLines
         self.AbundanceName = self.Defaults['abundfile']
-        self.AbundanceAll = util.abundanceRead(abundancename = self.AbundanceName)
+#        self.AbundanceAll = util.abundanceRead(abundancename = self.AbundanceName)
         abundAll = self.AbundanceAll['abundance']
         nonzed = abundAll > 0.
         minAbundAll = abundAll[nonzed].min()

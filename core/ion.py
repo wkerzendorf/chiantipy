@@ -2,16 +2,59 @@ import os
 import types
 import numpy as np
 from scipy import interpolate
+#
 import chianti
+chInteractive = chianti.chInteractive
+if chInteractive:
+    import pylab as pl
+else:
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as pl
+#
+#    #
+if pl.rcParams['backend'].lower() == 'qt4agg':
+    import chianti.gui_qt.gui as gui
+elif pl.rcParams['backend'].lower() == 'wxagg':
+    import chianti.gui_wx.gui as gui
+elif pl.rcParams['backend'].lower() == 'gtkagg':
+    import chianti.gui_cl.gui as gui
+elif pl.rcParams['backend'].lower() == 'agg':
+    import chianti.gui_cl.gui as gui
+elif pl.rcParams['backend'].lower() == 'agg':
+    import chianti.gui_cl.gui as gui
+elif pl.rcParams['backend'].lower() == 'macosx ':
+    import chianti.gui_cl.gui as gui
+else:
+    print ' - Warning - '
+    print ' - in order to use the various gui dialogs, the matlpotlib/pylab backend needs'
+    print ' - to be either Qt4Agg or WXAgg - '
+    print ' - in order to use the command line dialogs, the matlpotlib/pylab backend needs'
+    print ' - to be GTKAgg or MacOSX - '
+    print ' - current backend is ',pl.rcParams['backend']
+    print ' - the full functionality of the chianti.core.ion class may not be available'
+    print ' - it would probably be better to set your matplotlib backend to either'
+    print ' - Qt4Agg, WXAgg, GTKAgg, or MacOSX'
+    print ' - using the command line dialogs for now but there could be problems -'
+    import chianti.gui_cl.gui as gui
+#    #
 import chianti.filters as chfilters
 import chianti.util as util
 import chianti.constants as const
+#import chianti.pl as pl
+#
+#try:
+#    chInteractive = int(os.environ['CHIANTIPY_INTERACTIVE'])
+#except:
+#    chInteractive = 1
 #
 xuvtop = chianti.xuvtop
 #
 ip = chianti.Ip
-#MasterList = chianti.MasterList
-defaults = chianti.Defaults
+MasterList = chianti.MasterList
+Defaults = chianti.Defaults
+AbundanceAll = chianti.AbundanceAll
+IoneqAll = chianti.IoneqAll
 class ion:
     '''The top level class for performing spectral calculations for an ion in the CHIANTI database.
 
@@ -34,9 +77,9 @@ class ion:
         #
 #        self.__version__ = chianti.__version__
         self.IonStr=ionStr
-        self.Defaults=defaults
-        self.AbundanceName = defaults['abundfile']
-        self.IoneqName = defaults['ioneqfile']
+        self.Defaults=Defaults
+        self.AbundanceName = Defaults['abundfile']
+        self.IoneqName = Defaults['ioneqfile']
         MasterList = chianti.MasterList
         #
         self.Z=util.convertName(ionStr)['Z']
@@ -56,11 +99,12 @@ class ion:
             self.Temperature = np.array(temperature,'float64')
         #
         #
-        self.AbundanceAll = util.abundanceRead(abundancename = self.AbundanceName)
+#        self.AbundanceAll = util.abundanceRead(abundancename = self.AbundanceName)
+        self.AbundanceAll = AbundanceAll
         self.Abundance = self.AbundanceAll['abundance'][self.Z-1]
         #
 #        self.IoneqAll = util.ioneqRead(ioneqname = self.Defaults['ioneqfile'])
-        self.IoneqAll = chianti.IoneqAll
+        self.IoneqAll = IoneqAll
         self.ioneqOne()
         #
         #  this needs to go after setting temperature and reading ionization equilibria

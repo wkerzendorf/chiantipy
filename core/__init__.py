@@ -7,6 +7,7 @@ that is found in the LICENSE file
 
 
 '''
+import chianti
 #import os
 #import types
 ##from datetime import *
@@ -55,6 +56,7 @@ that is found in the LICENSE file
 #defaults = util.defaultsRead(verbose = chInteractive)
 #print ' core __init_ defaults = ', defaults
 #
+#from chianti import *
 from spectrum import spectrum
 from mspectrum import mspectrum
 from continuum import continuum
@@ -63,10 +65,10 @@ from ion import ion
 ##from ion import ionWeb
 ##from ionweb import ionWeb
 #
-##if chInteractive:
-##    import matplotlib as pl
-##else:
-##    import pylab as pl
+#if chInteractive:
+#    import matplotlib as pl
+#else:
+#    import pylab as pl
 ##
 ###
 ##
