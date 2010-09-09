@@ -30,8 +30,8 @@ class continuum:
         if self.Ion > 1:
             self.Ip=ip[self.Z-1, self.Ion-2]
         else:
-            print ' in continuum, trying to use the neutral ion'
-            self.FreeBound={}
+            if chianti.chInteractive:
+                print ' in continuum, trying to use the neutral ion'
             return
         #
         if type(temperature) != types.NoneType:
@@ -289,6 +289,9 @@ class continuum:
             self.ioneqOne()
             gIoneq = self.IoneqOne
         #
+        if not np.any(gIoneq) > 0:
+            self.FreeBound = {'errorMessage':' no non-zero values of ioneq'}
+            return
         try:
             abund = self.Abundance
         except:

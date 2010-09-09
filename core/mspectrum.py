@@ -93,6 +93,7 @@ class mspectrum:
         self.AllLines = allLines
         self.AbundanceName = self.Defaults['abundfile']
 #        self.AbundanceAll = util.abundanceRead(abundancename = self.AbundanceName)
+        self.AbundanceAll = chianti.AbundanceAll
         abundAll = self.AbundanceAll['abundance']
         nonzed = abundAll > 0.
         minAbundAll = abundAll[nonzed].min()
