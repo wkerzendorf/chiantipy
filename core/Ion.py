@@ -50,11 +50,11 @@ import chianti.constants as const
 #
 xuvtop = chianti.xuvtop
 #
-ip = chianti.Ip
-MasterList = chianti.MasterList
-Defaults = chianti.Defaults
-AbundanceAll = chianti.AbundanceAll
-IoneqAll = chianti.IoneqAll
+#ip = chianti.Ip
+#MasterList = chianti.MasterList
+#Defaults = chianti.Defaults
+#AbundanceAll = chianti.AbundanceAll
+#IoneqAll = chianti.IoneqAll
 class ion:
     '''The top level class for performing spectral calculations for an ion in the CHIANTI database.
 
@@ -77,9 +77,9 @@ class ion:
         #
 #        self.__version__ = chianti.__version__
         self.IonStr=ionStr
-        self.Defaults=Defaults
-        self.AbundanceName = Defaults['abundfile']
-        self.IoneqName = Defaults['ioneqfile']
+        self.Defaults=chianti.Defaults
+        self.AbundanceName = self.Defaults['abundfile']
+        self.IoneqName = self.Defaults['ioneqfile']
         MasterList = chianti.MasterList
         #
         self.Z=util.convertName(ionStr)['Z']
@@ -93,18 +93,18 @@ class ion:
         #
         #  ip in eV, but don't read for bare ions
         if self.Ion <= self.Z:
-            self.Ip=ip[self.Z-1, self.Ion-1-self.Dielectronic]
+            self.Ip=chianti.Ip[self.Z-1, self.Ion-1-self.Dielectronic]
         #
         if type(temperature) != types.NoneType:
             self.Temperature = np.array(temperature,'float64')
         #
         #
 #        self.AbundanceAll = util.abundanceRead(abundancename = self.AbundanceName)
-        self.AbundanceAll = AbundanceAll
+        self.AbundanceAll = chianti.AbundanceAll
         self.Abundance = self.AbundanceAll['abundance'][self.Z-1]
         #
 #        self.IoneqAll = util.ioneqRead(ioneqname = self.Defaults['ioneqfile'])
-        self.IoneqAll = IoneqAll
+        self.IoneqAll = chianti.IoneqAll
         self.ioneqOne()
         #
         #  this needs to go after setting temperature and reading ionization equilibria
@@ -3324,8 +3324,7 @@ class ioneq(ion):
     '''Calculates the ionization equilibrium for an element as a function of temperature.
     The variable z is the atomic number of the element.  Acceptable values are from 1 to 30.'''
     def __init__(self,z, temperature, verbose=False):
-#        self.Defaults=defaults
-        ionList=[]
+#       ionList=[]
         chIons=[]
         self.Z=z
         self.Temperature = np.array(temperature, 'float64')

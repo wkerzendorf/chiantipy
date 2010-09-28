@@ -26,4 +26,3 @@ MasterList = util.masterListRead()
 AbundanceAll = util.abundanceRead(abundancename = Defaults['abundfile'])
 IoneqAll = util.ioneqRead(ioneqname = Defaults['ioneqfile'])
 import core
-__version__ = '0.3'
