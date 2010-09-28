@@ -2147,12 +2147,15 @@ class ion:
         y2=interpolate.splrep(np.log(ioneqTemperature[gioneq]),np.log(thisIoneq[gioneq]),s=0)
         #
         if goodt.sum() > 0:
-            gIoneq=interpolate.splev(np.log(self.Temperature[goodt]),y2)   #,der=0)
-            gIoneq=np.exp(gIoneq)
+            if self.Temperature.size > 1:
+                gIoneq=interpolate.splev(np.log(self.Temperature[goodt]),y2)   #,der=0)
+                ioneqOne[goodt] = np.exp(gIoneq)
+            else:
+                gIoneq=interpolate.splev(np.log(self.Temperature),y2)
+                ioneqOne = np.exp(gIoneq)
         else:
-            gIoneq=0.
+            ioneqOne = 0.
         #
-        ioneqOne[goodt]=gIoneq
         self.IoneqOne = ioneqOne
         #
         # -------------------------------------------------------------------------------------
@@ -2292,7 +2295,7 @@ class ion:
         nxvalues=len(xvalues)
         #  maxAll is an array
         ymax = np.max(1.2*emiss[top-1]/maxAll)
-        ymin = ymax
+        ymin = np.min(emiss[0]/maxAll)  # was originally  = ymax
         for iline in range(top):
             tline=topLines[iline]
             pl.loglog(xvalues,emiss[tline]/maxAll)
