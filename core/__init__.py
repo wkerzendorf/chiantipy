@@ -62,7 +62,8 @@ from mspectrum import mspectrum
 from continuum import continuum
 #from ion import ioneq
 from Ion import ion
-##from ion import ionWeb
+from Ion import ionWeb
+from Ion import ioneq
 ##from ionweb import ionWeb
 #
 #if chInteractive:
