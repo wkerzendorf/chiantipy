@@ -35,7 +35,9 @@ def doIonQ(inQueue, outQueue):
         wavelength = inputs[3]
         wvlRange = [wavelength.min(), wavelength.max()]
         filter = inputs[4]
+        allLines = inputs[5]
         thisIon = chianti.core.ion(ionS, temperature, density)
+        thisIon.intensity(wvlRange = wvlRange, allLines = allLines)
         thisIon.spectrum(wavelength,  filter=filter)
         outList = [ionS, thisIon.Spectrum]
         if not thisIon.Dielectronic:
@@ -44,3 +46,6 @@ def doIonQ(inQueue, outQueue):
                 outList.append(thisIon.TwoPhoton)
         outQueue.put(outList)
     return
+    #
+    # ----------------------------------------------
+    #

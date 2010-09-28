@@ -1,72 +1,18 @@
-'''Contains the main classes for ChiantiPy users.
-
-Copyright 2009, 2010 Kenneth P. Dere
-
-This software is distributed under the terms of the GNU General Public License
-that is found in the LICENSE file
-
-
-'''
 import os
 import types
-from datetime import *
-#from ConfigParser import *
 import numpy as np
 from scipy import interpolate
 #
-# the following is necessary to make chiantipy non interactive for the web
-try:
-    chInteractive = int(os.environ['CHIANTIPY_INTERACTIVE'])
-except:
-    chInteractive = 1
-#
-try:
-#    from Queue.Queue import *
-    import multiprocessing as mp
-    from chianti import mputil
-#    from multiprocessing import Pool as mp.Pool
-#    from multiprocessing import Process,  Queue
-except:
-    if chInteractive:
-        print ' your version of Python does not support multiprocessing \n you will not be able to use mspectrum'
-#
+import chianti
+chInteractive = chianti.chInteractive
 if chInteractive:
     import pylab as pl
 else:
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as pl
-try:
-    from matplotlib.delaunay.triangulate import Triangulation
-except:
-    from scikits.delaunay.triangulate import Triangulation
-import chianti
-from chianti import util
-import chianti.constants as const
-import chianti.filters as chfilters
 #
-xuvtop=os.environ['XUVTOP']
-
-#if chInteractive:
-#    import matplotlib as pl
-#else:
-#    import pylab as pl
-#
-ip = util.ipRead()
-MasterList = util.masterListRead()
-# zn_25.elvlc does not have as many levels as the splups file
-MasterList.remove('zn_25')
-#
-defaults = util.defaultsRead(verbose = chInteractive)
-#
-#if defaults['gui'] == 'qt':
-#   import chianti.gui_qt.gui as gui
-#elif defaults['gui'] == 'wx':
-#    import chianti.gui_wx.gui as gui
-#else:
-#    print ' unknown gui - ',defaults['gui']
-#    print ' the full functionality of the chiant.core.ion class will not be available'
-    #
+#    #
 if pl.rcParams['backend'].lower() == 'qt4agg':
     import chianti.gui_qt.gui as gui
 elif pl.rcParams['backend'].lower() == 'wxagg':
@@ -91,1007 +37,24 @@ else:
     print ' - Qt4Agg, WXAgg, GTKAgg, or MacOSX'
     print ' - using the command line dialogs for now but there could be problems -'
     import chianti.gui_cl.gui as gui
-    #
-class continuum:
-    '''The top level class for continuum calculations.
-
-    includes methods for the calculation of the free-free and free-bound continua.'''
-    def __init__(self, ionStr,  temperature=None,  density=None):
-        nameDict = util.convertName(ionStr)
-        self.Z = nameDict['Z']
-        self.Ion = nameDict['Ion']
-        self.IonStr = ionStr
-        self.Dielectronic = 0
-        self.Defaults=defaults
-        self.AbundanceName = defaults['abundfile']
-        self.IoneqName = defaults['ioneqfile']
-        #
-        #  ip in eV, reading Ip of next lower level, needed for freeBound
-
-        if self.Ion > 1:
-            self.Ip=ip[self.Z-1, self.Ion-2]
-        else:
-            print ' in continuum, trying to use the neutral ion'
-            self.FreeBound={}
-            return
-        #
-        if type(temperature) != types.NoneType:
-            self.Temperature = np.array(temperature,'float64')
-        #
-        if type(density) != types.NoneType:
-            self.Density = np.asarray(density,'float64')
-        #
-        #----------------------------------------------------------------------------------------
-        #
-    def freeBoundEmiss(self, wvl, verner=1):
-        '''Calculates the free-bound (radiative recombination) continuum emissivity of an ion.
-
-        Uses the Gaunt factors of Karzas, W.J, Latter, R, 1961, ApJS, 6, 167
-        for recombination to the ground level, the photoionization cross sections of
-        Verner and Yakovlev, 1995, A&ASS, 109, 125
-        are used to develop the free-bound cross section
-        provides emissivity = ergs cm^-2 s^-1 str^-1 Angstrom ^-1 for an individual ion
-        does not include the elemental abundance or ionization fraction
-        the specified ion is the target ion'''
-        #
-        wvl = np.asarray(wvl, 'float64')
-        try:
-            temperature = self.Temperature
-        except:
-            print ' temperature undefined'
-            return
-        #
-        try:
-            fblvl = self.Fblvl
-        except:
-            fblvlname = util.zion2filename(self.Z,self.Ion-1)+'.fblvl'
-            self.Fblvl = util.fblvlRead(fblvlname)
-            fblvl = self.Fblvl
-        #  need some data for the recombining ion
-        try:
-            rFblvl = self.rFblvl
-        except:
-            if self.Ion == self.Z+1:
-                # then we looking for the bare ion
-                rFblvl = {'mult':[1., 1.]}
-            else:
-                rfblvlname = util.zion2filename(self.Z,self.Ion)+'.fblvl'  # previously self.Ion)
-                self.rFblvl = util.fblvlRead(rfblvlname)
-                rFblvl = self.rFblvl
-        #  6/9/2010 the recombining iion is the present ion
-        #
-        # for the ionization potential, Ip, must use that of the recombined ion
-        ipcm = self.Ip/const.invCm2Ev
-        #
-        nlvls = len(fblvl['lvl'])
-        # pqn = principle quantum no. n
-        pqn = fblvl['pqn']
-        # l is angular moment quantum no. L
-        l = fblvl['l']
-        # energy level in inverse cm
-        ecm = fblvl['ecm']
-        for i in range(nlvls):
-            print ' lvl ecm wvl = ',i, ecm[i], 1.e+8/(ipcm-ecm[i])
-        # statistical weigths/multiplicities
-        mult = fblvl['mult']
-        multr = rFblvl['mult']
-        #
-        #
-        ipcm = self.Ip/const.invCm2Ev
-        wecm = ipcm-ecm
-        #
-        # get Karzas-Latter Gaunt factors
-        try:
-            klgfb = self.Klgfb
-        except:
-            self.Klgfb = util.klgfbRead()
-            klgfb = self.Klgfb
-        #
-        nWvl = wvl.size
-        nTemp = temperature.size
-        #
-        if verner:
-            lvl1 = 1
-        else:
-            lvl1 = 0
-            #
-        if (nTemp > 1) and (nWvl > 1):
-            mask = np.zeros((nlvls,nTemp,nWvl),'Bool')
-            fbrate = np.zeros((nlvls,nTemp,nWvl),'float64')
-            expf = np.zeros((nlvls,nTemp,nWvl),'float64')
-            ratg = np.zeros((nlvls),'float64')
-            fbRate = np.zeros((nTemp,nWvl),'float64')
-            if verner:
-                self.vernerCross(wvl)
-                vCross = self.VernerCross
-            #
-            ratg[0] = float(mult[0])/float(multr[0])
-            ipLvlEv = self.Ip - const.invCm2Ev*ecm[0]
-            ipLvlErg = const.ev2Erg*ipLvlEv
-            for itemp in range(nTemp):
-                mask[0,itemp] = 1.e+8/wvl < (ipcm - ecm[0])
-                expf[0,itemp] = np.exp((ipLvlErg - 1.e+8*const.planck*const.light/wvl)/(const.boltzmann*temperature[itemp]))
-                fbrate[0,itemp] = (const.planck*const.light/(1.e-8*wvl))**5*const.verner*ratg[0]*expf[0,itemp]*vCross/temperature[itemp]**1.5
-            for ilvl in range(lvl1,nlvls):
-                ipLvlEv = self.Ip - const.invCm2Ev*ecm[ilvl]
-                ipLvlErg = const.ev2Erg*ipLvlEv
-                scaledE = np.log(const.ev2Ang/(ipLvlEv*wvl))
-                thisGf = klgfb['klgfb'][pqn[ilvl]-1, l[ilvl]]
-                spl = interpolate.splrep(klgfb['pe'], thisGf)
-                gf = np.exp(interpolate.splev(scaledE, spl))
-                ratg[ilvl] = float(mult[ilvl])/float(multr[0]) # ratio of statistical weights
-            #
-                for itemp in range(nTemp):
-                    expf[ilvl] = np.exp((ipLvlErg - 1.e+8*const.planck*const.light/wvl)/(const.boltzmann*temperature[itemp]))
-                    ipLvlErg = const.ev2Erg*ipLvlEv
-                    expf[ilvl,itemp] = np.exp((ipLvlErg - 1.e+8*const.planck*const.light/wvl)/(const.boltzmann*temperature[itemp]))
-                    mask[ilvl,itemp] = 1.e+8/wvl < (ipcm - ecm[ilvl])
-                    fbrate[ilvl,itemp] = const.freeBound*ratg[ilvl]*(ipLvlErg**2/float(pqn[ilvl]))*gf*expf[ilvl,itemp]/(temperature[itemp]**1.5*(wvl)**2)
-            fbrma = np.ma.array(fbrate)
-            fbrma.mask =  mask
-            fbrma.fill_value = 0.
-            fbRate = (fbrma).sum(axis=0)
-            fbRate.fill_value = 0.
-            self.FreeBoundEmiss = {'emiss':fbRate.data, 'temperature':temperature,'wvl':wvl}
-            #
-        elif (nTemp == 1) and (nWvl > 1):
-            mask = np.zeros((nlvls,nWvl),'Bool')
-            fbrate = np.zeros((nlvls,nWvl),'float64')
-            expf = np.zeros((nlvls,nWvl),'float64')
-            ratg = np.zeros((nlvls),'float64')
-            if verner:
-                self.vernerCross(wvl)
-                vCross = self.VernerCross
-                #
-                mask[0] = 1.e+8/wvl < (ipcm - ecm[0])
-                ratg[0] = float(mult[0])/float(multr[0])
-                ipLvlEv = self.Ip - const.invCm2Ev*ecm[0]
-                print ' verner ipLvlEv =', ipLvlEv
-                ipLvlErg = const.ev2Erg*ipLvlEv
-                expf[0] = np.exp((ipLvlErg - 1.e+8*const.planck*const.light/wvl)/(const.boltzmann*temperature))
-                fbrate[0] = (const.planck*const.light/(1.e-8*wvl))**5*const.verner*ratg[0]*vCross/temperature**1.5
-#                print ' expf verner = ', expf[0]
-#                print ' fbrate verner = ', fbrate[0]
-            for ilvl in range(lvl1,nlvls):
-                # scaled energy is relative to the ionization potential of each individual level
-                ipLvlEv = self.Ip - const.invCm2Ev*ecm[ilvl]
-#                print ' ilvl, ipLvlEv = ', ilvl, ipLvlEv
-                scaledE = np.log(const.ev2Ang/(ipLvlEv*wvl))
-                thisGf = klgfb['klgfb'][pqn[ilvl]-1, l[ilvl]]
-                spl = interpolate.splrep(klgfb['pe'], thisGf)
-                gf = np.exp(interpolate.splev(scaledE, spl))
-                mask[ilvl] = 1.e+8/wvl < (ipcm - ecm[ilvl])
-                ratg[ilvl] = float(mult[ilvl])/float(multr[0]) # ratio of statistical weights
-                ipLvlErg = const.ev2Erg*ipLvlEv
-                expf[ilvl] = np.exp((ipLvlErg - 1.e+8*const.planck*const.light/wvl)/(const.boltzmann*temperature))
-                fbrate[ilvl] = const.freeBound*ratg[ilvl]*(ipLvlErg**2/float(pqn[ilvl]))*gf/(temperature**1.5*(wvl)**2)
-#                print ' ilvl, scaledE = ', ilvl, scaledE
-#                print ' ilvl, thisGf = ', ilvl, thisGf
-#                print ' ilvl, gf = ', ilvl, gf
-#                print ' ilvl ratg = ', ilvl, ratg[ilvl]
-#                print ' ilvl mask = ', ilvl, mask[ilvl]
-#                print ' ilvl expf = ', ilvl, expf[ilvl]
-#                print ' fbrate = ', ilvl,  fbrate[ilvl]
-            fbrma = np.ma.array(fbrate)
-            fbrma.mask =  mask
-            fbrma.fill_value = 0.
-            # factor of 1.e-8 converts to Angstrom^-1, otherwise it would be cm^-1
-            fbRate = (expf*fbrma).sum(axis=0)
-            fbRate.fill_value = 0.
-            self.FreeBoundEmiss = {'emiss':fbRate.data, 'temperature':temperature,'wvl':wvl}
-        else:
-            mask = np.zeros((nlvls,nTemp),'Bool')
-            fbrate = np.zeros((nlvls,nTemp),'float64')
-            expf = np.zeros((nlvls,nTemp),'float64')
-            ratg = np.zeros((nlvls),'float64')
-            if verner:
-                self.vernerCross(wvl)
-                vCross = self.VernerCross
-            #
-            mask[0] = 1.e+8/wvl < (ipcm - ecm[0])
-            ratg[0] = float(mult[0])/float(multr[0])
-            ipLvlEv = self.Ip - const.invCm2Ev*ecm[0]
-            ipLvlErg = const.ev2Erg*ipLvlEv
-            expf[0] = np.exp((ipLvlErg - 1.e+8*const.planck*const.light/wvl)/(const.boltzmann*temperature))
-            fbrate[0] = (const.planck*const.light/(1.e-8*wvl))**5*const.verner*ratg[0]*expf[0]*vCross/temperature**1.5
-            for ilvl in range(lvl1,nlvls):
-                # scaled energy is relative to the ionization potential of each individual level
-                ipLvlEv = self.Ip - const.invCm2Ev*ecm[ilvl]
-                scaledE = np.log(const.ev2Ang/(ipLvlEv*wvl))
-                thisGf = klgfb['klgfb'][pqn[ilvl]-1, l[ilvl]]
-                spl = interpolate.splrep(klgfb['pe'], thisGf)
-                gf = np.exp(interpolate.splev(scaledE, spl))
-                mask[ilvl] = 1.e+8/wvl < (ipcm - ecm[ilvl])
-                ratg[ilvl] = float(mult[ilvl])/float(multr[0]) # ratio of statistical weights
-                ipLvlErg = const.ev2Erg*ipLvlEv
-                expf[ilvl] = np.exp((ipLvlErg - 1.e+8*const.planck*const.light/wvl)/(const.boltzmann*temperature))
-                fbrate[ilvl] = const.freeBound*ratg[ilvl]*(ipLvlErg**2/float(pqn[ilvl]))*expf[ilvl]*gf/(temperature**1.5*(wvl)**2)
-            fbrma = np.ma.array(fbrate)
-            fbrma.mask =  mask
-            fbrma.fill_value = 0.
-            # factor of 1.e-8 converts to Angstrom^-1, otherwise it would be cm^-1
-            fbRate = (fbrma).sum(axis=0)
-            fbRate.fill_value = 0.
-            self.FreeBoundEmiss = {'emiss':fbRate.data, 'temperature':temperature,'wvl':wvl}
-            #
-            # ----------------------------------------------------------------------------
-            #
-    def freeBound(self, wvl, verner=1):
-        '''to calculate the free-bound (radiative recombination) continuum rate coefficient of an ion, where
-        the ion is taken to be the recombined ion,
-        including the elemental abundance and the ionization equilibrium population
-        uses the Gaunt factors of Karzas, W.J, Latter, R, 1961, ApJS, 6, 167
-        for recombination to the ground level, the photoionization cross sections of Verner and Yakovlev, 1995, A&ASS, 109, 125
-        are used to develop the free-bound cross section
-        includes the elemental abundance and the ionization fraction
-        provides emissivity = ergs cm^-2 s^-1 str^-1 Angstrom ^-1'''
-        wvl = np.asarray(wvl, 'float64')
-        #
-        #  ip in eV, for freebound
-        if self.Ion > 1 :
-            self.Ip=ip[self.Z-1, self.Ion-2]
-        else:
-            print ' in freeBound, trying to use the neutral ion as the recombining ion'
-            self.FreeBound={}
-            return
-        try:
-            temperature = self.Temperature
-        except:
-            print ' temperature undefined'
-            return
-        # the recombined ion contains that data for fblvl
-        try:
-            fblvl = self.Fblvl
-        except:
-            fblvlname = util.zion2filename(self.Z,self.Ion-1)+'.fblvl'
-            self.Fblvl = util.fblvlRead(fblvlname)
-            fblvl = self.Fblvl
-            # in case there is no fblvl file
-            if 'errorMessage' in fblvl.keys():
-                self.FreeBound = fblvl
-                return
-        #  need data for the current/recombining ion
-        try:
-            rFblvl = self.rFblvl
-        except:
-            if self.Ion+1 == self.Z:
-                # this is a bare ion
-                rFblvl = {'mult':[1., 1.]}
-            else:
-                rfblvlname = util.zion2filename(self.Z,self.Ion)+'.fblvl'
-                self.rFblvl = util.fblvlRead(fblvlname)
-                rFblvl = self.rFblvl
-            if 'errorMessage' in rFblvl.keys():
-                self.FreeBound = fblvl
-                return
-        try:
-            gIoneq = self.IoneqOne
-        except:
-            self.ioneqOne()
-            gIoneq = self.IoneqOne
-        #
-        if not np.any(gIoneq) > 0:
-            self.FreeBound = {'errorMessage':' no non-zero values of ioneq'}
-            return
-        #
-        try:
-            abund = self.Abundance
-        except:
-            self.AbundanceAll = util.abundanceRead(abundancename = self.AbundanceName)
-            self.Abundance = self.AbundanceAll['abundance'][self.Z-1]
-            abund = self.Abundance
-        #
-        ipcm = self.Ip/const.invCm2Ev
-        iperg = self.Ip*const.ev2Erg
-        #
-        nlvls = len(fblvl['lvl'])
-        # pqn = principle quantum no. n
-        pqn = np.asarray(fblvl['pqn'], 'float64')
-        # l is angular moment quantum no. L
-        l = fblvl['l']
-        # energy level in inverse cm
-        ecm = fblvl['ecm']
-        eerg = np.asarray(ecm, 'float64')*const.invCm2Erg
-        # get log of photon energy relative to the ionization potential
-        mult = fblvl['mult']
-        multr = rFblvl['mult']
-#       ipcm = self.Ip/const.invCm2Ev
-        #
-        #
-        wecm=1.e+8/(ipcm-ecm)
-        #
-        # get karzas-latter Gaunt factors
-        try:
-            klgfb = self.Klgfb
-        except:
-            self.Klgfb = util.klgfbRead()
-            klgfb = self.Klgfb
-        #
-        nWvl = wvl.size
-        nTemp = temperature.size
-    # statistical weigths/multiplicities
-        mult = fblvl['mult']
-        multr = rFblvl['mult']
-        #
-        if verner:
-            lvl1 = 1
-        else:
-            lvl1 = 0
-            #
-        nWvl = wvl.size
-        nTemp = temperature.size
-        #
-        if (nTemp > 1) and (nWvl > 1):
-            mask = np.zeros((nlvls,nTemp,nWvl),'Bool')
-            fbrate = np.zeros((nlvls,nTemp,nWvl),'float64')
-            expf = np.zeros((nlvls,nTemp,nWvl),'float64')
-            ratg = np.zeros((nlvls),'float64')
-            fbRate = np.zeros((nTemp,nWvl),'float64')
-            if verner:
-                self.vernerCross(wvl)
-                vCross = self.VernerCross
-                ratg[0] = float(mult[0])/float(multr[0])
-                ipLvlEv = self.Ip - const.invCm2Ev*ecm[0]
-                ipLvlErg = const.ev2Erg*ipLvlEv
-                ipLvlErg = iperg - eerg[0]
-                for itemp in range(nTemp):
-                    mask[0,itemp] = 1.e+8/wvl < (ipcm - ecm[0])
-                    expf[0,itemp] = np.exp((ipLvlErg - 1.e+8*const.planck*const.light/wvl)/(const.boltzmann*temperature[itemp]))
-                    fbrate[0,itemp] = (const.planck*const.light/(1.e-8*wvl))**5*const.verner*gIoneq[itemp]*ratg[0]*expf[0,itemp]*vCross/temperature[itemp]**1.5
-            for ilvl in range(lvl1,nlvls):
-                ipLvlEv = self.Ip - const.invCm2Ev*ecm[ilvl]
-                ipLvlErg = const.ev2Erg*ipLvlEv
-                ipLvlErg = iperg - eerg[0]
-                scaledE = np.log(const.ev2Ang/(ipLvlEv*wvl))
-                thisGf = klgfb['klgfb'][pqn[ilvl]-1, l[ilvl]]
-                spl = interpolate.splrep(klgfb['pe'], thisGf)
-                gf = np.exp(interpolate.splev(scaledE, spl))
-                ratg[ilvl] = float(mult[ilvl])/float(multr[0]) # ratio of statistical weights
-            #
-                for itemp in range(nTemp):
-                    expf[ilvl] = np.exp((ipLvlErg - 1.e+8*const.planck*const.light/wvl)/(const.boltzmann*temperature[itemp]))
-                    ipLvlErg = const.ev2Erg*ipLvlEv
-                    expf[ilvl,itemp] = np.exp((ipLvlErg - 1.e+8*const.planck*const.light/wvl)/(const.boltzmann*temperature[itemp]))
-                    mask[ilvl,itemp] = 1.e+8/wvl < (ipcm - ecm[ilvl])
-                    fbrate[ilvl,itemp] = const.freeBound*gIoneq[itemp]*ratg[ilvl]*(ipLvlErg**2/float(pqn[ilvl]))*gf*expf[ilvl,itemp]/(temperature[itemp]**1.5*(wvl)**2)
-            fbrma = np.ma.array(fbrate)
-            fbrma.mask =  mask
-            fbrma.fill_value = 0.
-            fbRate = (fbrma).sum(axis=0)
-            fbRate.fill_value = 0.
-            self.FreeBound = {'rate':abund*fbRate.data, 'temperature':temperature,'wvl':wvl}
-            #
-        elif (nTemp == 1) and (nWvl > 1):
-            mask = np.zeros((nlvls,nWvl),'Bool')
-            fbrate = np.zeros((nlvls,nWvl),'float64')
-            expf = np.zeros((nlvls,nWvl),'float64')
-            ratg = np.zeros((nlvls),'float64')
-            if verner:
-                self.vernerCross(wvl)
-                vCross = self.VernerCross
-                # mask is true for bad values
-                mask[0] = 1.e+8/wvl < (ipcm - ecm[0])
-                ratg[0] = float(mult[0])/float(multr[0])
-                ipLvlEv = self.Ip - const.invCm2Ev*ecm[0]
-                ipLvlErg = const.ev2Erg*ipLvlEv
-#               ipLvlErg = iperg - eerg[0]
-#               print ' verner ipLvlErg = ', ipLvlErg,  ipLvlErg/(const.boltzmann*temperature)
-                expf[0] = np.exp((ipLvlErg - 1.e+8*const.planck*const.light/wvl)/(const.boltzmann*temperature))
-                fbrate[0] = (const.planck*const.light/(1.e-8*wvl))**5*const.verner*ratg[0]*expf[0]*vCross/temperature**1.5
-            #
-            for ilvl in range(lvl1,nlvls):
-            # scaled energy is relative to the ionization potential of each individual level
-                ipLvlEv = self.Ip - const.invCm2Ev*ecm[ilvl]
-                scaledE = np.log(const.ev2Ang/(ipLvlEv*wvl))
-                thisGf = klgfb['klgfb'][pqn[ilvl]-1, l[ilvl]]
-                spl = interpolate.splrep(klgfb['pe'], thisGf)
-                gf = np.exp(interpolate.splev(scaledE, spl))
-                mask[ilvl] = 1.e+8/wvl < (ipcm - ecm[ilvl])
-                ratg[ilvl] = float(mult[ilvl])/float(multr[0]) # ratio of statistical weights
-                ipLvlErg = const.ev2Erg*ipLvlEv
-#               ipLvlErg = iperg - eerg[ilvl]
-#               print ' ilvl epLvlErg = ', ipLvlErg,  ipLvlErg/(const.boltzmann*temperature)
-                expf[ilvl] = np.exp((ipLvlErg - 1.e+8*const.planck*const.light/wvl)/(const.boltzmann*temperature))
-                fbrate[ilvl] = const.freeBound*ratg[ilvl]*(ipLvlErg**2/float(pqn[ilvl]))*expf[ilvl]*gf/(temperature**1.5*(wvl)**2)
-#               fbrate[ilvl] = const.freeBound*ratg[ilvl]*(eerg[ilvl]**2/float(pqn[ilvl]))*expf[ilvl]*gf/(temperature**1.5*(wvl)**2)
-            fbrma = np.ma.array(fbrate)
-            fbrma.mask =  mask
-            fbrma.fill_value = 0.
-            # factor of 1.e-8 converts to Angstrom^-1, otherwise it would be cm^-1
-            fbRate = abund*gIoneq*fbrma.sum(axis=0)
-            fbRate.fill_value = 0.
-            self.FreeBound = {'rate':fbRate.data, 'temperature':temperature,'wvl':wvl}
-        #elif (nTemp > 1) and (nWvl == 1):
-        else:
-            mask = np.zeros((nlvls,nTemp),'Bool')
-            fbrate = np.zeros((nlvls,nTemp),'float64')
-            expf = np.zeros((nlvls,nTemp),'float64')
-            ratg = np.zeros((nlvls),'float64')
-            if verner:
-                self.vernerCross(wvl)
-                vCross = self.VernerCross
-            mask[0] = 1.e+8/wvl < (ipcm - ecm[0])
-            ratg[0] = float(mult[0])/float(multr[0])
-            ipLvlEv = self.Ip - const.invCm2Ev*ecm[0]
-            ipLvlErg = const.ev2Erg*ipLvlEv
-            expf[0] = np.exp((ipLvlErg - 1.e+8*const.planck*const.light/wvl)/(const.boltzmann*temperature))
-            fbrate[0] = (const.planck*const.light/(1.e-8*wvl))**5*const.verner*ratg[0]*expf[0]*vCross/temperature**1.5
-            for ilvl in range(lvl1,nlvls):
-                # scaled energy is relative to the ionization potential of each individual level
-                ipLvlEv = self.Ip - const.invCm2Ev*ecm[ilvl]
-                scaledE = np.log(const.ev2Ang/(ipLvlEv*wvl))
-                thisGf = klgfb['klgfb'][pqn[ilvl]-1, l[ilvl]]
-                spl = interpolate.splrep(klgfb['pe'], thisGf)
-                gf = np.exp(interpolate.splev(scaledE, spl))
-                mask[ilvl] = 1.e+8/wvl < (ipcm - ecm[ilvl])
-                ratg[ilvl] = float(mult[ilvl])/float(multr[0]) # ratio of statistical weights
-                ipLvlErg = const.ev2Erg*ipLvlEv
-                expf[ilvl] = np.exp((ipLvlErg - 1.e+8*const.planck*const.light/wvl)/(const.boltzmann*temperature))
-                fbrate[ilvl] = const.freeBound*ratg[ilvl]*(ipLvlErg**2/float(pqn[ilvl]))*expf[ilvl]*gf/(temperature**1.5*(wvl)**2)
-            fbrma = np.ma.array(fbrate)
-            fbrma.mask =  mask
-            fbrma.fill_value = 0.
-            # factor of 1.e-8 converts to Angstrom^-1, otherwise it would be cm^-1
-            fbRate = abund*gIoneq*(fbrma).sum(axis=0)
-            fbRate.fill_value = 0.
-            self.FreeBound = {'rate':fbRate.data, 'temperature':temperature,'wvl':wvl}
-        #
-        # ----------------------------------------------------------------------------------------
-        #
-            #
-    def freeBoundLoss(self):
-        '''to calculate the free-bound (radiative recombination) energy loss rate coefficient of an ion,
-        the ion is taken to be the recombined iion,
-        including the elemental abundance and the ionization equilibrium population
-        uses the Gaunt factors of Karzas, W.J, Latter, R, 1961, ApJS, 6, 167
-        provides rate = ergs cm^-2 s^-1 '''
-        try:
-            temperature = self.Temperature
-        except:
-            print ' temperature undefined'
-            return
-        #
-        if self.Ion > 1:
-            self.Ip=ip[self.Z-1, self.Ion-1]
-        else:
-            print ' in freeBound, trying to use the neutral ion as the recombining ion'
-            self.FreeBound={}
-            return
-        #
-        try:
-            fblvl = self.Fblvl
-        except:
-            fblvlname = util.zion2filename(self.Z,self.Ion-1)+'.fblvl'
-            self.Fblvl = util.fblvlRead(fblvlname)
-            fblvl = self.Fblvl
-    #  need some data for the recombining/target ion
-        try:
-            rFblvl = self.rFblvl
-        except:
-            if self.Ion == self.Z+1:
-                # then we looking for the bare ion
-                rFblvl = {'mult':[1., 1.]}
-            else:
-                rfblvlname = util.zion2filename(self.Z,self.Ion)+'.fblvl'
-                self.rFblvl = util.fblvlRead(rfblvlname)
-                rFblvl = self.rFblvl
-        try:
-            gIoneq = self.IoneqOne
-        except:
-            self.ioneqOne()
-            gIoneq = self.IoneqOne
-        #
-        try:
-            abund = self.Abundance
-        except:
-            self.AbundanceAll = util.abundanceRead(abundancename = self.AbundanceName)
-            self.Abundance = self.AbundanceAll['abundance'][self.Z-1]
-            abund = self.Abundance
-            #
-            #ipcm = self.Ip/const.invCm2Ev
-            #
-            nlvls = len(fblvl['lvl'])
-            # pqn = principle quantum no. n
-            pqn = fblvl['pqn']
-            # l is angular moment quantum no. L
-            l = fblvl['l']
-            # energy level in inverse cm
-            ecm = fblvl['ecm']
-            # get log of photon energy relative to the ionization potential
-            mult = fblvl['mult']
-            multr = rFblvl['mult']
-            #
-            #
-            #wecm=1.e+8/(ipcm-ecm)
-            #
-            # get karzas-latter Gaunt factors
-            try:
-                klgfb = self.Klgfb
-            except:
-                self.Klgfb = util.klgfbRead()
-                klgfb = self.Klgfb
-            #
-            nTemp = temperature.size
-        # statistical weigths/multiplicities
-            mult = fblvl['mult']
-            multr = rFblvl['mult']
-            #
-            #
-            #wecm=1.e+8/(ipcm-ecm)
-            #
-        fbrate = np.zeros((nlvls,nTemp),'float64')
-        ratg = np.zeros((nlvls),'float64')
-        for ilvl in range(nlvls):
-            # scaled energy is relative to the ionization potential of each individual level
-            # will add the average energy of a free electron to this to get typical photon energy to
-            # evaluate the gaunt factor
-            hnuEv = 1.5*const.boltzmann*temperature/const.ev2Erg
-            ipLvlEv = self.Ip - const.invCm2Ev*ecm[ilvl]
-            scaledE = np.log(hnuEv/ipLvlEv)
-            thisGf = klgfb['klgfb'][pqn[ilvl]-1, l[ilvl]]
-            spl = interpolate.splrep(klgfb['pe'], thisGf)
-            gf = np.exp(interpolate.splev(scaledE, spl))
-            ratg[ilvl] = float(mult[ilvl])/float(multr[0]) # ratio of statistical weights
-            ipLvlErg = const.ev2Erg*ipLvlEv
-            fbrate[ilvl] = ratg[ilvl]*(ipLvlErg**2/float(pqn[ilvl]))*gf/np.sqrt(temperature)
-        fbRate = abund*gIoneq*const.freeBoundLoss*(fbrate.sum(axis=0))
-        self.FreeBoundLoss = {'rate':fbRate, 'temperature':temperature}
-        #
-        # ----------------------------------------------------------------------------------------
-        #
-    def vernerCross(self,wvl):
-        '''Calculates the photoionization cross section.
-
-        The data are from Verner and Yakovlev
-        the cross section refers to the next lower ionization stage'''
-        try:
-            vernerDat = self.VernerDat
-        except:
-            self.VernerDat = util.vernerRead()
-            vernerDat = self.VernerDat
-        z = self.Z
-        stage = self.Ion
-        ip = self.Ip
-        ipcm = self.Ip/const.invCm2Ev
-        ecm = self.Fblvl['ecm']
-        #
-        en = const.ev2Ang/wvl
-        y = en/vernerDat['e0'][z,stage-1]
-        fy= vernerDat['sig0'][z,stage-1]*((y - 1.)**2 + vernerDat['yw'][z,stage-1]**2) * y**(-5.5 - vernerDat['l'][z,stage-1] + 0.5*vernerDat['p'][z,stage-1]) * (1. + np.sqrt(y/vernerDat['ya'][z,stage-1]))**(-vernerDat['p'][z,stage-1])
-#       mask = en < vernerDat['eth'][z,stage]
-        # will use Chianti values for energy of ground level
-        mask = (1.e+8/wvl) < (ipcm - ecm[0])
-        vCross = np.ma.array(fy)
-        vCross.mask = mask
-        vCross.fill_value = 0.
-        # cross-section will be output in cm^2
-        self.VernerCross = vCross*1.e-18
-        #
-        # ----------------------------------------------------------------------------------------
-        #
-    def freeFree(self, wvl):
-        '''Calculates the free-free emission for a single ion.
-
-        Includes elemental abundance and ionization equilibrium population.
-        Uses Itoh where valid and Sutherland elsewhere'''
-        if self.Ion == 1:
-            self.FreeFree = {'errorMessage':' freefree is not produced by neutrals'}
-        else:
-            wvl = np.asarray(wvl, 'float64')
-            ffs = self.sutherland(wvl)
-            #
-            ffi = self.itoh(wvl)
-            ff = ffs['suthFf']
-            if not 'errorMessage' in ffi.keys():
-                iff = ffi['itohFf']
-                itohMask = np.logical_not(iff.mask)
-                ff[itohMask] = iff[itohMask]
-        #
-        try:
-            gIoneq = self.IoneqOne
-        except:
-            self.ioneqOne()
-            gIoneq = self.IoneqOne
-        if type(gIoneq) == types.FloatType:
-            # only one temperature specified
-            if gIoneq == 0.:
-                ffRate = np.zeros(wvl.size)
-                self.FreeFree = {'rate':ffRate, 'temperature':self.Temperature,'wvl':wvl}
-                return
-        else:
-            if gIoneq.sum() == 0.:
-                ffRate = np.zeros((self.Temperature.size, wvl.size), 'float64')
-                self.FreeFree = {'rate':ffRate, 'temperature':self.Temperature,'wvl':wvl}
-                return
-#       print ' gIoneq = ', gIoneq
-        if wvl.size > 1:
-            gIoneq = gIoneq.repeat(wvl.size).reshape(self.Temperature.size,wvl.size)
-            #
-            try:
-                abund = self.Abundance
-            except:
-                self.AbundanceAll = util.abundanceRead(abundancename = self.AbundanceName)
-                self.Abundance = self.AbundanceAll['abundance'][self.Z-1]
-                abund = self.Abundance
-                #
-            ffRate = (const.freeFree*(self.Z)**2*abund*gIoneq*ff).squeeze()
-            self.FreeFree = {'rate':ffRate, 'temperature':self.Temperature,'wvl':wvl}
-        #
-        # ----------------------------------------------------------------------------------------
-        #
-    def freeFreeEmiss(self, wvl):
-        '''Calculates the free-free emissivity for a single ion.
-        does not include element abundance or ionization fraction
-        Uses Itoh where valid and Sutherland elsewhere'''
-        if self.Ion == 1:
-            self.FreeFreeEmiss = {'errorMessage':' freefree is not produced by neutrals'}
-        else:
-            wvl = np.asarray(wvl, 'float64')
-            ffs = self.sutherland(wvl)
-            ff = ffs['suthFf']
-            ffi = self.itoh(wvl)
-            if 'errorMessage' not in ffi.keys():
-                iff = ffi['itohFf']
-                itohMask = np.logical_not(iff.mask)
-                ff[itohMask] = iff[itohMask]
-            #
-            ffRate = (const.freeFree*(self.Z)**2*ff).squeeze()
-            self.FreeFree = {'rate':ffRate, 'temperature':self.Temperature,'wvl':wvl}
-        #
-        # ----------------------------------------------------------------------------------------
-        #
-    def freeFreeLoss(self):
-        '''Calculates the total free-free emission for a single ion.
-
-        Includes elemental abundance and ionization equilibrium population.
-
-        Uses Itoh where valid and Sutherland elsewhere'''
-        #
-        if self.Ion == 1:
-            self.FreeFree = {'errorMessage':' freefree is not produced by neutrals'}
-        else:
-            try:
-                temperature = self.Temperature
-            except:
-                print ' temperature undefined'
-                return
-            try:
-                gffint = self.Gffint['gffint']
-                g2 = self.Gffint['g2']
-            except:
-                self.Gffint = self.gffintRead()
-                gffint = self.Gffint['gffint']
-                g2 = self.Gffint['g2']
-            #
-            gamma2 = self.Ip*const.ev2Erg/(const.boltzmann*temperature)
-            #
-            spl = interpolate.splrep(g2, gffint)
-            gff = interpolate.splev(np.log(gamma2), spl)
-            #
-            try:
-                gIoneq = self.IoneqOne
-            except:
-                self.ioneqOne()
-                gIoneq = self.IoneqOne
-            #
-            try:
-                abund = self.Abundance
-            except:
-                self.AbundanceAll = util.abundanceRead(abundancename = self.AbundanceName)
-                self.Abundance = self.AbundanceAll['abundance'][self.Z-1]
-                abund = self.Abundance
-                #
-            ffRate = const.freeFreeloss*(self.Z)**2*abund*gIoneq*gff*np.sqrt(temperature)
-            self.FreeFreeLoss = {'rate':ffRate, 'temperature':temperature}
-        #
-        # ----------------------------------------------------------------------------------------
-        #
-    def klgfbInterp(self, wvl, n, l):
-        '''A Python version of the CHIANTI IDL procedure karzas_xs.
-
-        Interpolates free-bound gaunt factor of Karzas and Latter, (1961, Astrophysical Journal
-        Supplement Series, 6, 167) as a function of wavelength (wvl).'''
-        try:
-            klgfb = self.Klgfb
-        except:
-            self.Klgfb = util.klgfbRead()
-            klgfb = self.Klgfb
-        # get log of photon energy relative to the ionization potential
-        sclE = np.log(self.Ip/(wvl*const.ev2ang))
-        thisGf = klgfb['klgfb'][n-1, l]
-        spl = interpolate.splrep(klgfb['pe'], thisGf)
-        gf = interpolate.splev(sclE, spl)
-        return gf
-
-        #
-        # ----------------------------------------------------------------------------------------
-        #
-    def itoh(self, wvl):
-        '''Calculates free-free emission with the free-free gaunt factors of Itoh et al. (ApJS 128, 125, 2000).
-
-        the relativistic values are valid for 6. < log10(T) < 8.5 and -4. < log10(u) < 1.'''
-        wvl = np.array(wvl, 'float64')
-        try:
-            itohCoef = self.ItohCoef
-        except:
-            self.ItohCoef = util.itohRead()['itohCoef'][self.Z-1].reshape(11, 11)
-            itohCoef = self.ItohCoef
-        try:
-            t = (np.log10(self.Temperature) -7.25)/1.25
-        except:
-            errorMessage = ' temperature undefined in continuum.itoh'
-            print(errorMessage)
-            return {'errorMessage':errorMessage}
-        if type(self.Temperature) == types.FloatType:
-            nTemp = 1
-        else:
-            nTemp = self.Temperature.size
-        #
-        nWvl = wvl.size
-        #
-        if (nTemp > 1) and (nWvl > 1):
-            u = (const.planck*const.light*1.e+8/const.boltzmann)*np.outer(1./self.Temperature, 1./wvl )
-            lU = (np.log10(u) + 1.5)/2.5
-            lT = (np.log10(self.Temperature) -7.25)/1.25
-            g = np.zeros((nTemp, nWvl), 'float64')
-            rad = np.ma.zeros((nTemp, nWvl), 'float64')
-            for itemp in range(nTemp):
-                for j in range(11):
-                    for i in range(11):
-                        g[itemp]+= itohCoef[i,j]*(lT[itemp]**i)*(lU[itemp]**j)
-                rad[itemp] = (1./wvl)**2*g[itemp]*np.exp(-u[itemp])/np.sqrt(self.Temperature[itemp])
-            tArray = np.zeros((1, len(self.Temperature)), 'float64')
-            tArray[0] = self.Temperature
-            t2Array = np.repeat(tArray.transpose(), len(wvl), axis=1)
-            nonValidT1 = np.log10(t2Array) < 6.
-            nonValidT2 = np.log10(t2Array) > 8.5
-            nonValidT = np.logical_or(nonValidT1, nonValidT2)
-            nonValidU1 = np.log10(u) < -4.
-            nonValidU2 = np.log10(u) > 1.
-            nonValidU = np.logical_or(nonValidU1, nonValidU2)
-            nonValid = np.logical_or(nonValidT, nonValidU)
-            rad.mask = nonValid
-            rad.set_fill_value(0.)
-            g=np.ma.array(g, mask=nonValid, fill_value=0.)
-            return {'itohGff':g, 'itohFf':rad}
-        elif (nTemp > 1) and (nWvl == 1):
-            u = (const.planck*const.light*1.e+8/const.boltzmann)/(self.Temperature*wvl )
-            lU = (np.log10(u) + 1.5)/2.5
-            lT = (np.log10(self.Temperature) -7.25)/1.25
-            g = np.zeros((nTemp), 'float64')
-            rad = np.ma.zeros((nTemp), 'float64')
-            for itemp in range(nTemp):
-                for j in range(11):
-                    for i in range(11):
-                        g[itemp]+= itohCoef[i,j]*(lT[itemp]**i)*(lU[itemp]**j)
-                rad[itemp] = (1./wvl)**2*g[itemp]*np.exp(-u[itemp])/np.sqrt(self.Temperature[itemp])
-            nonValidT1 = np.log10(self.Temperature) < 6.
-            nonValidT2 = np.log10(self.Temperature) > 8.5
-            nonValidT = np.logical_or(nonValidT1, nonValidT2)
-            nonValidU1 = np.log10(u) < -4.
-            nonValidU2 = np.log10(u) > 1.
-            nonValidU = np.logical_or(nonValidU1, nonValidU2)
-            nonValid = np.logical_or(nonValidT, nonValidU)
-            rad.mask = nonValid
-            rad.set_fill_value(0.)
-            g=np.ma.array(g, mask=nonValid, fill_value=0.)
-            return {'itohGff':g, 'itohFf':rad}
-        elif (nTemp == 1) and (nWvl > 1):
-            if (np.log10(self.Temperature) < 6.) or (np.log10(self.Temperature > 8.5)):
-                errorMessage ='invalid temperature in continuum.itoh()'
-                return {'errorMessage':errorMessage}
-            else:
-                u = (const.planck*const.light*1.e+8/const.boltzmann)/(self.Temperature*wvl )
-                lU = (np.log10(u) + 1.5)/2.5
-                lT = (np.log10(self.Temperature) -7.25)/1.25
-                g = np.zeros(nWvl, 'float64')
-                rad = np.ma.zeros((nWvl), 'float64')
-                for j in range(11):
-                    for i in range(11):
-                        g+= itohCoef[i,j]*(lT**i)*(lU**j)
-                rad = np.ma.array((1./wvl)**2*g*np.exp(-u)/np.sqrt(self.Temperature), 'Float64')
-                nonValidU1 = np.log10(u) < -4.
-                nonValidU2 = np.log10(u) > 1.
-                nonValidU = np.logical_or(nonValidU1, nonValidU2)
-                nonValid = nonValidU
-                rad.mask = nonValid
-                rad.set_fill_value(0.)
-                g=np.ma.array(g, mask=nonValid, fill_value=0.)
-                return {'itohGff':g, 'itohFf':rad}
-        elif (nTemp == 1) and (nWvl == 1):
-            u = (const.planck*const.light*1.e+8/const.boltzmann)/(self.Temperature*wvl )
-            if (np.log10(self.Temperature) < 6.) or (np.log10(self.Temperature > 8.5)):
-                errorMessage ='invalid temperature in continuum.itoh()'
-                return {'errorMessage':errorMessage}
-            elif (np.log10(u) < -4.) or (np.log10(u) > 8.5):
-                errorMessage ='invalid temperature/wavelength in continuum.itoh()'
-                return {'errorMessage':errorMessage}
-            else:
-                u = (const.planck*const.light*1.e+8/const.boltzmann)/(self.Temperature*wvl )
-                lU = (np.log10(u) + 1.5)/2.5
-                lT = (np.log10(self.Temperature) -7.25)/1.25
-                g = np.zeros(nWvl, 'float64')
-                rad = np.ma.zeros((nWvl), 'float64')
-                for j in range(11):
-                    for i in range(11):
-                        g+= itohCoef[i,j]*(lT**i)*(lU**j)
-                rad = np.ma.array((1./wvl)**2*g*np.exp(-u)/np.sqrt(self.Temperature), 'Float64')
-                nonValidU1 = np.log10(u) < -4.
-                nonValidU2 = np.log10(u) > 1.
-                nonValidU = np.logical_or(nonValidU1, nonValidU2)
-                nonValid = nonValidU
-                rad.mask = nonValid
-                rad.set_fill_value(0.)
-                return {'itohGff':g, 'itohFf':rad}
-        #
-        # - - - - - - - - - - - - - - - - - - - - - - -
-        #
-    def sutherland(self, wvl):
-        '''Calculates the free-free continuum using the free-free gaunt factor calculations of Sutherland, 1998, MNRAS, 300, 321.
-
-        the wavelengths (wvl) will be sorted, first thing'''
-        #
-        wvl = np.array(wvl, 'float64')
-        nWvl = wvl.size
-#       factor = 5.44436e-39
-        try:
-            temperature = self.Temperature
-        except:
-            errorMessage = ' temperature undefined in continuum.sutherland'
-            print(errorMessage)
-            return {'errorMessage':errorMessage}
-        #  read in the gaunt factors, if necessary and get interpolator
-        try:
-            gffInterpolator = self.GffInterpolator
-        except:
-            self.Gff = util.gffRead()
-            gff = self.Gff
-            iu=(np.log10(gff['u1d']) + 4.)*10.
-            ig=(np.log10(gff['g21d']) + 4.)*5.
-            gaunt = gff['gff']
-            #tr=Triangulation(iu.flatten(),ig.flatten())
-            tr=Triangulation(iu,ig)
-            self.GffInterpolator = tr.nn_interpolator(gaunt.flatten())
-            gffInterpolator = self.GffInterpolator
-    #
-        gga = np.array((float(self.Z)**2*const.ryd2erg/const.boltzmann)*(1./temperature),'float64')
-        nonValidGg1 = np.log10(gga) < -4.
-        nonValidGg2 = np.log10(gga) > 4.
-        nonValidGg = np.logical_or(nonValidGg1, nonValidGg2)
-        ggOut = np.ma.array(gga, mask = nonValidGg, fill_value=True)
-        iGg = np.ma.array((np.log10(gga) + 4.)*5., mask=nonValidGg,  fill_value=0.)
-        #
-        if nonValidGg.sum():
-            errorMessage = 'no valid temperatures in continuum.sutherland'
-            print(errorMessage)
-            return {'errorMessage':errorMessage}
-        else:
-                #iUu = np.ma.array((np.log10(uu) + 4.)*10., mask=nonValidUu,  fill_value=0.)
-        #iGg = (np.log10(gg) + 4.)*5.
-        #print ' iGg.shape = ',iGg, iGg.shape
-            #
-            nWvl = wvl.size
-            nTemp = temperature.size
-            #
-            if (nTemp > 1) and (nWvl > 1):
-                ff = np.ma.zeros((nWvl, nTemp), 'float64')
-                gffOut1 = np.ma.zeros((nWvl, nTemp), 'float64')
-                gffOutMask = np.zeros((nWvl, nTemp), 'Bool')
-                uuOut = np.zeros((nWvl, nTemp), 'float64')
-                for iwvl in range(nWvl):
-                    uu = ((const.planck*const.light*1.e+8/const.boltzmann)/(wvl[iwvl]*temperature))  #.flatten()
-                    nonValidUu1 = np.log10(uu) < -4.
-                    nonValidUu2 = np.log10(uu) > 4.
-                    nonValidUu = np.logical_or(nonValidUu1, nonValidUu2)
-                    gffOutMask[iwvl] = nonValidUu
-                    uuOut[iwvl] = np.ma.array(uu, mask=nonValidUu, fill_value=True)
-                    iUu = np.ma.array((np.log10(uu) + 4.)*10., mask=nonValidUu,  fill_value=0.)
-                    gffOut1[iwvl] = gffInterpolator(iUu, iGg)
-                    wvlt = 1./(wvl[iwvl]**2*np.sqrt(temperature))  # was sortedTemperature
-                    ff[iwvl] = (np.exp(-uuOut[iwvl])*gffOut1[iwvl]*wvlt)
-                gffOut1.mask = gffOutMask
-                gffOut1.set_fill_value(0.)
-                gffOut = gffOut1.transpose()
-                ff.mask = gffOutMask
-                ff.set_fill_value(0.)
-                return {'suthFf':ff.transpose(), 'suthGff':gffOut}
-            #
-            if (nTemp == 1) and (nWvl > 1):
-                uu = ((const.planck*const.light*1.e+8/const.boltzmann)/(wvl*temperature))  # .flatten()
-                nonValidUu1 = np.log10(uu) < -4.
-                nonValidUu2 = np.log10(uu) > 4.
-                nonValidUu = np.logical_or(nonValidUu1, nonValidUu2)
-                gffOutMask = nonValidUu
-                iUu = (np.log10(uu) + 4.)*10.
-                gffOut1 = gffInterpolator(iUu, iGg.repeat(nWvl))
-                wvlt = 1./(wvl**2*np.sqrt(temperature))
-                ff = np.ma.array(np.exp(-uu)*gffOut1*wvlt)
-                ff.mask=gffOutMask
-                ff.set_fill_value(0.)
-                gffOut = np.ma.array(gffOut1, mask=gffOutMask, fill_value=0.)
-                return {'suthFf':ff, 'suthGff':gffOut, 'iUu':iUu, 'gffOut1':gffOut1, 'wvlt':wvlt,  'iGg':iGg.repeat(nWvl), 'gffInterpolator':gffInterpolator}
-        #elif (nTemp > 1) and (nWvl == 1):
-            else:
-                #print ' igg.shape = ',iGg.shape
-                #gffOut1 = np.ma.zeros((nTemp), 'float64')
-                #gffOutMask = np.zeros((nTemp), 'Bool')
-                #uuOut = np.zeros((nTemp), 'float64')
-                #
-                uu = (const.planck*const.light*1.e+8/const.boltzmann) /(wvl*temperature).flatten()
-                nonValidUu1 = np.log10(uu) < -4.
-                nonValidUu2 = np.log10(uu) > 4.
-                nonValidUu = np.logical_or(nonValidUu1, nonValidUu2)
-                gffOutMask = nonValidUu
-                uuOut = np.ma.array(uu, mask=nonValidUu, fill_value=True)
-                #iUu = np.ma.array((np.log10(uu) + 4.)*10., mask=nonValidUu,  fill_value=0.)
-                iUu = (np.log10(uu) + 4.)*10.
-                #print ' iUu.shape = ',iUu.shape
-                gffOut1 = gffInterpolator(iUu, iGg.flatten())
-                #
-                wvlt = 1./(wvl**2*np.sqrt(temperature))
-                ff1 = np.exp(-uuOut)*gffOut1*wvlt
-                ff = np.ma.array(ff1, mask=gffOutMask, fill_value=0.)
-                gffOut = np.ma.array(gffOut1, mask=gffOutMask, fill_value=0.)
-        return {'suthFf':ff, 'suthGff':gffOut}
-            #elif (nTemp == 1) and (nWvl == 1):
-        ##iGg = (np.log10(gg) + 4.)*5.
-        #uu = (const.planck*const.light*1.e+8/const.boltzmann)/(wvl*temperature)
-        #nonValidUu1 = np.log10(uu) < -4.
-        #nonValidUu2 = np.log10(uu) > 4.
-        #nonValidUu = np.logical_or(nonValidUu1, nonValidUu2)
-        #if not nonValidUu:
-            #iUu = (np.log10(uu) + 4.)*10.
-            #gffOut = gffInterpolator(iUu, iGg)
-            #wvlt = 1./(wvl**2*np.sqrt(temperature))
-            #ff = np.exp(-uu)*gffOut*wvlt
-            #return {'suthFf':ff, 'suthGff':gffOut}
-        #else:
-            #errorMessage = 'invalid Temperature/Wavlength in continuum.sutherland'
-            #print(errorMessage)
-            #return {'errorMessage':errorMessage}
-        #
-        # ----------------------------------------------------------------------------------------
-        #
-    def ioneqOne(self):
-        '''Provide the ionization equilibrium for the selected ion as a function of temperature.
-        returned in self.IoneqOne'''
-        #
-        try:
-            temperature = self.Temperature
-        except:
-            return
-        #
-        try:
-            ioneqAll = self.IoneqAll
-        except:
-            self.IoneqAll = util.ioneqRead(ioneqname = self.Defaults['ioneqfile'])
-            ioneqAll=self.IoneqAll
-        #
-        ioneqTemperature = ioneqAll['ioneqTemperature']
-        Z=self.Z
-        Ion=self.Ion
-        Dielectronic=self.Dielectronic
-        ioneqOne = np.zeros_like(temperature)
-        #
-        thisIoneq=ioneqAll['ioneqAll'][Z-1,Ion-1-Dielectronic].squeeze()
-#        thisIoneq = self.Ioneq
-        gioneq=thisIoneq > 0.
-        goodt1=self.Temperature >= ioneqTemperature[gioneq].min()
-        goodt2=self.Temperature <= ioneqTemperature[gioneq].max()
-        goodt=np.logical_and(goodt1,goodt2)
-        y2=interpolate.splrep(np.log(ioneqTemperature[gioneq]),np.log(thisIoneq[gioneq]),s=0)
-        #
-        if goodt.sum() > 0:
-            gIoneq=interpolate.splev(np.log(self.Temperature[goodt]),y2)   #,der=0)
-            gIoneq=np.exp(gIoneq)
-        else:
-            gIoneq=0.
-        #
-        ioneqOne[goodt]=gIoneq
-        self.IoneqOne = ioneqOne
-        #
-        # -------------------------------------------------------------------------------------
-        #
+#    #
+import chianti.filters as chfilters
+import chianti.util as util
+import chianti.constants as const
+#import chianti.pl as pl
+#
+#try:
+#    chInteractive = int(os.environ['CHIANTIPY_INTERACTIVE'])
+#except:
+#    chInteractive = 1
+#
+xuvtop = chianti.xuvtop
+#
+ip = chianti.Ip
+MasterList = chianti.MasterList
+Defaults = chianti.Defaults
+AbundanceAll = chianti.AbundanceAll
+IoneqAll = chianti.IoneqAll
 class ion:
     '''The top level class for performing spectral calculations for an ion in the CHIANTI database.
 
@@ -1112,11 +75,12 @@ class ion:
         '''
         #
         #
-        self.__version__ = chianti.__version__
+#        self.__version__ = chianti.__version__
         self.IonStr=ionStr
-        self.Defaults=defaults
-        self.AbundanceName = defaults['abundfile']
-        self.IoneqName = defaults['ioneqfile']
+        self.Defaults=Defaults
+        self.AbundanceName = Defaults['abundfile']
+        self.IoneqName = Defaults['ioneqfile']
+        MasterList = chianti.MasterList
         #
         self.Z=util.convertName(ionStr)['Z']
         self.Ion=util.convertName(ionStr)['Ion']
@@ -1135,10 +99,12 @@ class ion:
             self.Temperature = np.array(temperature,'float64')
         #
         #
-        self.AbundanceAll = util.abundanceRead(abundancename = self.AbundanceName)
+#        self.AbundanceAll = util.abundanceRead(abundancename = self.AbundanceName)
+        self.AbundanceAll = AbundanceAll
         self.Abundance = self.AbundanceAll['abundance'][self.Z-1]
         #
-        self.IoneqAll = util.ioneqRead(ioneqname = self.Defaults['ioneqfile'])
+#        self.IoneqAll = util.ioneqRead(ioneqname = self.Defaults['ioneqfile'])
+        self.IoneqAll = IoneqAll
         self.ioneqOne()
         #
         #  this needs to go after setting temperature and reading ionization equilibria
@@ -2594,7 +1560,7 @@ class ion:
         # -------------------------------------------------------------------------------------
         #
     def emiss(self,temperature=None,density=None,pDensity=None,  wvlRange = None,  allLines=1):
-        """Calculate and the emissivities for lines of the specified ion.
+        """Calculate the emissivities for lines of the specified ion.
 
         wvlRange can be set to limit the calculation to a particular wavelength range
 
@@ -3383,10 +2349,10 @@ class ion:
         g_line= topLines[gline_idx]#  [0]
         ##        print ' g_line = ',g_line
         #
-        gofnt=np.zeros(ngofnt,'float32')
+        gofnt=np.zeros(ngofnt,'float64')
         for aline in g_line:
             gofnt+=gAbund*gIoneq*emiss[aline].squeeze()
-        self.Gofnt={'temperature':outTemperature,'density':outDensity,'gofnt':gofnt}
+        self.Gofnt={'temperature':outTemperature,'density':outDensity,'gofnt':gofnt, 'index':g_line, 'wvl':wvl[g_line]}
         #
         pl.loglog(xvalues,gofnt)
         pl.xlim(xvalues.min(),xvalues.max())
@@ -3637,633 +2603,6 @@ class ion:
         #
         # ----------------------------------------------
         #
-class ioneq(ion):
-    '''Calculates the ionization equilibrium for an element as a function of temperature.
-    The variable z is the atomic number of the element.  Acceptable values are from 1 to 30.'''
-    def __init__(self,z, temperature, verbose=False):
-#        self.Defaults=defaults
-        ionList=[]
-        chIons=[]
-        self.Z=z
-        self.Temperature = np.array(temperature, 'float64')
-        for stage in range(1, z+2):
-            ionStr=util.zion2name(z, stage)
-            ionList.append(ionStr)
-            print z, stage, ionStr
-            atom=ion(ionStr, temperature = self.Temperature)
-            atom.ionizRate()
-            atom.recombRate()
-            chIons.append(atom)
-#        for anIon in chIons:
-#            print ' this ion = ', anIon.Ions
-#            if type(anIon.IonizRate) != NoneType:
-#                pl.loglog(anIon.IonizRate['temperature'], anIon.IonizRate['rate'])
-#        #
-#        for anIon in chIons:
-#            print ' this ion = ',  anIon.Ions
-#            if type(anIon.RecombRate) != NoneType:
-#                pl.loglog(anIon.RecombRate['temperature'], anIon.RecombRate['rate'])
-        #
-        ntemp=chIons[0].IonizRate['temperature'].size
-        print ' ntemp = ',ntemp
-        if ntemp == 1:
-            ioneq=np.zeros((z+1), 'float32')
-            factor = []
-            for anIon in chIons:
-                if type(anIon.IonizRate) != types.NoneType and type(anIon.RecombRate) != types.NoneType:
-                    rat=anIon.IonizRate['rate']/anIon.RecombRate['rate']
-                    factor.append(rat**2 + rat**(-2))
-                else:
-                    factor.append(0.)
-            factor[0]=max(factor)
-            factor[-1]=max(factor)
-            ionmax=factor.index(min(factor))
-#            print ' it, ionmax', it, ionmax
-            ioneq[ionmax]=1.
-            #
-            for iz in range(ionmax+1, z+1):
-                ionrate=chIons[iz-1].IonizRate['rate']
-                recrate=chIons[iz].RecombRate['rate']
-                ioneq[iz]=ionrate*ioneq[iz-1]/recrate
-            #
-            for iz in range(ionmax-1, -1, -1):
-                ionrate=chIons[iz].IonizRate['rate']
-                recrate=chIons[iz+1].RecombRate['rate']
-                ioneq[iz]=recrate*ioneq[iz+1]/ionrate
-            ionsum=ioneq.sum()
-#            print ' ionsum = ', ionsum
-            ioneq=ioneq/ionsum
-            self.Ioneq=ioneq
-        #  ntemp >1
-        else:
-            ioneq=np.zeros((z+1,ntemp ), 'float32')
-            for it in range(ntemp):
-                factor=[]
-                for anIon in chIons:
-                    if type(anIon.IonizRate) != types.NoneType and type(anIon.RecombRate) != types.NoneType:
-                        rat=anIon.IonizRate['rate'][it]/anIon.RecombRate['rate'][it]
-                        factor.append(rat**2 + rat**(-2))
-                    else:
-                        factor.append(0.)
-                factor[0]=max(factor)
-                factor[-1]=max(factor)
-                ionmax=factor.index(min(factor))
-    #            print ' it, ionmax', it, ionmax
-                ioneq[ionmax, it]=1.
-                #
-                for iz in range(ionmax+1, z+1):
-                    ionrate=chIons[iz-1].IonizRate['rate'][it]
-                    recrate=chIons[iz].RecombRate['rate'][it]
-                    ioneq[iz, it]=ionrate*ioneq[iz-1, it]/recrate
-                #
-                for iz in range(ionmax-1, -1, -1):
-                    ionrate=chIons[iz].IonizRate['rate'][it]
-                    recrate=chIons[iz+1].RecombRate['rate'][it]
-                    ioneq[iz, it]=recrate*ioneq[iz+1, it]/ionrate
-                ionsum=ioneq[:, it].sum()
-    #            print ' ionsum = ', ionsum
-                ioneq[:, it]=ioneq[:, it]/ionsum
-            self.Ioneq=ioneq
-#
-    def plot(self, stages=None, xr=None, yr=None, oplot=False, label=True, title=True,  bw=False):
-        '''Plots the ionization equilibria.
-
-        self.plot(xr=None, yr=None, oplot=False)
-        stages = sequence of ions to be plotted, neutral == 1, fully stripped == Z+1
-        xr = temperature range, yr = ion fraction range
-
-        for overplotting:
-        oplot="ioneqfilename" such as 'mazzotta'
-        or if oplot=True or oplot=1 and a widget will come up so that a file can be selected.'''
-        if bw:
-            linestyle=['k-','k--', 'k-.', 'k:']
-        else:
-            linestyle=['b-','r--', 'g-.', 'm:']
-        #
-        if type(stages) == types.NoneType:
-            stages=range(1, self.Z+2)
-        elif min(stages) < 1 or max(stages) > self.Z+1:
-            stages=range(1, self.Z+2)  #  spectroscopic notation
-        if type(xr) == types.NoneType:
-            xr=[self.Temperature.min(), self.Temperature.max()]
-        if type(yr) == types.NoneType:
-            yr=[0.01, 1.1]
-        xyr=list(xr)
-        xyr.extend(list(yr))
-        #
-        iz=stages[0]
-        pl.loglog(self.Temperature, self.Ioneq[iz-1])
-        if label:
-            idx=self.Ioneq[iz-1] == self.Ioneq[iz-1].max()
-            if idx.sum() > 1:
-                jdx=np.arange(len(idx))
-                idx=jdx[idx].max()
-            ann=const.Ionstage[iz-1]
-            pl.annotate(ann, [self.Temperature[idx], 0.7*self.Ioneq[iz-1, idx]], ha='center')
-        for iz in stages[1:]:
-            pl.plot(self.Temperature, self.Ioneq[iz-1], linestyle[0])
-            if label:
-                idx=self.Ioneq[iz-1] == self.Ioneq[iz-1].max()
-                if idx.sum() > 1:
-                    jdx=np.arange(len(idx))
-                    idx=jdx[idx].mean()
-                ann=const.Ionstage[iz-1]
-                pl.annotate(ann, [self.Temperature[idx], 0.7*self.Ioneq[iz-1, idx]], ha='center')
-        pl.xlabel('Temperature (K)')
-        pl.ylabel('Ion Fraction')
-        atitle='Chianti Ionization Equilibrium for '+El[self.Z-1].capitalize()
-        #
-        if oplot != False:
-            if type(oplot) == BooleanType:
-                result=self.ioneqRead(ioneqname='',default=False)
-                if result != False:
-                    atitle+='  & '+result['ioneqname'].replace('.ioneq', '')
-                    atitle+=' '+linestyle[0]
-                    for iz in ions:
-                        pl.plot(self.IoneqTemperature, self.IoneqAll[self.Z-1, iz-1],linestyle[0], linestyle[1])
-            elif type(oplot) == StringType:
-                atitle+='  & '+oplot+' '+linestyle[0]
-                atitle+=' '+linestyle[0]
-                result=self.ioneqRead(ioneqname=oplot,default=False)
-                if result != False:
-                    for iz in ions:
-                        pl.plot(self.IoneqTemperature, self.IoneqAll[self.Z-1, iz-1],linestyle[0], linestyle[1])
-            elif type(oplot) == ListType:
-                for iplot in range(len(oplot)):
-                    result=self.ioneqRead(ioneqname=oplot[iplot],default=False)
-                    if result != False:
-                        atitle+='  & '+oplot[iplot]+' '+linestyle[iplot%3]
-                        for iz in ions:
-                            pl.plot(self.IoneqTemperature, self.IoneqAll[self.Z-1, iz-1], linestyle[iplot%4])
-            else:
-                print ' oplot not understood ', oplot
-        if title:
-            pl.title(atitle)
-        pl.axis(xyr)
-    #
-    # -------------------------------------------------------------------------
-    #
-class spectrum:
-    '''Calculate the emission spectrum as a function of temperature and density.
-
-    temperature and density can be arrays but, unless the size of either is one (1),
-    the two must have the same size
-
-    the returned spectrum will be convolved with a filter of the specified width on the
-    specified wavelength array
-
-    the default filter is gaussianR with a resolving power of 1000.  Other filters,
-    such as gaussian, box and lorentz, are available in chianti.filters.  When using the box filter,
-    the width should equal the wavelength interval to keep the units of the continuum and line
-    spectrum the same.
-
-    A selection of ions can be make with ionList containing the names of
-    the desired lines in Chianti notation, i.e. C VI = c_6
-
-    a minimum abundance can be specified so that the calculation can be speeded up by excluding
-    elements with a low abundance.  Setting doContinuum =0 will skip the continuum calculation.
-
-    Setting em will multiply the spectrum at each temperature by the value of em.
-
-    em [for emission measure], can be a float or an array of the same length as the
-    temperature/density.'''
-    def __init__(self, temperature, density, wavelength, filter=(chfilters.gaussianR, 1000.),  ionList = 0, minAbund=0., doContinuum=1, em = None,  verbose=0):
-        t1 = datetime.now()
-        masterlist = util.masterListRead()
-        # use the ionList but make sure the ions are in the database
-        if ionList:
-            alist=[]
-            for one in ionList:
-                if masterlist.count(one):
-                    alist.append(one)
-                else:
-                    if chInteractive and verbose:
-                        pstring = ' %s not in CHIANTI database'%(one)
-                        print('')
-            masterlist = alist
-        self.Defaults=defaults
-        self.Temperature = np.asarray(temperature, 'float64')
-        nTemp = self.Temperature.size
-        self.Density = np.asarray(density, 'float64')
-        nDen = self.Density.size
-        nTempDen = max([nTemp, nDen])
-        if type(em) != types.NoneType:
-            if type(em) == types.FloatType:
-                if nTempDen > 1:
-                    em = np.ones_like(self.Temperature)*em
-                    nEm = nTempDen
-                else:
-                    nEm = 1
-            else:
-                em = np.asarray(em, 'float64')
-                nEm = em.size
-                if nEm != nTempDen:
-                    print ' the emission measure array must be the same size as the temperature/density array'
-                    return
-        self.AbundanceName = defaults['abundfile']
-        self.AbundanceAll = util.abundanceRead(abundancename = self.AbundanceName)
-        abundAll = self.AbundanceAll['abundance']
-        nonzed = abundAll > 0.
-        minAbundAll = abundAll[nonzed].min()
-        if minAbund < minAbundAll:
-            minAbund = minAbundAll
-        self.minAbund = minAbund
-        ionInfo = util.masterListInfo()
-        wavelength = np.asarray(wavelength)
-        nWvl = wavelength.size
-        self.Wavelength = wavelength
-        wvlRange = [wavelength.min(), wavelength.max()]
-        #
-        freeFree = np.zeros((nTempDen, nWvl), 'float64').squeeze()
-        freeBound = np.zeros((nTempDen, nWvl), 'float64').squeeze()
-        twoPhoton = np.zeros((nTempDen, nWvl), 'float64').squeeze()
-        lineSpectrum = np.zeros((nTempDen, nWvl), 'float64').squeeze()
-        #
-        #
-        for iz in range(31):
-            abundance = self.AbundanceAll['abundance'][iz-1]
-            if abundance >= minAbund:
-                if chInteractive:
-                    print ' %5i %5s abundance = %10.2e '%(iz, const.El[iz-1],  abundance)
-                #
-                for ionstage in range(1, iz+2):
-                    ionS = util.zion2name(iz, ionstage)
-#                   print ' ionS = ', ionS
-                    masterListTest = ionS in masterlist
-                    masterListInfoTest = ionS in ionInfo.keys()
-                    if masterListTest or masterListInfoTest:
-                        wvlTestMin = self.Wavelength.min() <= ionInfo[ionS]['wmax']
-                        wvlTestMax = self.Wavelength.max() >= ionInfo[ionS]['wmin']
-                        ioneqTest = (self.Temperature.max() >= ionInfo[ionS]['tmin']) and (self.Temperature.min() <= ionInfo[ionS]['tmax'])
-                    # construct similar test for the dielectronic files
-                    ionSd = util.zion2name(iz, ionstage, dielectronic=1)
-                    masterListTestD = ionSd in masterlist
-                    masterListInfoTestD = ionSd in ionInfo.keys()
-                    if masterListTestD or masterListInfoTestD:
-                        wvlTestMinD = self.Wavelength.min() <= ionInfo[ionSd]['wmax']
-                        wvlTestMaxD = self.Wavelength.max() >= ionInfo[ionSd]['wmin']
-                        ioneqTestD = (self.Temperature.max() >= ionInfo[ionSd]['tmin']) and (self.Temperature.min() <=ionInfo[ionSd]['tmax'])
-                    ionstageTest = ionstage > 1
-                    if ionstageTest and ioneqTest and doContinuum:
-                        # ionS is the target ion, cannot be the neutral for the continuum
-                        if chInteractive:
-                            print ' calculating continuum for :  ',  ionS
-                        cont = chianti.core.continuum(ionS, temperature)
-                        cont.freeFree(wavelength)
-    #                   print dir(thisIon)
-    #                   print ' wvl = ', thisIon.FreeFree['wvl']
-                        if nTempDen ==1:
-                            freeFree += cont.FreeFree['rate']
-                        else:
-                            for iTempDen in range(nTempDen):
-                                freeFree[iTempDen] += cont.FreeFree['rate'][iTempDen]
-                    #
-                        cont.freeBound(wavelength)
-                        if 'errorMessage' not in cont.FreeBound.keys():
-                            #  an fblvl file exists for this ions
-                            if nTempDen == 1:
-                                freeBound += cont.FreeBound['rate']
-                            else:
-                                freeBound[iTempDen] += cont.FreeBound['rate'][iTempDen]
-                    if masterListTest and wvlTestMin and wvlTestMax and ioneqTest:
-                        if chInteractive:
-                            print ' calculating spectrum for  :  ', ionS
-                        thisIon = chianti.core.ion(ionS, temperature, density)
-#                       print ' dir = ', dir(thisIon)
-                        thisIon.intensity(wvlRange = wvlRange)
-                        # check that there are lines in this wavelength range
-                        if 'errorMessage' not in  thisIon.Intensity.keys():
-                            thisIon.spectrum(wavelength, filter=filter)
-#                           intensity = thisIon.Intensity['intensity']
-                            if nTempDen == 1:
-                                lineSpectrum += thisIon.Spectrum['intensity']
-                            else:
-                                for iTempDen in range(nTempDen):
-                                    lineSpectrum[iTempDen] += thisIon.Spectrum['intensity'][iTempDen]
-                        # get 2 photon emission for H and He sequences
-                        if (iz - ionstage) in [0, 1]:
-                            thisIon.twoPhoton(wavelength)
-                            twoPhoton += thisIon.TwoPhoton['rate']
-                    # get dielectronic lines
-                    if masterListTestD and wvlTestMinD and wvlTestMaxD and ioneqTestD:
-                        print ' calculating spectrum for  :  ', ionSd
-                        thisIon = chianti.core.ion(ionSd, temperature, density)
-#                       print ' dir = ', dir(thisIon)
-                        thisIon.intensity(wvlRange = wvlRange)
-                        # check that there are lines in this wavelength range - probably not redundant
-                        if 'errorMessage' not in  thisIon.Intensity.keys():
-                            thisIon.spectrum(wavelength, filter=filter)
-                            if nTempDen == 1:
-                                lineSpectrum += thisIon.Spectrum['intensity']
-                            else:
-                                for iTempDen in range(nTempDen):
-                                    lineSpectrum[iTempDen] += thisIon.Spectrum['intensity'][iTempDen]
-        self.FreeFree = {'wavelength':wavelength, 'intensity':freeFree.squeeze()}
-        self.FreeBound = {'wavelength':wavelength, 'intensity':freeBound.squeeze()}
-        self.LineSpectrum = {'wavelength':wavelength, 'intensity':lineSpectrum.squeeze()}
-        self.TwoPhoton = {'wavelength':wavelength, 'intensity':twoPhoton.squeeze()}
-        #
-        total = freeFree + freeBound + lineSpectrum + twoPhoton
-        t2 = datetime.now()
-        dt=t2-t1
-        print ' elapsed seconds = ', dt.seconds
-        if type(em) != types.NoneType:
-            if nEm == 1:
-                integrated = total*em
-            else:
-                integrated = np.zeros_like(wavelength)
-                for iTempDen in range(nTempDen):
-                    integrated += total[iTempDen]*em[iTempDen]
-            self.Spectrum ={'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1], 'integrated':integrated, 'em':em}
-        else:
-            self.Spectrum ={'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1]}
-    #
-    # -------------------------------------------------------------------------
-    #
-class mspectrum:
-    ''' this is the multiprocessing version of spectrum
-    Calculate the emission spectrum as a function of temperature and density.
-
-    temperature and density can be arrays but, unless the size of either is one (1),
-    the two must have the same size
-
-    the returned spectrum will be convolved with a filter of the specified width on the
-    specified wavelength array
-
-    the default filter is gaussianR with a resolving power of 100.  Other filters,
-    such as gaussian, box and lorentz, are available in chianti.filters.  When using the box filter,
-    the width should equal the wavelength interval to keep the units of the continuum and line
-    spectrum the same.
-
-    A selection of ions can be make with ionList containing the names of
-    the desired lines in Chianti notation, i.e. C VI = c_6
-
-    a minimum abundance can be specified so that the calculation can be speeded up by excluding
-    elements with a low abundance.  Setting doContinuum =0 will skip the continuum calculation.
-
-    Setting em will multiply the spectrum at each temperature by the value of em.
-
-    em [for emission measure], can be a float or an array of the same length as the
-    temperature/density.
-    proc = the number of processors to use
-    timeout - a small but non-zero value seems to be necessary
-    '''
-    def __init__(self, temperature, density, wavelength, filter=(chfilters.gaussianR, 1000.),  ionList = 0, minAbund=0., doContinuum=1, em = None,  proc=3,  verbose = 0,  timeout=0.1):
-        t1 = datetime.now()
-        masterlist = util.masterListRead()
-        # use the ionList but make sure the ions are in the database
-        if ionList:
-            alist=[]
-            for one in ionList:
-                if masterlist.count(one):
-                    alist.append(one)
-                else:
-                    if chInteractive and verbose:
-                        pstring = ' %s not in CHIANTI database'%(one)
-                        print('')
-            masterlist = alist
-        self.Defaults=defaults
-        self.Temperature = np.asarray(temperature, 'float64')
-        nTemp = self.Temperature.size
-        self.Density = np.asarray(density, 'float64')
-        nDen = self.Density.size
-        nTempDen = max([nTemp, nDen])
-        if type(em) != types.NoneType:
-            if type(em) == types.FloatType:
-                if nTempDen > 1:
-                    em = np.ones_like(self.Temperature)*em
-                    nEm = nTempDen
-                else:
-                    nEm = 1
-            else:
-                em = np.asarray(em, 'float64')
-                nEm = em.size
-                if nEm != nTempDen:
-                    print ' the emission measure array must be the same size as the temperature/density array'
-                    return
-        self.AbundanceName = defaults['abundfile']
-        self.AbundanceAll = util.abundanceRead(abundancename = self.AbundanceName)
-        abundAll = self.AbundanceAll['abundance']
-        nonzed = abundAll > 0.
-        minAbundAll = abundAll[nonzed].min()
-        if minAbund < minAbundAll:
-            minAbund = minAbundAll
-        ionInfo = util.masterListInfo()
-        wavelength = np.asarray(wavelength)
-        nWvl = wavelength.size
-        self.Wavelength = wavelength
-        wvlRange = [wavelength.min(), wavelength.max()]
-        #
-        proc = min([proc, mp.cpu_count()])
-        #
-        freeFree = np.zeros((nTempDen, nWvl), 'float64').squeeze()
-        freeBound = np.zeros((nTempDen, nWvl), 'float64').squeeze()
-        twoPhoton = np.zeros((nTempDen, nWvl), 'float64').squeeze()
-        lineSpectrum = np.zeros((nTempDen, nWvl), 'float64').squeeze()
-        #
-        #  free-free multiprocessing setup
-        ffWorkerQ = mp.Queue()
-        ffDoneQ = mp.Queue()
-        #
-        #  free-bound multiprocessing setup
-        #
-        fbWorkerQ = mp.Queue()
-        fbDoneQ = mp.Queue()
-        #
-        #  ion multiprocessing setup
-        ionWorkerQ = mp.Queue()
-        ionDoneQ = mp.Queue()
-        #
-        #
-        self.Todo = []
-        for iz in range(31):
-            abundance = self.AbundanceAll['abundance'][iz-1]
-            if abundance >= minAbund:
-                if chInteractive and verbose:
-                    print ' %5i %5s abundance = %10.2e '%(iz, const.El[iz-1],  abundance)
-                #
-                for ionstage in range(1, iz+2):
-                    ionS = util.zion2name(iz, ionstage)
-                    masterListTest = ionS in masterlist
-                    masterListInfoTest = ionS in ionInfo.keys()
-                    if masterListTest or masterListInfoTest:
-                        wvlTestMin = self.Wavelength.min() <= ionInfo[ionS]['wmax']
-                        wvlTestMax = self.Wavelength.max() >= ionInfo[ionS]['wmin']
-                        ioneqTest = (self.Temperature.max() >= ionInfo[ionS]['tmin']) and (self.Temperature.min() <= ionInfo[ionS]['tmax'])
-                    # construct similar test for the dielectronic files
-                    ionSd = util.zion2name(iz, ionstage, dielectronic=1)
-                    masterListTestD = ionSd in masterlist
-                    masterListInfoTestD = ionSd in ionInfo.keys()
-                    if masterListTestD or masterListInfoTestD:
-                        wvlTestMinD = self.Wavelength.min() <= ionInfo[ionSd]['wmax']
-                        wvlTestMaxD = self.Wavelength.max() >= ionInfo[ionSd]['wmin']
-                        ioneqTestD = (self.Temperature.max() >= ionInfo[ionSd]['tmin']) and (self.Temperature.min() <=ionInfo[ionSd]['tmax'])
-                    ionstageTest = ionstage > 1
-                    if ionstageTest and ioneqTest and doContinuum:
-                        # ionS is the target ion, cannot be the neutral for the continuum
-                        if chInteractive and verbose:
-                            print ' setting up continuum calculation for :  ',  ionS
-                        ffWorkerQ.put((ionS, temperature, wavelength))
-                        fbWorkerQ.put((ionS, temperature, wavelength))
-#                        fbInputs.append([ionS, temperature, wavelength])
-                        #
-                    if masterListTest and wvlTestMin and wvlTestMax and ioneqTest:
-                        if chInteractive and verbose:
-                            print ' setting up spectrum calculation for  :  ', ionS
-                        ionWorkerQ.put((ionS, temperature, density, wavelength, filter))
-                        self.Todo.append(ionS)
-                    # get dielectronic lines
-                    if masterListTestD and wvlTestMinD and wvlTestMaxD and ioneqTestD:
-                        if chInteractive and verbose:
-                            print ' setting up  spectrum calculation for  :  ', ionSd
-#                        dielWorkerQ.put((ionSd, temperature, density, wavelength, filter))
-                        ionWorkerQ.put((ionSd, temperature, density, wavelength, filter))
-                        self.Todo.append(ionSd)
-        #
-        ffWorkerQSize = ffWorkerQ.qsize()
-        fbWorkerQSize = fbWorkerQ.qsize()
-        ionWorkerQSize = ionWorkerQ.qsize()
-        if doContinuum:
-            ffProcesses = []
-            for i in range(proc):
-                p = mp.Process(target=mputil.doFfQ, args=(ffWorkerQ, ffDoneQ))
-                p.start()
-                ffProcesses.append(p)
-    #       timeout is not necessary
-            for p in ffProcesses:
-                if p.is_alive():
-                    p.join(timeout=timeout)
-#            for i in range(proc):
-#                ffProcesses.append('STOP')
-            #
-            for iff in range(ffWorkerQSize):
-                thisFreeFree =ffDoneQ.get()
-                if nTempDen ==1:
-                    freeFree += thisFreeFree['rate']
-                else:
-                    for iTempDen in range(nTempDen):
-                        freeFree[iTempDen] += thisFreeFree['rate'][iTempDen]
-            for p in ffProcesses:
-                if not isinstance(p, str):
-                    p.terminate()
-        #
-            fbProcesses = []
-            for i in range(proc):
-                p = mp.Process(target=mputil.doFbQ, args=(fbWorkerQ, fbDoneQ))
-                p.start()
-                fbProcesses.append(p)
-    #       timeout is not necessary
-            for p in fbProcesses:
-                if p.is_alive():
-                    p.join(timeout=timeout)
-#            for i in range(proc):
-#                fbProcesses.append('STOP')
-            #
-            for ifb in range(fbWorkerQSize):
-                thisFreeBound = fbDoneQ.get()
-                if thisFreeBound.has_key('rate'):
-                    if nTempDen ==1:
-                        freeBound += thisFreeBound['rate']
-                    else:
-                        for iTempDen in range(nTempDen):
-                            freeBound[iTempDen] += thisFreeBound['rate'][iTempDen]
-            for p in fbProcesses:
-                if not isinstance(p, str):
-                    p.terminate()
-        #
-        ionProcesses = []
-        if ionWorkerQSize < proc:
-            nproc = ionWorkerQSize
-        for i in range(proc):
-            p = mp.Process(target=mputil.doIonQ, args=(ionWorkerQ, ionDoneQ))
-            p.start()
-            ionProcesses.append(p)
-#            ionWorkerQ.put('STOP')
-#       timeout is not necessary
-        for p in ionProcesses:
-#            print' process is alive:  ', p.is_alive()
-            if p.is_alive():
-#                p.join()
-                p.join(timeout=timeout)
-#        for i in range(proc):
-#            ionProcesses.append('STOP')
-        self.Finished = []
-        #
-        for ijk in range(ionWorkerQSize):
-            out = ionDoneQ.get()
-            ions = out[0]
-            self.Finished.append(ions)
-            aspectrum = out[1]
-            try:
-                if nTempDen == 1:
-                    lineSpectrum += aspectrum['intensity']
-                else:
-                    for iTempDen in range(nTempDen):
-                        lineSpectrum[iTempDen] += aspectrum['intensity'][iTempDen]
-               # check for two-photon emission
-                if len(out) == 3:
-                    tp = out[2]
-                    if nTempDen == 1:
-                        twoPhoton += tp['rate']
-                    else:
-                        for iTempDen in range(nTempDen):
-                            twoPhoton[iTempDen] += tp['rate'][iTempDen]
-            except:
-                print '  error in ion pool'
-        #
-        for p in ionProcesses:
-            if not isinstance(p, str):
-                p.terminate()
-        #
-        #
-        #
-        self.FreeFree = {'wavelength':wavelength, 'intensity':freeFree.squeeze()}
-        self.FreeBound = {'wavelength':wavelength, 'intensity':freeBound.squeeze()}
-        self.LineSpectrum = {'wavelength':wavelength, 'intensity':lineSpectrum.squeeze()}
-        self.TwoPhoton = {'wavelength':wavelength, 'intensity':twoPhoton.squeeze()}
-        #
-        total = freeFree + freeBound + lineSpectrum + twoPhoton
-        t2 = datetime.now()
-        dt=t2-t1
-        if chInteractive and verbose:
-            print ' elapsed seconds = ', dt.seconds
-        if type(em) != types.NoneType:
-            if nEm == 1:
-                integrated = total*em
-            else:
-                integrated = np.zeros_like(wavelength)
-                for iTempDen in range(nTempDen):
-                    integrated += total[iTempDen]*em[iTempDen]
-            self.Spectrum ={'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1], 'integrated':integrated, 'em':em}
-        else:
-            self.Spectrum ={'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1], 'worker':ionWorkerQ, 'done':ionDoneQ}
-    #
-    # -------------------------------------------------------------------------
-    #
-    def lineSpectrumPlot(self, saveFile=0, plotContinuum=0, linLog = 'lin'):
-        ''' to plot the spectrum as a function of wavelength'''
-        # must follow setting top
-        #
-        pl.figure()
-        ylabel = 'Intensity'
-        #
-        xlabel = 'Wavelength ('+self.Defaults['wavelength'] +')'
-        #
-#        ymin = 10.**(np.log10(emiss.min()).round(0))
-        #
-        if chInteractive:
-            pl.ion()
-        else:
-            pl.ioff()
-        #
-        pl.plot(self.LineSpectrum['wavelength'], self.LineSpectrum['intensity'])
-        pl.xlabel(xlabel)
-        pl.ylabel(ylabel)
-        if saveFile:
-            pl.savefig(saveFile)
-    #
-    # -------------------------------------------------------------------------
-    #
 class ionWeb(ion):
     """
     a class that contains methods to be used for 'Chianti on the Web'
@@ -4981,5 +3320,169 @@ class ionWeb(ion):
         #
         # -------------------------------------------------------------------------------------
         #
+class ioneq(ion):
+    '''Calculates the ionization equilibrium for an element as a function of temperature.
+    The variable z is the atomic number of the element.  Acceptable values are from 1 to 30.'''
+    def __init__(self,z, temperature, verbose=False):
+#        self.Defaults=defaults
+        ionList=[]
+        chIons=[]
+        self.Z=z
+        self.Temperature = np.array(temperature, 'float64')
+        for stage in range(1, z+2):
+            ionStr=util.zion2name(z, stage)
+            ionList.append(ionStr)
+            print z, stage, ionStr
+            atom=ion(ionStr, temperature = self.Temperature)
+            atom.ionizRate()
+            atom.recombRate()
+            chIons.append(atom)
+#        for anIon in chIons:
+#            print ' this ion = ', anIon.Ions
+#            if type(anIon.IonizRate) != NoneType:
+#                pl.loglog(anIon.IonizRate['temperature'], anIon.IonizRate['rate'])
+#        #
+#        for anIon in chIons:
+#            print ' this ion = ',  anIon.Ions
+#            if type(anIon.RecombRate) != NoneType:
+#                pl.loglog(anIon.RecombRate['temperature'], anIon.RecombRate['rate'])
+        #
+        ntemp=chIons[0].IonizRate['temperature'].size
+        print ' ntemp = ',ntemp
+        if ntemp == 1:
+            ioneq=np.zeros((z+1), 'float32')
+            factor = []
+            for anIon in chIons:
+                if type(anIon.IonizRate) != types.NoneType and type(anIon.RecombRate) != types.NoneType:
+                    rat=anIon.IonizRate['rate']/anIon.RecombRate['rate']
+                    factor.append(rat**2 + rat**(-2))
+                else:
+                    factor.append(0.)
+            factor[0]=max(factor)
+            factor[-1]=max(factor)
+            ionmax=factor.index(min(factor))
+#            print ' it, ionmax', it, ionmax
+            ioneq[ionmax]=1.
+            #
+            for iz in range(ionmax+1, z+1):
+                ionrate=chIons[iz-1].IonizRate['rate']
+                recrate=chIons[iz].RecombRate['rate']
+                ioneq[iz]=ionrate*ioneq[iz-1]/recrate
+            #
+            for iz in range(ionmax-1, -1, -1):
+                ionrate=chIons[iz].IonizRate['rate']
+                recrate=chIons[iz+1].RecombRate['rate']
+                ioneq[iz]=recrate*ioneq[iz+1]/ionrate
+            ionsum=ioneq.sum()
+#            print ' ionsum = ', ionsum
+            ioneq=ioneq/ionsum
+            self.Ioneq=ioneq
+        #  ntemp >1
+        else:
+            ioneq=np.zeros((z+1,ntemp ), 'float32')
+            for it in range(ntemp):
+                factor=[]
+                for anIon in chIons:
+                    if type(anIon.IonizRate) != types.NoneType and type(anIon.RecombRate) != types.NoneType:
+                        rat=anIon.IonizRate['rate'][it]/anIon.RecombRate['rate'][it]
+                        factor.append(rat**2 + rat**(-2))
+                    else:
+                        factor.append(0.)
+                factor[0]=max(factor)
+                factor[-1]=max(factor)
+                ionmax=factor.index(min(factor))
+    #            print ' it, ionmax', it, ionmax
+                ioneq[ionmax, it]=1.
+                #
+                for iz in range(ionmax+1, z+1):
+                    ionrate=chIons[iz-1].IonizRate['rate'][it]
+                    recrate=chIons[iz].RecombRate['rate'][it]
+                    ioneq[iz, it]=ionrate*ioneq[iz-1, it]/recrate
+                #
+                for iz in range(ionmax-1, -1, -1):
+                    ionrate=chIons[iz].IonizRate['rate'][it]
+                    recrate=chIons[iz+1].RecombRate['rate'][it]
+                    ioneq[iz, it]=recrate*ioneq[iz+1, it]/ionrate
+                ionsum=ioneq[:, it].sum()
+    #            print ' ionsum = ', ionsum
+                ioneq[:, it]=ioneq[:, it]/ionsum
+            self.Ioneq=ioneq
+#
+    def plot(self, stages=None, xr=None, yr=None, oplot=False, label=True, title=True,  bw=False):
+        '''Plots the ionization equilibria.
 
+        self.plot(xr=None, yr=None, oplot=False)
+        stages = sequence of ions to be plotted, neutral == 1, fully stripped == Z+1
+        xr = temperature range, yr = ion fraction range
 
+        for overplotting:
+        oplot="ioneqfilename" such as 'mazzotta'
+        or if oplot=True or oplot=1 and a widget will come up so that a file can be selected.'''
+        if bw:
+            linestyle=['k-','k--', 'k-.', 'k:']
+        else:
+            linestyle=['b-','r--', 'g-.', 'm:']
+        #
+        if type(stages) == types.NoneType:
+            stages=range(1, self.Z+2)
+        elif min(stages) < 1 or max(stages) > self.Z+1:
+            stages=range(1, self.Z+2)  #  spectroscopic notation
+        if type(xr) == types.NoneType:
+            xr=[self.Temperature.min(), self.Temperature.max()]
+        if type(yr) == types.NoneType:
+            yr=[0.01, 1.1]
+        xyr=list(xr)
+        xyr.extend(list(yr))
+        #
+        iz=stages[0]
+        pl.loglog(self.Temperature, self.Ioneq[iz-1])
+        if label:
+            idx=self.Ioneq[iz-1] == self.Ioneq[iz-1].max()
+            if idx.sum() > 1:
+                jdx=np.arange(len(idx))
+                idx=jdx[idx].max()
+            ann=const.Ionstage[iz-1]
+            pl.annotate(ann, [self.Temperature[idx], 0.7*self.Ioneq[iz-1, idx]], ha='center')
+        for iz in stages[1:]:
+            pl.plot(self.Temperature, self.Ioneq[iz-1], linestyle[0])
+            if label:
+                idx=self.Ioneq[iz-1] == self.Ioneq[iz-1].max()
+                if idx.sum() > 1:
+                    jdx=np.arange(len(idx))
+                    idx=jdx[idx].mean()
+                ann=const.Ionstage[iz-1]
+                pl.annotate(ann, [self.Temperature[idx], 0.7*self.Ioneq[iz-1, idx]], ha='center')
+        pl.xlabel('Temperature (K)')
+        pl.ylabel('Ion Fraction')
+        atitle='Chianti Ionization Equilibrium for '+El[self.Z-1].capitalize()
+        #
+        if oplot != False:
+            if type(oplot) == BooleanType:
+                result=self.ioneqRead(ioneqname='',default=False)
+                if result != False:
+                    atitle+='  & '+result['ioneqname'].replace('.ioneq', '')
+                    atitle+=' '+linestyle[0]
+                    for iz in ions:
+                        pl.plot(self.IoneqTemperature, self.IoneqAll[self.Z-1, iz-1],linestyle[0], linestyle[1])
+            elif type(oplot) == StringType:
+                atitle+='  & '+oplot+' '+linestyle[0]
+                atitle+=' '+linestyle[0]
+                result=self.ioneqRead(ioneqname=oplot,default=False)
+                if result != False:
+                    for iz in ions:
+                        pl.plot(self.IoneqTemperature, self.IoneqAll[self.Z-1, iz-1],linestyle[0], linestyle[1])
+            elif type(oplot) == ListType:
+                for iplot in range(len(oplot)):
+                    result=self.ioneqRead(ioneqname=oplot[iplot],default=False)
+                    if result != False:
+                        atitle+='  & '+oplot[iplot]+' '+linestyle[iplot%3]
+                        for iz in ions:
+                            pl.plot(self.IoneqTemperature, self.IoneqAll[self.Z-1, iz-1], linestyle[iplot%4])
+            else:
+                print ' oplot not understood ', oplot
+        if title:
+            pl.title(atitle)
+        pl.axis(xyr)
+    #
+    # -------------------------------------------------------------------------
+    #
