@@ -61,7 +61,7 @@ from spectrum import spectrum
 from mspectrum import mspectrum
 from continuum import continuum
 #from ion import ioneq
-from ion import ion
+from Ion import ion
 ##from ion import ionWeb
 ##from ionweb import ionWeb
 #
