@@ -2094,7 +2094,8 @@ class ion:
         Descriptive information is included at the top of the file.'''
         if outfile == '':
             outfile=self.IntensityRatio['filename']
-            print ' filename = ',outfile
+            if chInteractive:
+                print ' saving ratio to filename = ',outfile
         temperature=self.IntensityRatio['temperature']
         density=self.IntensityRatio['density']
         ratio=self.IntensityRatio['ratio']
