@@ -2106,7 +2106,7 @@ class ion:
         #
         out.write(outfile+'\n')    #1
         out.write(self.IntensityRatio['desc']+'\n') #2
-        out.write(' created with ChiantiPy version '+ self.__version__ +'\n')   #3
+        out.write(' created with ChiantiPy version '+ chianti.__version__ +'\n')   #3
         out.write(' columns are temperature, density, ratio'+'\n')  #5
         tunit = 'K'
         out.write(' temperature in '+tunit+', electron density in cm^(-3)'+'\n')  #6
