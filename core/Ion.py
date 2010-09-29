@@ -1682,7 +1682,7 @@ class ion:
         #
         # ---------------------------------------------------------------------------
         #
-    def emissPlot(self, index=None,  wvlRange=None,  top=10, linLog='lin', relative=0,  verbose=0, saveFile=0 ):
+    def emissPlot(self, index=None,  wvlRange=None,  top=10, linLog='lin', relative=0,  verbose=0, plotFile = 0, saveFile=0 ):
         '''Plot the emissivities.
 
         wvlRange, a 2 element tuple, list or array determines the wavelength range
@@ -1800,8 +1800,8 @@ class ion:
         pl.title(title+tstr+dstr)
         if wvlRange:
             pl.axis([wvlRange[0], wvlRange[1], ymin, emiss.max()])
-        if saveFile:
-            pl.savefig(saveFile)
+        if plotFile:
+            pl.savefig(plotFile)
         #
         idx = np.argsort(wvl)
         self.Emiss['wvlTop'] = wvl[idx]
