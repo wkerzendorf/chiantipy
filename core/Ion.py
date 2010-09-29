@@ -3314,10 +3314,10 @@ class ionWeb(ion):
         if saveFile:
             pl.savefig(saveFile)
         intensityRatioFileName=self.IonStr
-        for aline in numIdx:
+        for aline in num_idx:
             intensityRatioFileName+= '_%3i'%(wvl[topLines[aline]])
         intensityRatioFileName+='_2'
-        for aline in denIdx:
+        for aline in den_idx:
             intensityRatioFileName+= '_%3i'%(wvl[topLines[aline]])
         intensityRatioFileName
         self.IntensityRatio={'ratio':numEmiss/denEmiss,'desc':desc,
