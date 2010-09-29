@@ -1554,7 +1554,7 @@ class ion:
 #            yl=pl.ylim()
             pl.ylim(yl[0],1.2)
         if plotFile:
-            pl.savefig(saveFile)
+            pl.savefig(plotFile)
         return
         #
         # -------------------------------------------------------------------------------------
