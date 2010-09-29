@@ -1435,7 +1435,7 @@ class ion:
         #
         # -------------------------------------------------------------------------------------
         #
-    def popPlot(self,top=10, saveFile=0):
+    def popPlot(self,top=10, plotFile=0, saveFile=0):
         """Plots populations vs temperature or density.
 
         top specifies the number of the most highly populated levels to plot."""
@@ -1553,7 +1553,7 @@ class ion:
 #            pl.xlim(density.min(),density.max())
 #            yl=pl.ylim()
             pl.ylim(yl[0],1.2)
-        if saveFile:
+        if plotFile:
             pl.savefig(saveFile)
         return
         #
