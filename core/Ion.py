@@ -3126,14 +3126,6 @@ class ionWeb(ion):
         self.wvlChoices = wvlChoices
         self.topLines = topLines
         #
-        intensityRatioFileName = self.IonStr
-        for aline in num_idx:
-            intensityRatioFileName += '_%3i'%(wvl[topLines[aline]])
-        intensityRatioFileName += '_2'
-        for aline in den_idx:
-            intensityRatioFileName += '_%3i'%(wvl[topLines[aline]])
-        self.intensityRatioFileName = intensityRatioFileName
-        #
         #   -----------------------------------
         #
     def intensityRatioShow(self,numIdx, denIdx, saveFile=0):
@@ -3322,12 +3314,12 @@ class ionWeb(ion):
         if saveFile:
             pl.savefig(saveFile)
         intensityRatioFileName=self.IonStr
-        for aline in num_idx:
+        for aline in numIdx:
             intensityRatioFileName+= '_%3i'%(wvl[topLines[aline]])
         intensityRatioFileName+='_2'
-        for aline in den_idx:
+        for aline in denIdx:
             intensityRatioFileName+= '_%3i'%(wvl[topLines[aline]])
-        intensityRatioFileName+='.rat'
+        intensityRatioFileName
         self.IntensityRatio={'ratio':numEmiss/denEmiss,'desc':desc,
                 'temperature':outTemperature,'density':outDensity,'filename':intensityRatioFileName}
         #
