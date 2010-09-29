@@ -1555,6 +1555,7 @@ class ion:
             pl.ylim(yl[0],1.2)
         if plotFile:
             pl.savefig(plotFile)
+        self.Population['toplvl'] = toplvl
         return
         #
         # -------------------------------------------------------------------------------------
