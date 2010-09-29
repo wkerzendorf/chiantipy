@@ -3126,6 +3126,14 @@ class ionWeb(ion):
         self.wvlChoices = wvlChoices
         self.topLines = topLines
         #
+        intensityRatioFileName = self.IonStr
+        for aline in num_idx:
+            intensityRatioFileName += '_%3i'%(wvl[topLines[aline]])
+        intensityRatioFileName += '_2'
+        for aline in den_idx:
+            intensityRatioFileName += '_%3i'%(wvl[topLines[aline]])
+        self.intensityRatioFileName = intensityRatioFileName
+        #
         #   -----------------------------------
         #
     def intensityRatioShow(self,numIdx, denIdx, saveFile=0):
