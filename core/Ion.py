@@ -2768,7 +2768,7 @@ class ionWeb(ion):
         #
         # -------------------------------------------------------------------------------------
         #
-    def gofntShow(self,wvlRange=0,top=10,index=0, saveFile=0):
+    def gofntShow(self, wvlRange=0, top=10, index=0, saveFile=0):
         """Return a plot of the 'so-called' G(T) function fron the selected lines in index
 
         Given as a function of both temperature and density.
@@ -2910,7 +2910,7 @@ class ionWeb(ion):
 #        gline_idx=gline.selectedIndex
 #        #
         gline_idx = index
-        ngofnt = len(index)
+        nWvl = len(index)
         #
         gAbund=self.Abundance
         #
@@ -2936,8 +2936,8 @@ class ionWeb(ion):
         g_line= topLines[gline_idx]#  [0]
         #print ' g_line = ',g_line
         #
-        gofnt=np.zeros(ngofnt,'float64')
-        if ngofnt > 1:
+        if nWvl > 1:
+            gofnt=np.zeros((nWvl, ngofnt) ,'float64')
             for aline in g_line:
     #        for aline in gline_idx:
                 gofnt += gAbund*gIoneq*emiss[aline].squeeze()
