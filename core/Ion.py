@@ -2937,7 +2937,7 @@ class ionWeb(ion):
         #print ' g_line = ',g_line
         #
         if nWvl > 1:
-            gofnt=np.zeros((nWvl, ngofnt) ,'float64')
+            gofnt=np.zeros((ngofnt) ,'float64')
             for aline in g_line:
     #        for aline in gline_idx:
                 gofnt += gAbund*gIoneq*emiss[aline].squeeze()
