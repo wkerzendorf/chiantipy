@@ -2934,24 +2934,24 @@ class ionWeb(ion):
         #
         # plot the desired ratio
         pl.figure()
-        g_line = gline_idx#  [0]
+#        g_line = gline_idx#  [0]
         #print ' g_line = ',g_line
         #
         if nWvl > 1:
             gofnt=np.zeros((ngofnt) ,'float64')
-            for aline in g_line:
-    #        for aline in gline_idx:
+#            for aline in g_line:
+            for aline in gline_idx:
                 gofnt += gAbund*gIoneq*emiss[aline].squeeze()
         else:
             gofnt = gAbund*gIoneq*emiss[index].squeeze()
 
-        self.Gofnt={'temperature':outTemperature,'density':outDensity,'gofnt':gofnt}
+        self.Gofnt={'temperature':outTemperature,'density':outDensity,'gofnt':gofnt, 'index':gline_idx}
         #
         pl.loglog(xvalues,gofnt)
         pl.xlim(xvalues.min(),xvalues.max())
         pl.xlabel(xlabel,fontsize=fontsize)
         pl.ylabel('Gofnt',fontsize=fontsize)
-        pl.title(title+' '+str(wvl[g_line])+' '+desc_str, fontsize=fontsize)
+        pl.title(title+' '+str(wvl[index])+' '+desc_str, fontsize=fontsize)
         if saveFile:
             pl.savefig(saveFile)
         else:
