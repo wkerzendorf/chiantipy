@@ -2910,8 +2910,7 @@ class ionWeb(ion):
 #        gline_idx=gline.selectedIndex
 #        #
         gline_idx = index
-        # for now
-        ngofnt = 1
+        ngofnt = len(index)
         #
         gAbund=self.Abundance
         #
@@ -2937,7 +2936,7 @@ class ionWeb(ion):
         g_line= topLines[gline_idx]#  [0]
         #print ' g_line = ',g_line
         #
-        gofnt=np.zeros(ngofnt,'float32')
+        gofnt=np.zeros(ngofnt,'float64')
         if ngofnt > 1:
             for aline in g_line:
     #        for aline in gline_idx:
