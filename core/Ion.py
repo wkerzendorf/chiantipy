@@ -2086,25 +2086,25 @@ class ion:
         #
         # -------------------------------------------------------------------------------------
         #
-    def intensityRatioSave(self,outfile=''):
+    def intensityRatioSave(self,outFile=''):
         '''Save the intensity ratio to a file.
 
         The intensity ratio as a function to temperature and density is saved to an asciii file.
 
         Descriptive information is included at the top of the file.'''
-        if outfile == '':
+        if outFile == '':
             outfile=self.IntensityRatio['filename']
             if chInteractive:
                 print ' saving ratio to filename = ',outfile
         temperature=self.IntensityRatio['temperature']
         density=self.IntensityRatio['density']
         ratio=self.IntensityRatio['ratio']
-        out=open(outfile,'w')
+        out=open(outFile,'w')
         nvalues=len(ratio)
         #
         #  need to add 7 lines to maintain IDL like files
         #
-        out.write(outfile+'\n')    #1
+        out.write(outFile+'\n')    #1
         out.write(self.IntensityRatio['desc']+'\n') #2
         out.write(' created with ChiantiPy version '+ chianti.__version__ +'\n')   #3
         out.write(' columns are temperature, density, ratio'+'\n')  #5
@@ -3128,10 +3128,12 @@ class ionWeb(ion):
         #
         #   -----------------------------------
         #
-    def intensityRatioShow(self,numIdx, denIdx, saveFile=0):
+    def intensityRatioShow(self,numIdx, denIdx, plotDir=0, saveDir=0):
         """Plot the ratio of 2 lines or sums of lines.
 
-        Shown as a function of density and/or temperature."""
+        Shown as a function of density and/or temperature.
+
+        to save a plot or txt, only the directory name is needed"""
         #
         #        self.Emiss={"temperature":temperature,"density":density,"wvl":wvl,"emiss":em,
         #        "plotLabels":plotLabels}
@@ -3311,14 +3313,21 @@ class ionWeb(ion):
 #        pl.ioff()
 #        pl.show()
         #
-        if saveFile:
-            pl.savefig(saveFile)
         intensityRatioFileName=self.IonStr
         for aline in num_idx:
             intensityRatioFileName+= '_%3i'%(wvl[topLines[aline]])
         intensityRatioFileName+='_2'
         for aline in den_idx:
             intensityRatioFileName+= '_%3i'%(wvl[topLines[aline]])
+        #
+        if plotDir:
+            plotFile = os.path.join(plotDir, intensityRatioFileName+'.png')
+            pl.savefig(plotFile)
+        #
+        if saveDir:
+            txtFile = os.path.join(saveDir, intensityRatioFileName+'.txt')
+            self.intensityRatioSave(outFile = txtFile)
+        #
         self.IntensityRatio={'ratio':numEmiss/denEmiss,'desc':desc,
                 'temperature':outTemperature,'density':outDensity,'filename':intensityRatioFileName}
         #
