@@ -3319,7 +3319,6 @@ class ionWeb(ion):
         intensityRatioFileName+='_2'
         for aline in den_idx:
             intensityRatioFileName+= '_%3i'%(wvl[topLines[aline]])
-        intensityRatioFileName
         self.IntensityRatio={'ratio':numEmiss/denEmiss,'desc':desc,
                 'temperature':outTemperature,'density':outDensity,'filename':intensityRatioFileName}
         #
