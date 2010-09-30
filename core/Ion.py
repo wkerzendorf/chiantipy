@@ -2934,7 +2934,7 @@ class ionWeb(ion):
         #
         # plot the desired ratio
         pl.figure()
-        g_line= topLines[gline_idx]#  [0]
+        g_line = gline_idx#  [0]
         #print ' g_line = ',g_line
         #
         if nWvl > 1:
