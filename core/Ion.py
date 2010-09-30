@@ -2762,6 +2762,7 @@ class ionWeb(ion):
         for one in wvl[topLines]:
             wvlChoices.append('%12.3f'%(one))
         self.wvlChoices = wvlChoices
+        self.topLines = topLines
 #        gline = gui.selectorDialog(wvlChoices,label='Select line(s)')
 #        gline_idx=gline.selectedIndex
         #
