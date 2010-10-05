@@ -260,6 +260,25 @@ def zion2filename(z,ion, dielectronic=False):
     #
     # -------------------------------------------------------------------------------------
     #
+def zion2localFilename(z,ion, dielectronic=False):
+    """ convert Z to generic file name string with current directory at top"""
+    dir='.'
+    if (z-1 < len(const.El)) and (ion <= z+1):
+        thisel=const.El[z-1]
+    else:
+        thisel=''
+    if z-1 < len(const.El):
+        thisone=const.El[z-1]+'_'+str(ion)
+        if dielectronic:
+            thisone+='d'
+    else:
+        thisone=''
+    if thisel != '' :
+        fname=os.path.join(dir,thisel,thisone,thisone)
+    return fname
+    #
+    # -------------------------------------------------------------------------------------
+    #
 def zion2spectroscopic(z,ion, dielectronic=False):
     """ convert Z and ion to spectroscopic notation string """
     if (z-1 < len(const.El)) and (ion <= z+1):
