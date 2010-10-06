@@ -668,7 +668,7 @@ class ion:
                         newRec[index] = highRec[idx]
                         index += 1
                 recRate[itrans] = newRec
-        self.ReclvlRate = {'rate':recRate, 'lvl2':reclvl['lvl2']}
+        self.ReclvlRate = {'rate':recRate, 'lvl2':reclvl['lvl2'], 'temperature':temperature}
         #
         # -------------------------------------------------------------------------------------
         #
@@ -1161,26 +1161,29 @@ class ion:
                 # the ciRate can be computed for all temperatures
                 #
                 for itrans in range(len(cisplups['lvl1'])):
-                    lvl1 = cisplups['lvl1'][itrans]
-                    lvl2 = cisplups['lvl2'][itrans]
+                    lvl1 = cisplups['lvl1'][itrans]-1
+                    lvl2 = cisplups['lvl2'][itrans]-1
                     de = cisplups['de'][itrans]
                     ekt = (de*1.57888e+5)/temperature
                     mult = lowMult[lvl1-1]
                     cirate = const.collision*self.CiUpsilon[itrans]*np.exp(-ekt)/(np.sqrt(temperature)*mult)
                     # this is kind of double booking the ionization rate components
-                    popmat[lvl2, lvl1-1] += self.Density*cirate
-                    popmat[lvl1-1, lvl1-1] -= self.Density*cirate
+                    popmat[lvl2+ci, lvl1+ci] += self.Density*cirate
+                    popmat[lvl1+ci, lvl1+ci] -= self.Density*cirate
             if rec:
 #               print ' rec = ', rec
                 popmat[-1,  ci] += self.Density*self.IonizRate['rate']
                 popmat[ci, ci] -= self.Density*self.IonizRate['rate']
-                popmat[ci, -1] += self.Density*higher.RecombRate['rate']
-                popmat[-1, -1] -= self.Density*higher.RecombRate['rate']
+                # next 2 line take care of overbooking
+                popmat[ci, -1] += self.Density*(higher.RecombRate['rate']
+                    -self.ReclvlRate['rate'].sum(axis=0))
+                popmat[-1, -1] -= self.Density*(higher.RecombRate['rate']
+                    - self.ReclvlRate['rate'].sum(axis=0))
                 #
                 for itrans in range(len(reclvl['lvl1'])):
-                    lvl1 = reclvl['lvl1'][itrans]
-                    lvl2 = reclvl['lvl2'][itrans]
-                    popmat[lvl2+ci+1, -1] += self.Density*self.ReclvlRate['rate'][itrans]
+                    lvl1 = reclvl['lvl1'][itrans]-1
+                    lvl2 = reclvl['lvl2'][itrans]-1
+                    popmat[lvl2+ci, -1] += self.Density*self.ReclvlRate['rate'][itrans]
                     popmat[-1, -1] -= self.Density*self.ReclvlRate['rate'][itrans]
             # normalize to unity
             norm=np.ones(nlvls+ci+rec,'float64')
@@ -1250,13 +1253,17 @@ class ion:
 #                   print ' rec = ', rec
                     popmat[-1,  ci] += self.Density*self.IonizRate['rate'][itemp]
                     popmat[ci, ci] -= self.Density*self.IonizRate['rate'][itemp]
-                    popmat[ci, -1] += self.Density*higher.RecombRate['rate'][itemp]
-                    popmat[-1, -1] -= self.Density*higher.RecombRate['rate'][itemp]
+                    popmat[ci, -1] += self.Density*(higher.RecombRate['rate'][itemp]
+                        - self.ReclvlRate['rate'][:, itemp].sum())
+                    popmat[-1, -1] -= self.Density*(higher.RecombRate['rate'][itemp]
+                        - self.ReclvlRate['rate'][:, itemp].sum())
+#                    popmat[ci, -1] += self.Density*higher.RecombRate['rate'][itemp]
+#                    popmat[-1, -1] -= self.Density*higher.RecombRate['rate'][itemp]
                     #
                     for itrans in range(len(reclvl['lvl1'])):
-                        lvl1 = reclvl['lvl1'][itrans]
-                        lvl2 = reclvl['lvl2'][itrans]
-                        popmat[lvl2+ci+1, -1] += self.Density*self.ReclvlRate['rate'][itrans, itemp]
+                        lvl1 = reclvl['lvl1'][itrans]-1
+                        lvl2 = reclvl['lvl2'][itrans]-1
+                        popmat[lvl2+ci, -1] += self.Density*self.ReclvlRate['rate'][itrans, itemp]
                         popmat[-1, -1] -= self.Density*self.ReclvlRate['rate'][itrans, itemp]
                 # normalize to unity
                 norm=np.ones(nlvls+ci+rec,'float64')
@@ -1323,16 +1330,19 @@ class ion:
                         popmat[lvl2, lvl1-1] += self.Density[idens]*cirate
                         popmat[lvl1-1, lvl1-1] -= self.Density[idens]*cirate
                 if rec:
-#                   print ' rec = ', rec
                     popmat[-1,  ci] += self.Density[idens]*self.IonizRate['rate']
                     popmat[ci, ci] -= self.Density[idens]*self.IonizRate['rate']
-                    popmat[ci, -1] += self.Density[idens]*higher.RecombRate['rate']
-                    popmat[-1, -1] -= self.Density[idens]*higher.RecombRate['rate']
+                    popmat[ci, -1] += self.Density[idens]*(higher.RecombRate['rate']
+                        - self.ReclvlRate['rate'].sum())
+                    popmat[-1, -1] -= self.Density[idens]*(higher.RecombRate['rate']
+                        - self.ReclvlRate['rate'].sum())
+#                    popmat[ci, -1] += self.Density[idens]*higher.RecombRate['rate']
+#                    popmat[-1, -1] -= self.Density[idens]*higher.RecombRate['rate']
                     #
                     for itrans in range(len(reclvl['lvl1'])):
-                        lvl1 = reclvl['lvl1'][itrans]
-                        lvl2 = reclvl['lvl2'][itrans]
-                        popmat[lvl2+ci+1, -1] += self.Density[idens]*self.ReclvlRate['rate'][itrans]
+                        lvl1 = reclvl['lvl1'][itrans]-1
+                        lvl2 = reclvl['lvl2'][itrans]-1
+                        popmat[lvl2+ci, -1] += self.Density[idens]*self.ReclvlRate['rate'][itrans]
                         popmat[-1, -1] -= self.Density[idens]*self.ReclvlRate['rate'][itrans]
                 # normalize to unity
                 norm=np.ones(nlvls+ci+rec,'float64')
@@ -1405,13 +1415,17 @@ class ion:
 #                   print ' rec = ', rec
                     popmat[-1,  ci] += self.Density[itemp]*self.IonizRate['rate'][itemp]
                     popmat[ci, ci] -= self.Density[itemp]*self.IonizRate['rate'][itemp]
-                    popmat[ci, -1] += self.Density[itemp]*higher.RecombRate['rate'][itemp]
-                    popmat[-1, -1] -= self.Density[itemp]*higher.RecombRate['rate'][itemp]
+                    popmat[ci, -1] += self.Density[itemp]*(higher.RecombRate['rate'][itemp]
+                        -self.ReclvlRate['rate'][:, itemp].sum())
+                    popmat[-1, -1] -= self.Density[itemp]*(higher.RecombRate['rate'][itemp]
+                        - self.ReclvlRate['rate'][:, itemp].sum())
+#                    popmat[ci, -1] += self.Density[itemp]*higher.RecombRate['rate'][itemp]
+#                    popmat[-1, -1] -= self.Density[itemp]*higher.RecombRate['rate'][itemp]
                     #
                     for itrans in range(len(reclvl['lvl1'])):
-                        lvl1 = reclvl['lvl1'][itrans]
-                        lvl2 = reclvl['lvl2'][itrans]
-                        popmat[lvl2+ci+1, -1] += self.Density[itemp]*self.ReclvlRate['rate'][itrans, itemp]
+                        lvl1 = reclvl['lvl1'][itrans]-1
+                        lvl2 = reclvl['lvl2'][itrans]-1
+                        popmat[lvl2+ci, -1] += self.Density[itemp]*self.ReclvlRate['rate'][itrans, itemp]
                         popmat[-1, -1] -= self.Density[itemp]*self.ReclvlRate['rate'][itrans, itemp]
                 # normalize to unity
                 norm=np.ones(nlvls+ci+rec,'float64')
