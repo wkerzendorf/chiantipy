@@ -1152,7 +1152,7 @@ class ion:
                 popmat[l2+ci,l2+ci]-=cp*pups[isplups]/(fmult2*np.sqrt(temp))
             # now include ionization rate from
             if ci:
-#               print ' ci = ', ci
+#                print ' ci = ', ci
                 popmat[1, 0] += self.Density*lower.IonizRate['rate']
                 popmat[0, 0] -= self.Density*lower.IonizRate['rate']
                 popmat[0, 1] += self.Density*self.RecombRate['rate']
@@ -1171,7 +1171,7 @@ class ion:
                     popmat[lvl2+ci, lvl1+ci] += self.Density*cirate
                     popmat[lvl1+ci, lvl1+ci] -= self.Density*cirate
             if rec:
-#               print ' rec = ', rec
+#                print ' rec = ', rec
                 popmat[-1,  ci] += self.Density*self.IonizRate['rate']
                 popmat[ci, ci] -= self.Density*self.IonizRate['rate']
                 # next 2 line take care of overbooking
@@ -1231,7 +1231,7 @@ class ion:
                     popmat[l2+ci,l2+ci]-=cp[itemp]*pups[isplups, itemp]/(fmult2*np.sqrt(temp[itemp]))
                 # now include ionization rate from
                 if ci:
-#                   print ' ci = ', ci
+                    print ' ci = ', ci
                     popmat[1, 0] += self.Density*lower.IonizRate['rate'][itemp]
                     popmat[0, 0] -= self.Density*lower.IonizRate['rate'][itemp]
                     popmat[0, 1] += self.Density*self.RecombRate['rate'][itemp]
@@ -1250,7 +1250,6 @@ class ion:
                         popmat[lvl2, lvl1-1] += self.Density*cirate[itemp]
                         popmat[lvl1-1, lvl1-1] -= self.Density*cirate[itemp]
                 if rec:
-#                   print ' rec = ', rec
                     popmat[-1,  ci] += self.Density*self.IonizRate['rate'][itemp]
                     popmat[ci, ci] -= self.Density*self.IonizRate['rate'][itemp]
                     popmat[ci, -1] += self.Density*(higher.RecombRate['rate'][itemp]

@@ -495,7 +495,7 @@ def elvlcRead(ions, filename = None, verbose=False):
 #    self.const.Elvlc={"lvl":lvl,"conf":conf,"term":term,"spin":spin,"l":l,"spd":spd,"j":j
 #            ,"mult":mult,"ecm":ecm,"eryd":eryd,"ecmth":ecmth,"erydth":erydth,"ref":ref}
     return {"lvl":lvl,"conf":conf,"term":term,"spin":spin,"l":l,"spd":spd,"j":j
-            ,"mult":mult,"ecm":ecm,"eryd":eryd,"ecmth":ecmth,"erydth":erydth,"ref":ref,"pretty":pretty}
+            ,"mult":mult,"ecm":ecm,"eryd":eryd,"ecmth":ecmth,"erydth":erydth,"ref":ref,"pretty":pretty, 'ionS':ions}
     #
     # -------------------------------------------------------------------------------------
     #
@@ -537,7 +537,7 @@ def wgfaRead(ions, filename = None):
     for i in range(nwvl,len(s1)-1):
         s1a=s1[i][:-1]
         ref.append(s1a.strip())
-    Wgfa={"lvl1":lvl1,"lvl2":lvl2,"wvl":wvl,"gf":gf,"avalue":avalue,"ref":ref}
+    Wgfa={"lvl1":lvl1,"lvl2":lvl2,"wvl":wvl,"gf":gf,"avalue":avalue,"ref":ref, 'ionS':ions}
     return Wgfa
     #
     # -------------------------------------------------------------------------------------
@@ -812,7 +812,7 @@ def cireclvlRead(ions, type):
         lvl2[idat] = int(cidat[3])
         ci[idat] = np.resize(shortCi, maxNtemp)
         idat += 1
-    return {'temperature':temp, 'ntemp':ntemp,'lvl1':lvl1, 'lvl2':lvl2, 'rate':ci,'ref':lines[ndata+1:-1]}
+    return {'temperature':temp, 'ntemp':ntemp,'lvl1':lvl1, 'lvl2':lvl2, 'rate':ci,'ref':lines[ndata+1:-1], 'ionS':ions}
     #
 def dilution(radius):
     ''' to calculate the dilution factor as a function distance from the center of a star in units of the stellar radius
