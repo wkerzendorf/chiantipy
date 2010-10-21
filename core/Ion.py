@@ -849,7 +849,7 @@ class ion:
 #                de=self.Psplups['de'][isplups]  # these are generally 0.
                 kte=temp/(de*1.57888e+5)
             elif ci:
-                # for proton rates
+                #
                 l1 = self.CiSplups["lvl1"][isplups]-1
                 l2 = self.CiSplups["lvl2"][isplups]-1
                 ttype = self.CiSplups["ttype"][isplups]
@@ -874,7 +874,7 @@ class ion:
                 kte=temp/(de*1.57888e+5)
             #
             der=0
-            if ttype ==1:
+            if ttype == 1:
                 st=1.-np.log(cups)/np.log(kte+cups)
                 xs=dx*np.arange(nspl)
                 y2=interpolate.splrep(xs,splups,s=0)  #allow smoothing,s=0)

@@ -708,10 +708,10 @@ def splupsRead(ions, filename=None, prot=False,ci=False):
         for i in range(0,nsplups):
             # checking for 5 or 9 point splines, need to check for 9 first!
             try:
-                inpt=FortranLine(s1[i],splupsFormat1)
-            except:
                 inpt=FortranLine(s1[i],splupsFormat2)
-#            inpt=FortranLine(s1[i],splupsFormat1)
+            except:
+                inpt=FortranLine(s1[i],splupsFormat1)
+#
             lvl1[i]=inpt[0]
             lvl2[i]=inpt[1]
             ttype[i]=inpt[2]
@@ -722,10 +722,14 @@ def splupsRead(ions, filename=None, prot=False,ci=False):
 #                    print ' last 4 total = ',np.array(inpt[11:-1]).sum()
             spl=np.array(inpt[6:])
             nz = spl > 0.
-            if nz.sum() > 5:
-                nspl[i] = 9
-            else:
-                nspl[i] = 5
+#            if i < 20:
+#                print 'nz.sum() = ', nz.sum()
+#                print ' inpt[6:] = ', inpt[3:]
+            nspl[i] = nz.sum()
+#            if nz.sum() > 5:
+#                nspl[i] = 9
+#            else:
+#                nspl[i] = 5
             splups[i].put(range(nspl[i]), spl)
         #
         ref=[]
