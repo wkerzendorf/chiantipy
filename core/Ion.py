@@ -842,7 +842,6 @@ class ion:
                 ttype=self.Psplups["ttype"][isplups]
                 cups=self.Psplups["cups"][isplups]
                 nspl=self.Psplups["nspl"][isplups]
-                ttype=6
                 dx=1./(float(nspl)-1.)
                 splups=self.Psplups["splups"][isplups,0:nspl]
                 de=elvlc[l2]-elvlc[l1]
@@ -916,8 +915,8 @@ class ion:
                 xs=dx*np.arange(nspl)
                 y2=interpolate.splrep(xs,splups,s=0)  #allow smoothing,s=0)
                 sups=interpolate.splev(st,y2,der=der)
-                ups[isplups] = sups
-#                ups[isplups]=10.**sups
+#                ups[isplups] = sups
+                ups[isplups]=10.**sups
             #
             elif ttype > 6:  print ' t_type ne 1,2,3,4,5=',ttype,l1,l2
         #
