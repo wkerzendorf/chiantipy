@@ -655,7 +655,7 @@ def splomRead(ions, filename=None):
     #
     # --------------------------------------------------
     #
-def splupsRead(ions, filename=None, prot=False,ci=False):
+def splupsRead(ions, filename=None, prot=False, ci=False):
     """read a chianti splups file and return
     {"lvl1":lvl1,"lvl2":lvl2,"ttype":ttype,"gf":gf,"de":de,"cups":cups,"bsplups":bsplups,"ref":ref}
     if prot >0, then reads the psplups file"""

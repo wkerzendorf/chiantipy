@@ -769,7 +769,7 @@ class ion:
         #
         # -------------------------------------------------------------------------------------
         #
-    def upsilonDescale(self,temperature=None,prot=0, ci=0):
+    def upsilonDescale(self, temperature=None, prot=0, ci=0):
         """Provides the temperatures and effective collision strengths (upsilons)."""
         #
         #  xt=kt/de
