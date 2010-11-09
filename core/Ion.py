@@ -134,6 +134,7 @@ class ion:
                 nlvlWgfa = max(self.Wgfa['lvl2'])
                 nlvlSplups = max(self.Splups['lvl2'])
                 self.Nlvls = min([nlvlElvlc, nlvlWgfa, nlvlSplups])
+##                self.Nlvls = nlvlElvlc
                 #
                 self.CiSplups = util.splupsRead(self.IonStr,ci=1)
                 if type(self.CiSplups) != types.NoneType:
@@ -160,7 +161,7 @@ class ion:
         '''Calculate the direct ionization cross section.
 
         Given as a function of the incident electron energy in eV, puts values into DiCross'''
-        iso=self.Z -self.Ion + 1
+        iso=self.Z - self.Ion + 1
         if type(energy) == types.NoneType:
             btenergy=0.1*np.arange(10)
             btenergy[0]=0.01
