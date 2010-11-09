@@ -837,12 +837,12 @@ class ion:
         ntemp=temp.size
         if ntemp > 1:
             ups = np.zeros((nsplups,ntemp),"Float64")
-            cexRate = np.zeros((nsplups,ntemp),"Float64")
-            cdexRate = np.zeros((nsplups,ntemp),"Float64")
+            exRate = np.zeros((nsplups,ntemp),"Float64")
+            dexRate = np.zeros((nsplups,ntemp),"Float64")
         else:
             ups = np.zeros(nsplups,"Float64")
-            cexRate = np.zeros((nsplups,ntemp),"Float64")
-            cdexRate = np.zeros((nsplups,ntemp),"Float64")
+            exRate = np.zeros((nsplups,ntemp),"Float64")
+            dexRate = np.zeros((nsplups,ntemp),"Float64")
         #
         for isplups in range(0,nsplups):
             if prot:
@@ -939,18 +939,25 @@ class ion:
                 ekt=(de*const.ryd2erg)/(const.boltzmann*temp)
                 fmult1=float(self.Elvlc["mult"][l1])
                 fmult2=float(self.Elvlc["mult"][l2])
-                cdexRate[isplups] = const.collision*ups[isplups]/(fmult2*np.sqrt(temp))
-                cexRate[isplups] = const.collision*ups[isplups]*np.exp(-ekt)/(fmult1*np.sqrt(temp))
+                dexRate[isplups] = const.collision*ups[isplups]/(fmult2*np.sqrt(temp))
+                exRate[isplups] = const.collision*ups[isplups]*np.exp(-ekt)/(fmult1*np.sqrt(temp))
+            elif prot:
+                de=np.abs(self.Elvlc["eryd"][l2]-self.Elvlc["eryd"][l1])
+                ekt=(de*1.57888e+5)/temp
+                fmult1=float(self.Elvlc["mult"][l1])
+                fmult2=float(self.Elvlc["mult"][l2])
+                dexRate[isplups] = const.collision*ups[isplups]/(fmult2*np.sqrt(temp))
+                exRate[isplups] = const.collision*ups[isplups]*np.exp(-ekt)/(fmult1*np.sqrt(temp))
         #
         #
         ups=np.where(ups > 0.,ups,0.)
         #
         if prot == 1:
-            self.PUpsilon = ups
+            self.PUpsilon = {'upsilon':ups, 'temperature':temperature, 'exRate':exRate, 'dexRate':dexRate}
         elif ci == 1:
             self.CiUpsilon = ups
         else:
-            self.Upsilon = {'upsilon':ups, 'temperature':temperature, 'exRate':cexRate, 'dexRate':cdexRate}
+            self.Upsilon = {'upsilon':ups, 'temperature':temperature, 'exRate':exRate, 'dexRate':dexRate}
         #
         # -------------------------------------------------------------------------
         #
@@ -1112,13 +1119,15 @@ class ion:
         self.rad=rad
         #
         self.upsilonDescale(temperature=temperature)
-        ups=self.Upsilon['upsilon']
+        ups = self.Upsilon['upsilon']
         exRate = self.Upsilon['exRate']
         dexRate = self.Upsilon['dexRate']
         #
         if npsplups >0:
             self.upsilonDescale(temperature=temperature,prot=1)
-            pups=self.PUpsilon
+            pups = self.PUpsilon['upsilon']
+            pexRate = self.PUpsilon['exRate']
+            pdexRate = self.PUpsilon['dexRate']
         #
         temp=temperature
         ntemp=temp.size
@@ -1144,23 +1153,10 @@ class ion:
         #
         #  first, for ntemp=ndens=1
         if ndens==1 and ntemp==1:
-#           print ' ndens, ntemp = 1'
-#            pop=np.zeros((nlvls),"float64")
             popmat=np.copy(rad)
             for isplups in range(0,nsplups):
                 l1=self.Splups["lvl1"][isplups]-1
                 l2=self.Splups["lvl2"][isplups]-1
-                if self.Dielectronic:
-                    de=np.abs((self.Elvlc["eryd"][l2]-self.Ip/const.ryd2Ev)-self.Elvlc["eryd"][l1])
-                else:
-                    de=np.abs(self.Elvlc["eryd"][l2]-self.Elvlc["eryd"][l1])
-                ekt=(de*const.ryd2erg)/(const.boltzmann*temp)
-                fmult1=float(self.Elvlc["mult"][l1])
-                fmult2=float(self.Elvlc["mult"][l2])
-#                popmat[l1+ci,l2+ci]+=cc*ups[isplups]/(fmult2*np.sqrt(temp))
-#                popmat[l2+ci,l1+ci]+=cc*ups[isplups]*np.exp(-ekt)/(fmult1*np.sqrt(temp))
-#                popmat[l1+ci,l1+ci]-=cc*ups[isplups]*np.exp(-ekt)/(fmult1*np.sqrt(temp))
-#                popmat[l2+ci,l2+ci]-=cc*ups[isplups]/(fmult2*np.sqrt(temp))
                 #
                 popmat[l1+ci,l2+ci] += dexRate['exRate'][isplups]
                 popmat[l2+ci,l1+ci] += exRate[isplups]
@@ -1169,16 +1165,12 @@ class ion:
             for isplups in range(0,npsplups):
                 l1=self.Psplups["lvl1"][isplups]-1
                 l2=self.Psplups["lvl2"][isplups]-1
-                # for proton excitation, the levels are all below the ionization potential
-                de=np.abs(self.Elvlc["eryd"][l2]-self.Elvlc["eryd"][l1])
-                ekt=(de*1.57888e+5)/temp
-                fmult1=float(self.Elvlc["mult"][l1])
-                fmult2=float(self.Elvlc["mult"][l2])
-                popmat[l1+ci,l2+ci]+=cp*pups[isplups]/(fmult2*np.sqrt(temp))
-                popmat[l2+ci,l1+ci]+=cp*pups[isplups]*np.exp(-ekt)/(fmult1*np.sqrt(temp))
-                popmat[l1+ci,l1+ci]-=cp*pups[isplups]*np.exp(-ekt)/(fmult1*np.sqrt(temp))
-                popmat[l2+ci,l2+ci]-=cp*pups[isplups]/(fmult2*np.sqrt(temp))
-            # now include ionization rate from
+                 #
+                popmat[l1+ci,l2+ci] += pdexRate['exRate'][isplups]
+                popmat[l2+ci,l1+ci] += pexRate[isplups]
+                popmat[l1+ci,l1+ci] -= pexRate[isplups]
+                popmat[l2+ci,l2+ci] -= pdexRate['exRate'][isplups]
+           # now include ionization rate from
             if ci:
 #                print ' ci = ', ci
                 popmat[1, 0] += self.Density*lower.IonizRate['rate']
