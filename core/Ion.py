@@ -1158,18 +1158,18 @@ class ion:
                 l1=self.Splups["lvl1"][isplups]-1
                 l2=self.Splups["lvl2"][isplups]-1
                 #
-                popmat[l1+ci,l2+ci] += dexRate['exRate'][isplups]
+                popmat[l1+ci,l2+ci] += dexRate[isplups]
                 popmat[l2+ci,l1+ci] += exRate[isplups]
                 popmat[l1+ci,l1+ci] -= exRate[isplups]
-                popmat[l2+ci,l2+ci] -= dexRate['exRate'][isplups]
+                popmat[l2+ci,l2+ci] -= dexRate[isplups]
             for isplups in range(0,npsplups):
                 l1=self.Psplups["lvl1"][isplups]-1
                 l2=self.Psplups["lvl2"][isplups]-1
                  #
-                popmat[l1+ci,l2+ci] += pdexRate['exRate'][isplups]
+                popmat[l1+ci,l2+ci] += pdexRate[isplups]
                 popmat[l2+ci,l1+ci] += pexRate[isplups]
                 popmat[l1+ci,l1+ci] -= pexRate[isplups]
-                popmat[l2+ci,l2+ci] -= pdexRate['exRate'][isplups]
+                popmat[l2+ci,l2+ci] -= pdexRate[isplups]
            # now include ionization rate from
             if ci:
 #                print ' ci = ', ci
