@@ -1,6 +1,15 @@
 from datetime import datetime
 import types
 #
+
+#
+import numpy as np
+import chianti
+import chianti.constants as const
+import chianti.filters as chfilters
+import chianti.util as util
+#
+chInteractive = chianti.chInteractive
 try:
     import multiprocessing as mp
     from chianti import mputil
@@ -9,15 +18,8 @@ except:
     if chInteractive:
         print ' your version of Python does not support multiprocessing \n you will not be able to use mspectrum'
 #
-import numpy as np
-import chianti
-import chianti.constants as const
-import chianti.filters as chfilters
-import chianti.util as util
-#
 defaults = chianti.Defaults
 Abundanceall = chianti.AbundanceAll
-chInteractive = chianti.chInteractive
 #
 # the following is necessary to make chiantipy non interactive for the web
 #try:

@@ -50,11 +50,11 @@ import chianti.constants as const
 #
 xuvtop = chianti.xuvtop
 #
-ip = chianti.Ip
-MasterList = chianti.MasterList
-Defaults = chianti.Defaults
-AbundanceAll = chianti.AbundanceAll
-IoneqAll = chianti.IoneqAll
+#ip = chianti.Ip
+#MasterList = chianti.MasterList
+#Defaults = chianti.Defaults
+#AbundanceAll = chianti.AbundanceAll
+#IoneqAll = chianti.IoneqAll
 class ion:
     '''The top level class for performing spectral calculations for an ion in the CHIANTI database.
 
@@ -77,9 +77,9 @@ class ion:
         #
 #        self.__version__ = chianti.__version__
         self.IonStr=ionStr
-        self.Defaults=Defaults
-        self.AbundanceName = Defaults['abundfile']
-        self.IoneqName = Defaults['ioneqfile']
+        self.Defaults=chianti.Defaults
+        self.AbundanceName = self.Defaults['abundfile']
+        self.IoneqName = self.Defaults['ioneqfile']
         MasterList = chianti.MasterList
         #
         self.Z=util.convertName(ionStr)['Z']
@@ -93,18 +93,18 @@ class ion:
         #
         #  ip in eV, but don't read for bare ions
         if self.Ion <= self.Z:
-            self.Ip=ip[self.Z-1, self.Ion-1-self.Dielectronic]
+            self.Ip=chianti.Ip[self.Z-1, self.Ion-1-self.Dielectronic]
         #
         if type(temperature) != types.NoneType:
             self.Temperature = np.array(temperature,'float64')
         #
         #
 #        self.AbundanceAll = util.abundanceRead(abundancename = self.AbundanceName)
-        self.AbundanceAll = AbundanceAll
+        self.AbundanceAll = chianti.AbundanceAll
         self.Abundance = self.AbundanceAll['abundance'][self.Z-1]
         #
 #        self.IoneqAll = util.ioneqRead(ioneqname = self.Defaults['ioneqfile'])
-        self.IoneqAll = IoneqAll
+        self.IoneqAll = chianti.IoneqAll
         self.ioneqOne()
         #
         #  this needs to go after setting temperature and reading ionization equilibria
@@ -134,6 +134,7 @@ class ion:
                 nlvlWgfa = max(self.Wgfa['lvl2'])
                 nlvlSplups = max(self.Splups['lvl2'])
                 self.Nlvls = min([nlvlElvlc, nlvlWgfa, nlvlSplups])
+##                self.Nlvls = nlvlElvlc
                 #
                 self.CiSplups = util.splupsRead(self.IonStr,ci=1)
                 if type(self.CiSplups) != types.NoneType:
@@ -160,7 +161,7 @@ class ion:
         '''Calculate the direct ionization cross section.
 
         Given as a function of the incident electron energy in eV, puts values into DiCross'''
-        iso=self.Z -self.Ion + 1
+        iso=self.Z - self.Ion + 1
         if type(energy) == types.NoneType:
             btenergy=0.1*np.arange(10)
             btenergy[0]=0.01
@@ -668,7 +669,7 @@ class ion:
                         newRec[index] = highRec[idx]
                         index += 1
                 recRate[itrans] = newRec
-        self.ReclvlRate = {'rate':recRate, 'lvl2':reclvl['lvl2']}
+        self.ReclvlRate = {'rate':recRate, 'lvl2':reclvl['lvl2'], 'temperature':temperature}
         #
         # -------------------------------------------------------------------------------------
         #
@@ -769,7 +770,7 @@ class ion:
         #
         # -------------------------------------------------------------------------------------
         #
-    def upsilonDescale(self,temperature=None,prot=0, ci=0):
+    def upsilonDescale(self, temperature=None, prot=0, ci=0):
         """Provides the temperatures and effective collision strengths (upsilons)."""
         #
         #  xt=kt/de
@@ -842,14 +843,13 @@ class ion:
                 ttype=self.Psplups["ttype"][isplups]
                 cups=self.Psplups["cups"][isplups]
                 nspl=self.Psplups["nspl"][isplups]
-                ttype=6
                 dx=1./(float(nspl)-1.)
                 splups=self.Psplups["splups"][isplups,0:nspl]
                 de=elvlc[l2]-elvlc[l1]
 #                de=self.Psplups['de'][isplups]  # these are generally 0.
                 kte=temp/(de*1.57888e+5)
             elif ci:
-                # for proton rates
+                #
                 l1 = self.CiSplups["lvl1"][isplups]-1
                 l2 = self.CiSplups["lvl2"][isplups]-1
                 ttype = self.CiSplups["ttype"][isplups]
@@ -874,7 +874,7 @@ class ion:
                 kte=temp/(de*1.57888e+5)
             #
             der=0
-            if ttype ==1:
+            if ttype == 1:
                 st=1.-np.log(cups)/np.log(kte+cups)
                 xs=dx*np.arange(nspl)
                 y2=interpolate.splrep(xs,splups,s=0)  #allow smoothing,s=0)
@@ -916,8 +916,8 @@ class ion:
                 xs=dx*np.arange(nspl)
                 y2=interpolate.splrep(xs,splups,s=0)  #allow smoothing,s=0)
                 sups=interpolate.splev(st,y2,der=der)
-                ups[isplups] = sups
-#                ups[isplups]=10.**sups
+#                ups[isplups] = sups
+                ups[isplups]=10.**sups
             #
             elif ttype > 6:  print ' t_type ne 1,2,3,4,5=',ttype,l1,l2
         #
@@ -1152,7 +1152,7 @@ class ion:
                 popmat[l2+ci,l2+ci]-=cp*pups[isplups]/(fmult2*np.sqrt(temp))
             # now include ionization rate from
             if ci:
-#               print ' ci = ', ci
+#                print ' ci = ', ci
                 popmat[1, 0] += self.Density*lower.IonizRate['rate']
                 popmat[0, 0] -= self.Density*lower.IonizRate['rate']
                 popmat[0, 1] += self.Density*self.RecombRate['rate']
@@ -1161,26 +1161,29 @@ class ion:
                 # the ciRate can be computed for all temperatures
                 #
                 for itrans in range(len(cisplups['lvl1'])):
-                    lvl1 = cisplups['lvl1'][itrans]
-                    lvl2 = cisplups['lvl2'][itrans]
+                    lvl1 = cisplups['lvl1'][itrans]-1
+                    lvl2 = cisplups['lvl2'][itrans]-1
                     de = cisplups['de'][itrans]
                     ekt = (de*1.57888e+5)/temperature
                     mult = lowMult[lvl1-1]
                     cirate = const.collision*self.CiUpsilon[itrans]*np.exp(-ekt)/(np.sqrt(temperature)*mult)
                     # this is kind of double booking the ionization rate components
-                    popmat[lvl2, lvl1-1] += self.Density*cirate
-                    popmat[lvl1-1, lvl1-1] -= self.Density*cirate
+                    popmat[lvl2+ci, lvl1+ci] += self.Density*cirate
+                    popmat[lvl1+ci, lvl1+ci] -= self.Density*cirate
             if rec:
-#               print ' rec = ', rec
+#                print ' rec = ', rec
                 popmat[-1,  ci] += self.Density*self.IonizRate['rate']
                 popmat[ci, ci] -= self.Density*self.IonizRate['rate']
-                popmat[ci, -1] += self.Density*higher.RecombRate['rate']
-                popmat[-1, -1] -= self.Density*higher.RecombRate['rate']
+                # next 2 line take care of overbooking
+                popmat[ci, -1] += self.Density*(higher.RecombRate['rate']
+                    -self.ReclvlRate['rate'].sum(axis=0))
+                popmat[-1, -1] -= self.Density*(higher.RecombRate['rate']
+                    - self.ReclvlRate['rate'].sum(axis=0))
                 #
                 for itrans in range(len(reclvl['lvl1'])):
-                    lvl1 = reclvl['lvl1'][itrans]
-                    lvl2 = reclvl['lvl2'][itrans]
-                    popmat[lvl2+ci+1, -1] += self.Density*self.ReclvlRate['rate'][itrans]
+                    lvl1 = reclvl['lvl1'][itrans]-1
+                    lvl2 = reclvl['lvl2'][itrans]-1
+                    popmat[lvl2+ci, -1] += self.Density*self.ReclvlRate['rate'][itrans]
                     popmat[-1, -1] -= self.Density*self.ReclvlRate['rate'][itrans]
             # normalize to unity
             norm=np.ones(nlvls+ci+rec,'float64')
@@ -1228,7 +1231,7 @@ class ion:
                     popmat[l2+ci,l2+ci]-=cp[itemp]*pups[isplups, itemp]/(fmult2*np.sqrt(temp[itemp]))
                 # now include ionization rate from
                 if ci:
-#                   print ' ci = ', ci
+                    print ' ci = ', ci
                     popmat[1, 0] += self.Density*lower.IonizRate['rate'][itemp]
                     popmat[0, 0] -= self.Density*lower.IonizRate['rate'][itemp]
                     popmat[0, 1] += self.Density*self.RecombRate['rate'][itemp]
@@ -1247,16 +1250,19 @@ class ion:
                         popmat[lvl2, lvl1-1] += self.Density*cirate[itemp]
                         popmat[lvl1-1, lvl1-1] -= self.Density*cirate[itemp]
                 if rec:
-#                   print ' rec = ', rec
                     popmat[-1,  ci] += self.Density*self.IonizRate['rate'][itemp]
                     popmat[ci, ci] -= self.Density*self.IonizRate['rate'][itemp]
-                    popmat[ci, -1] += self.Density*higher.RecombRate['rate'][itemp]
-                    popmat[-1, -1] -= self.Density*higher.RecombRate['rate'][itemp]
+                    popmat[ci, -1] += self.Density*(higher.RecombRate['rate'][itemp]
+                        - self.ReclvlRate['rate'][:, itemp].sum())
+                    popmat[-1, -1] -= self.Density*(higher.RecombRate['rate'][itemp]
+                        - self.ReclvlRate['rate'][:, itemp].sum())
+#                    popmat[ci, -1] += self.Density*higher.RecombRate['rate'][itemp]
+#                    popmat[-1, -1] -= self.Density*higher.RecombRate['rate'][itemp]
                     #
                     for itrans in range(len(reclvl['lvl1'])):
-                        lvl1 = reclvl['lvl1'][itrans]
-                        lvl2 = reclvl['lvl2'][itrans]
-                        popmat[lvl2+ci+1, -1] += self.Density*self.ReclvlRate['rate'][itrans, itemp]
+                        lvl1 = reclvl['lvl1'][itrans]-1
+                        lvl2 = reclvl['lvl2'][itrans]-1
+                        popmat[lvl2+ci, -1] += self.Density*self.ReclvlRate['rate'][itrans, itemp]
                         popmat[-1, -1] -= self.Density*self.ReclvlRate['rate'][itrans, itemp]
                 # normalize to unity
                 norm=np.ones(nlvls+ci+rec,'float64')
@@ -1323,16 +1329,19 @@ class ion:
                         popmat[lvl2, lvl1-1] += self.Density[idens]*cirate
                         popmat[lvl1-1, lvl1-1] -= self.Density[idens]*cirate
                 if rec:
-#                   print ' rec = ', rec
                     popmat[-1,  ci] += self.Density[idens]*self.IonizRate['rate']
                     popmat[ci, ci] -= self.Density[idens]*self.IonizRate['rate']
-                    popmat[ci, -1] += self.Density[idens]*higher.RecombRate['rate']
-                    popmat[-1, -1] -= self.Density[idens]*higher.RecombRate['rate']
+                    popmat[ci, -1] += self.Density[idens]*(higher.RecombRate['rate']
+                        - self.ReclvlRate['rate'].sum())
+                    popmat[-1, -1] -= self.Density[idens]*(higher.RecombRate['rate']
+                        - self.ReclvlRate['rate'].sum())
+#                    popmat[ci, -1] += self.Density[idens]*higher.RecombRate['rate']
+#                    popmat[-1, -1] -= self.Density[idens]*higher.RecombRate['rate']
                     #
                     for itrans in range(len(reclvl['lvl1'])):
-                        lvl1 = reclvl['lvl1'][itrans]
-                        lvl2 = reclvl['lvl2'][itrans]
-                        popmat[lvl2+ci+1, -1] += self.Density[idens]*self.ReclvlRate['rate'][itrans]
+                        lvl1 = reclvl['lvl1'][itrans]-1
+                        lvl2 = reclvl['lvl2'][itrans]-1
+                        popmat[lvl2+ci, -1] += self.Density[idens]*self.ReclvlRate['rate'][itrans]
                         popmat[-1, -1] -= self.Density[idens]*self.ReclvlRate['rate'][itrans]
                 # normalize to unity
                 norm=np.ones(nlvls+ci+rec,'float64')
@@ -1405,13 +1414,17 @@ class ion:
 #                   print ' rec = ', rec
                     popmat[-1,  ci] += self.Density[itemp]*self.IonizRate['rate'][itemp]
                     popmat[ci, ci] -= self.Density[itemp]*self.IonizRate['rate'][itemp]
-                    popmat[ci, -1] += self.Density[itemp]*higher.RecombRate['rate'][itemp]
-                    popmat[-1, -1] -= self.Density[itemp]*higher.RecombRate['rate'][itemp]
+                    popmat[ci, -1] += self.Density[itemp]*(higher.RecombRate['rate'][itemp]
+                        -self.ReclvlRate['rate'][:, itemp].sum())
+                    popmat[-1, -1] -= self.Density[itemp]*(higher.RecombRate['rate'][itemp]
+                        - self.ReclvlRate['rate'][:, itemp].sum())
+#                    popmat[ci, -1] += self.Density[itemp]*higher.RecombRate['rate'][itemp]
+#                    popmat[-1, -1] -= self.Density[itemp]*higher.RecombRate['rate'][itemp]
                     #
                     for itrans in range(len(reclvl['lvl1'])):
-                        lvl1 = reclvl['lvl1'][itrans]
-                        lvl2 = reclvl['lvl2'][itrans]
-                        popmat[lvl2+ci+1, -1] += self.Density[itemp]*self.ReclvlRate['rate'][itrans, itemp]
+                        lvl1 = reclvl['lvl1'][itrans]-1
+                        lvl2 = reclvl['lvl2'][itrans]-1
+                        popmat[lvl2+ci, -1] += self.Density[itemp]*self.ReclvlRate['rate'][itrans, itemp]
                         popmat[-1, -1] -= self.Density[itemp]*self.ReclvlRate['rate'][itrans, itemp]
                 # normalize to unity
                 norm=np.ones(nlvls+ci+rec,'float64')
@@ -1435,7 +1448,7 @@ class ion:
         #
         # -------------------------------------------------------------------------------------
         #
-    def popPlot(self,top=10, saveFile=0):
+    def popPlot(self,top=10, plotFile=0, saveFile=0):
         """Plots populations vs temperature or density.
 
         top specifies the number of the most highly populated levels to plot."""
@@ -1553,8 +1566,9 @@ class ion:
 #            pl.xlim(density.min(),density.max())
 #            yl=pl.ylim()
             pl.ylim(yl[0],1.2)
-        if saveFile:
-            pl.savefig(saveFile)
+        if plotFile:
+            pl.savefig(plotFile)
+        self.Population['toplvl'] = toplvl
         return
         #
         # -------------------------------------------------------------------------------------
@@ -1681,7 +1695,7 @@ class ion:
         #
         # ---------------------------------------------------------------------------
         #
-    def emissPlot(self, index=None,  wvlRange=None,  top=10, linLog='lin', relative=0,  verbose=0, saveFile=0 ):
+    def emissPlot(self, index=None,  wvlRange=None,  top=10, linLog='lin', relative=0,  verbose=0, plotFile = 0, saveFile=0 ):
         '''Plot the emissivities.
 
         wvlRange, a 2 element tuple, list or array determines the wavelength range
@@ -1799,8 +1813,8 @@ class ion:
         pl.title(title+tstr+dstr)
         if wvlRange:
             pl.axis([wvlRange[0], wvlRange[1], ymin, emiss.max()])
-        if saveFile:
-            pl.savefig(saveFile)
+        if plotFile:
+            pl.savefig(plotFile)
         #
         idx = np.argsort(wvl)
         self.Emiss['wvlTop'] = wvl[idx]
@@ -2085,26 +2099,27 @@ class ion:
         #
         # -------------------------------------------------------------------------------------
         #
-    def intensityRatioSave(self,outfile=''):
+    def intensityRatioSave(self,outFile=''):
         '''Save the intensity ratio to a file.
 
         The intensity ratio as a function to temperature and density is saved to an asciii file.
 
         Descriptive information is included at the top of the file.'''
-        if outfile == '':
+        if outFile == '':
             outfile=self.IntensityRatio['filename']
-            print ' filename = ',outfile
+            if chInteractive:
+                print ' saving ratio to filename = ',outfile
         temperature=self.IntensityRatio['temperature']
         density=self.IntensityRatio['density']
         ratio=self.IntensityRatio['ratio']
-        out=open(outfile,'w')
+        out=open(outFile,'w')
         nvalues=len(ratio)
         #
         #  need to add 7 lines to maintain IDL like files
         #
-        out.write(outfile+'\n')    #1
+        out.write(outFile+'\n')    #1
         out.write(self.IntensityRatio['desc']+'\n') #2
-        out.write(' created with ChiantiPy version '+ self.__version__ +'\n')   #3
+        out.write(' created with ChiantiPy version '+ chianti.__version__ +'\n')   #3
         out.write(' columns are temperature, density, ratio'+'\n')  #5
         tunit = 'K'
         out.write(' temperature in '+tunit+', electron density in cm^(-3)'+'\n')  #6
@@ -2147,12 +2162,15 @@ class ion:
         y2=interpolate.splrep(np.log(ioneqTemperature[gioneq]),np.log(thisIoneq[gioneq]),s=0)
         #
         if goodt.sum() > 0:
-            gIoneq=interpolate.splev(np.log(self.Temperature[goodt]),y2)   #,der=0)
-            gIoneq=np.exp(gIoneq)
+            if self.Temperature.size > 1:
+                gIoneq=interpolate.splev(np.log(self.Temperature[goodt]),y2)   #,der=0)
+                ioneqOne[goodt] = np.exp(gIoneq)
+            else:
+                gIoneq=interpolate.splev(np.log(self.Temperature),y2)
+                ioneqOne = np.exp(gIoneq)
         else:
-            gIoneq=0.
+            ioneqOne = 0.
         #
-        ioneqOne[goodt]=gIoneq
         self.IoneqOne = ioneqOne
         #
         # -------------------------------------------------------------------------------------
@@ -2292,7 +2310,7 @@ class ion:
         nxvalues=len(xvalues)
         #  maxAll is an array
         ymax = np.max(1.2*emiss[top-1]/maxAll)
-        ymin = ymax
+        ymin = np.min(emiss[0]/maxAll)  # was originally  = ymax
         for iline in range(top):
             tline=topLines[iline]
             pl.loglog(xvalues,emiss[tline]/maxAll)
@@ -2757,13 +2775,14 @@ class ionWeb(ion):
         for one in wvl[topLines]:
             wvlChoices.append('%12.3f'%(one))
         self.wvlChoices = wvlChoices
+        self.topLines = topLines
 #        gline = gui.selectorDialog(wvlChoices,label='Select line(s)')
 #        gline_idx=gline.selectedIndex
         #
         #
         # -------------------------------------------------------------------------------------
         #
-    def gofntShow(self,wvlRange=0,top=10,index=0, saveFile=0):
+    def gofntShow(self, wvlRange=0, top=10, index=0, saveFile=0):
         """Return a plot of the 'so-called' G(T) function fron the selected lines in index
 
         Given as a function of both temperature and density.
@@ -2905,8 +2924,7 @@ class ionWeb(ion):
 #        gline_idx=gline.selectedIndex
 #        #
         gline_idx = index
-        # for now
-        ngofnt = 1
+        nWvl = len(index)
         #
         gAbund=self.Abundance
         #
@@ -2929,24 +2947,24 @@ class ionWeb(ion):
         #
         # plot the desired ratio
         pl.figure()
-        g_line= topLines[gline_idx]#  [0]
+#        g_line = gline_idx#  [0]
         #print ' g_line = ',g_line
         #
-        gofnt=np.zeros(ngofnt,'float32')
-        if ngofnt > 1:
-            for aline in g_line:
-    #        for aline in gline_idx:
+        if nWvl > 1:
+            gofnt=np.zeros((ngofnt) ,'float64')
+#            for aline in g_line:
+            for aline in gline_idx:
                 gofnt += gAbund*gIoneq*emiss[aline].squeeze()
         else:
             gofnt = gAbund*gIoneq*emiss[index].squeeze()
 
-        self.Gofnt={'temperature':outTemperature,'density':outDensity,'gofnt':gofnt}
+        self.Gofnt={'temperature':outTemperature,'density':outDensity,'gofnt':gofnt, 'index':gline_idx}
         #
         pl.loglog(xvalues,gofnt)
         pl.xlim(xvalues.min(),xvalues.max())
         pl.xlabel(xlabel,fontsize=fontsize)
         pl.ylabel('Gofnt',fontsize=fontsize)
-        pl.title(title+' '+str(wvl[g_line])+' '+desc_str, fontsize=fontsize)
+        pl.title(title+' '+str(wvl[index])+' '+desc_str, fontsize=fontsize)
         if saveFile:
             pl.savefig(saveFile)
         else:
@@ -3123,10 +3141,12 @@ class ionWeb(ion):
         #
         #   -----------------------------------
         #
-    def intensityRatioShow(self,numIdx, denIdx, saveFile=0):
+    def intensityRatioShow(self,numIdx, denIdx, plotDir=0, saveDir=0):
         """Plot the ratio of 2 lines or sums of lines.
 
-        Shown as a function of density and/or temperature."""
+        Shown as a function of density and/or temperature.
+
+        to save a plot or txt, only the directory name is needed"""
         #
         #        self.Emiss={"temperature":temperature,"density":density,"wvl":wvl,"emiss":em,
         #        "plotLabels":plotLabels}
@@ -3306,15 +3326,21 @@ class ionWeb(ion):
 #        pl.ioff()
 #        pl.show()
         #
-        if saveFile:
-            pl.savefig(saveFile)
         intensityRatioFileName=self.IonStr
         for aline in num_idx:
             intensityRatioFileName+= '_%3i'%(wvl[topLines[aline]])
         intensityRatioFileName+='_2'
         for aline in den_idx:
             intensityRatioFileName+= '_%3i'%(wvl[topLines[aline]])
-        intensityRatioFileName+='.rat'
+        #
+        if plotDir:
+            plotFile = os.path.join(plotDir, intensityRatioFileName+'.png')
+            pl.savefig(plotFile)
+        #
+        if saveDir:
+            txtFile = os.path.join(saveDir, intensityRatioFileName+'.txt')
+            self.intensityRatioSave(outFile = txtFile)
+        #
         self.IntensityRatio={'ratio':numEmiss/denEmiss,'desc':desc,
                 'temperature':outTemperature,'density':outDensity,'filename':intensityRatioFileName}
         #
@@ -3324,8 +3350,7 @@ class ioneq(ion):
     '''Calculates the ionization equilibrium for an element as a function of temperature.
     The variable z is the atomic number of the element.  Acceptable values are from 1 to 30.'''
     def __init__(self,z, temperature, verbose=False):
-#        self.Defaults=defaults
-        ionList=[]
+#       ionList=[]
         chIons=[]
         self.Z=z
         self.Temperature = np.array(temperature, 'float64')

@@ -972,7 +972,8 @@ class continuum:
         #
     def ioneqOne(self):
         '''Provide the ionization equilibrium for the selected ion as a function of temperature.
-        returned in self.IoneqOne'''
+        returned in self.IoneqOne
+        this is a duplicate of the method ion.ioneqOne '''
         #
         try:
             temperature = self.Temperature
@@ -1000,14 +1001,16 @@ class continuum:
         y2=interpolate.splrep(np.log(ioneqTemperature[gioneq]),np.log(thisIoneq[gioneq]),s=0)
         #
         if goodt.sum() > 0:
-            gIoneq=interpolate.splev(np.log(self.Temperature[goodt]),y2)   #,der=0)
-            gIoneq=np.exp(gIoneq)
+            if self.Temperature.size > 1:
+                gIoneq=interpolate.splev(np.log(self.Temperature[goodt]),y2)   #,der=0)
+                ioneqOne[goodt] = np.exp(gIoneq)
+            else:
+                gIoneq=interpolate.splev(np.log(self.Temperature),y2)
+                ioneqOne = np.exp(gIoneq)
         else:
-            gIoneq=0.
+            ioneqOne = 0.
         #
-        ioneqOne[goodt]=gIoneq
         self.IoneqOne = ioneqOne
         #
         # -------------------------------------------------------------------------------------
-        #
         #

@@ -260,6 +260,25 @@ def zion2filename(z,ion, dielectronic=False):
     #
     # -------------------------------------------------------------------------------------
     #
+def zion2localFilename(z,ion, dielectronic=False):
+    """ convert Z to generic file name string with current directory at top"""
+    dir='.'
+    if (z-1 < len(const.El)) and (ion <= z+1):
+        thisel=const.El[z-1]
+    else:
+        thisel=''
+    if z-1 < len(const.El):
+        thisone=const.El[z-1]+'_'+str(ion)
+        if dielectronic:
+            thisone+='d'
+    else:
+        thisone=''
+    if thisel != '' :
+        fname=os.path.join(dir,thisel,thisone,thisone)
+    return fname
+    #
+    # -------------------------------------------------------------------------------------
+    #
 def zion2spectroscopic(z,ion, dielectronic=False):
     """ convert Z and ion to spectroscopic notation string """
     if (z-1 < len(const.El)) and (ion <= z+1):
@@ -476,7 +495,7 @@ def elvlcRead(ions, filename = None, verbose=False):
 #    self.const.Elvlc={"lvl":lvl,"conf":conf,"term":term,"spin":spin,"l":l,"spd":spd,"j":j
 #            ,"mult":mult,"ecm":ecm,"eryd":eryd,"ecmth":ecmth,"erydth":erydth,"ref":ref}
     return {"lvl":lvl,"conf":conf,"term":term,"spin":spin,"l":l,"spd":spd,"j":j
-            ,"mult":mult,"ecm":ecm,"eryd":eryd,"ecmth":ecmth,"erydth":erydth,"ref":ref,"pretty":pretty}
+            ,"mult":mult,"ecm":ecm,"eryd":eryd,"ecmth":ecmth,"erydth":erydth,"ref":ref,"pretty":pretty, 'ionS':ions}
     #
     # -------------------------------------------------------------------------------------
     #
@@ -518,7 +537,7 @@ def wgfaRead(ions, filename = None):
     for i in range(nwvl,len(s1)-1):
         s1a=s1[i][:-1]
         ref.append(s1a.strip())
-    Wgfa={"lvl1":lvl1,"lvl2":lvl2,"wvl":wvl,"gf":gf,"avalue":avalue,"ref":ref}
+    Wgfa={"lvl1":lvl1,"lvl2":lvl2,"wvl":wvl,"gf":gf,"avalue":avalue,"ref":ref, 'ionS':ions}
     return Wgfa
     #
     # -------------------------------------------------------------------------------------
@@ -636,7 +655,7 @@ def splomRead(ions, filename=None):
     #
     # --------------------------------------------------
     #
-def splupsRead(ions, filename=None, prot=False,ci=False):
+def splupsRead(ions, filename=None, prot=False, ci=False):
     """read a chianti splups file and return
     {"lvl1":lvl1,"lvl2":lvl2,"ttype":ttype,"gf":gf,"de":de,"cups":cups,"bsplups":bsplups,"ref":ref}
     if prot >0, then reads the psplups file"""
@@ -688,22 +707,25 @@ def splupsRead(ions, filename=None, prot=False,ci=False):
         #
         for i in range(0,nsplups):
             # checking for 5 or 9 point splines, need to check for 9 first!
-            try:
-                inpt=FortranLine(s1[i],splupsFormat1)
-            except:
-                inpt=FortranLine(s1[i],splupsFormat2)
-#            inpt=FortranLine(s1[i],splupsFormat1)
+#            try:
+#                inpt=FortranLine(s1[i],splupsFormat2)
+#                nspl[i] = 9
+#                print ' 9 = ', inpt[6:]
+#            except:
+#                inpt=FortranLine(s1[i],splupsFormat1)
+#                nspl[i] = 5
+#                print ' 5 = ', inpt[6:]
+#
+            inpt=FortranLine(s1[i],splupsFormat2)
             lvl1[i]=inpt[0]
             lvl2[i]=inpt[1]
             ttype[i]=inpt[2]
             gf[i]=inpt[3]
             de[i]=inpt[4]
             cups[i]=inpt[5]
-#                    print ' line(inpt) = ', len(inpt)
-#                    print ' last 4 total = ',np.array(inpt[11:-1]).sum()
             spl=np.array(inpt[6:])
-            nz = spl > 0.
-            if nz.sum() > 5:
+            good = spl != 0.
+            if good[5:].sum():
                 nspl[i] = 9
             else:
                 nspl[i] = 5
@@ -793,7 +815,7 @@ def cireclvlRead(ions, type):
         lvl2[idat] = int(cidat[3])
         ci[idat] = np.resize(shortCi, maxNtemp)
         idat += 1
-    return {'temperature':temp, 'ntemp':ntemp,'lvl1':lvl1, 'lvl2':lvl2, 'rate':ci,'ref':lines[ndata+1:-1]}
+    return {'temperature':temp, 'ntemp':ntemp,'lvl1':lvl1, 'lvl2':lvl2, 'rate':ci,'ref':lines[ndata+1:-1], 'ionS':ions}
     #
 def dilution(radius):
     ''' to calculate the dilution factor as a function distance from the center of a star in units of the stellar radius

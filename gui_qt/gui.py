@@ -97,7 +97,7 @@ class choice2Dialog(QtGui.QDialog):
             anitem = self.ui.numListWidget.item(i)
 #            print 'selected? = ', anitem.isSelected()
             if anitem.isSelected():
-                print ' item = ' , str(anitem.text())
+#                print ' item = ' , str(anitem.text())
                 self.numText.append(str(anitem.text()))
                 self.numIndex.append(i)
         self.denIndex=[]

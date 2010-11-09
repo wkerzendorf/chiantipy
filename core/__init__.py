@@ -57,9 +57,9 @@ import chianti
 #print ' core __init_ defaults = ', defaults
 #
 #from chianti import *
-from spectrum import spectrum
-from mspectrum import mspectrum
-from continuum import continuum
+from Spectrum import spectrum
+from Mspectrum import mspectrum
+from Continuum import continuum
 #from ion import ioneq
 from Ion import ion
 from Ion import ionWeb
