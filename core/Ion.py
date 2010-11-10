@@ -128,12 +128,6 @@ class ion:
                 self.Nwgfa=len(self.Wgfa['lvl1'])
                 self.Splups = util.splupsRead(self.IonStr)
                 self.Nsplups=len(self.Splups['lvl1'])
-                #
-                # need to determine the number of levels that can be populated
-                nlvlElvlc = len(self.Elvlc['lvl'])
-                nlvlWgfa = max(self.Wgfa['lvl2'])
-                nlvlSplups = max(self.Splups['lvl2'])
-                self.Nlvls = min([nlvlElvlc, nlvlWgfa, nlvlSplups])
 ##                self.Nlvls = nlvlElvlc
                 #
                 self.CiSplups = util.splupsRead(self.IonStr,ci=1)
@@ -147,6 +141,12 @@ class ion:
                     self.Nreclvl = len(self.Reclvl['lvl1'])
                 else:
                     self.Nreclvl = -1
+                #  .dielsplups file may not exist
+                self.Dielsplups = util.splupsRead(self.IonStr, diel=1)
+                if type(self.Dielsplups) != types.NoneType:
+                    self.Ndielsplups=len(self.Dielsplups["lvl1"])
+                else:
+                    self.Ndielsplups =0
                 #
                 #  psplups file may not exist
                 self.Psplups = util.splupsRead(self.IonStr, prot=True)
@@ -154,6 +154,12 @@ class ion:
                     self.Npsplups=len(self.Psplups["lvl1"])
                 else:
                     self.Npsplups = -1
+                #
+                # need to determine the number of levels that can be populated
+                nlvlElvlc = len(self.Elvlc['lvl'])
+                nlvlWgfa = max(self.Wgfa['lvl2'])
+                nlvlSplups = max(self.Splups['lvl2'])
+                self.Nlvls = max([nlvlElvlc, nlvlWgfa, nlvlSplups])
         #
         # ------------------------------------------------------------------------------
         #
@@ -770,7 +776,7 @@ class ion:
         #
         # -------------------------------------------------------------------------------------
         #
-    def upsilonDescale(self, temperature=None, prot=0, ci=0):
+    def upsilonDescale(self, temperature=None, prot=0, ci=0,  diel=0):
         """Provides the temperatures and effective collision strengths (upsilons)
         set prot for proton rates, ci for collision ionization rates
         otherwise, ce will be set for electron collision rates"""
@@ -941,6 +947,12 @@ class ion:
                 fmult2=float(self.Elvlc["mult"][l2])
                 dexRate[isplups] = const.collision*ups[isplups]/(fmult2*np.sqrt(temp))
                 exRate[isplups] = const.collision*ups[isplups]*np.exp(-ekt)/(fmult1*np.sqrt(temp))
+            elif diel:
+                de=np.abs((self.Elvlc["eryd"][l2]-self.Ip/const.ryd2Ev)-self.Elvlc["eryd"][l1])
+                ekt=(de*const.ryd2erg)/(const.boltzmann*temp)
+                fmult1=float(self.Elvlc["mult"][l1])
+                fmult2=float(self.Elvlc["mult"][l2])
+                exRate[isplups] = const.collision*ups[isplups]*np.exp(-ekt)/(fmult1*np.sqrt(temp))
             elif prot:
                 de=np.abs(self.Elvlc["eryd"][l2]-self.Elvlc["eryd"][l1])
                 ekt=(de*1.57888e+5)/temp
@@ -954,6 +966,8 @@ class ion:
         #
         if prot == 1:
             self.PUpsilon = {'upsilon':ups, 'temperature':temperature, 'exRate':exRate, 'dexRate':dexRate}
+        elif diel == 1:
+            self.DielUpsilon = {'upsilon':ups, 'temperature':temperature, 'exRate':exRate}
         elif ci == 1:
             self.CiUpsilon = ups
         else:
@@ -1125,9 +1139,14 @@ class ion:
         #
         if npsplups >0:
             self.upsilonDescale(temperature=temperature,prot=1)
-            pups = self.PUpsilon['upsilon']
+#            pups = self.PUpsilon['upsilon']
             pexRate = self.PUpsilon['exRate']
             pdexRate = self.PUpsilon['dexRate']
+        #
+        if self.Ndielsplups:
+            self.upsilonDescale(temperature=temperature,diel=1)
+#            pups = self.PUpsilon['upsilon']
+            dielexRate = self.DielUpsilon['exRate']
         #
         temp=temperature
         ntemp=temp.size
@@ -1158,18 +1177,30 @@ class ion:
                 l1=self.Splups["lvl1"][isplups]-1
                 l2=self.Splups["lvl2"][isplups]-1
                 #
-                popmat[l1+ci,l2+ci] += dexRate[isplups]
-                popmat[l2+ci,l1+ci] += exRate[isplups]
-                popmat[l1+ci,l1+ci] -= exRate[isplups]
-                popmat[l2+ci,l2+ci] -= dexRate[isplups]
+                popmat[l1+ci,l2+ci] += self.Density*dexRate[isplups]
+                popmat[l2+ci,l1+ci] += self.Density*exRate[isplups]
+                popmat[l1+ci,l1+ci] -= self.Density*exRate[isplups]
+                popmat[l2+ci,l2+ci] -= self.Density*dexRate[isplups]
+                #
             for isplups in range(0,npsplups):
                 l1=self.Psplups["lvl1"][isplups]-1
                 l2=self.Psplups["lvl2"][isplups]-1
                  #
-                popmat[l1+ci,l2+ci] += pdexRate[isplups]
-                popmat[l2+ci,l1+ci] += pexRate[isplups]
-                popmat[l1+ci,l1+ci] -= pexRate[isplups]
-                popmat[l2+ci,l2+ci] -= pdexRate[isplups]
+                popmat[l1+ci,l2+ci] += self.PDensity*pdexRate[isplups]
+                popmat[l2+ci,l1+ci] += self.PDensity*pexRate[isplups]
+                popmat[l1+ci,l1+ci] -= self.PDensity*pexRate[isplups]
+                popmat[l2+ci,l2+ci] -= self.PDensity*pdexRate[isplups]
+                #
+            if self.Ndielsplups:
+                dielTot = 0.
+                print ' Ndielsplups > 0'
+            for isplups in range(0,self.Ndielsplups):
+                l1 = self.Dielsplups["lvl1"][isplups]-1 +nlvls
+                l2 = self.Dielsplups["lvl2"][isplups]-1
+                 #
+                popmat[l2+ci,l1+ci] += self.Density*dielexRate[isplups]
+                popmat[l1+ci,l1+ci] -= self.Density*dielexRate[isplups]
+                dielTot += self.Density*dielexRate[isplups]
            # now include ionization rate from
             if ci:
 #                print ' ci = ', ci
@@ -1196,9 +1227,9 @@ class ion:
                 popmat[ci, ci] -= self.Density*self.IonizRate['rate']
                 # next 2 line take care of overbooking
                 popmat[ci, -1] += self.Density*(higher.RecombRate['rate']
-                    -self.ReclvlRate['rate'].sum(axis=0))
+                    -self.ReclvlRate['rate'].sum(axis=0)) - dielTot
                 popmat[-1, -1] -= self.Density*(higher.RecombRate['rate']
-                    - self.ReclvlRate['rate'].sum(axis=0))
+                    - self.ReclvlRate['rate'].sum(axis=0)) - dielTot
                 #
                 for itrans in range(len(reclvl['lvl1'])):
                     lvl1 = reclvl['lvl1'][itrans]-1
