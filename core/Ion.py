@@ -1053,30 +1053,15 @@ class ion:
                 for iwvl in idx:
                     wvlCalc = self.Intensity['wvl'][iwvl]
                     aspectrum += useFilter(wavelength, wvlCalc, factor=useFactor)*intensity['intensity'][iwvl]
-        elif nTemp > 1 or nDens > 1:
+        else:
+            nVar = max(nTemp, nDens)
             aspectrum = np.zeros((nTemp, wavelength.size), 'float64')
             if not 'errorMessage' in self.Intensity.keys():
                 idx = util.between(self.Intensity['wvl'], [wavelength.min(), wavelength.max()])
-                for itemp in xrange(nTemp):
+                for itemp in xrange(nVar):
                     for iwvl in idx:
                         wvlCalc = self.Intensity['wvl'][iwvl]
                         aspectrum[itemp] += useFilter(wavelength, wvlCalc, factor=useFactor)*self.Intensity['intensity'][itemp, iwvl]
-        elif nDens > 1 and nTemp ==1:
-            aspectrum = np.zeros((nDens, wavelength.size), 'float64')
-            if not 'errorMessage' in self.Intensity.keys():
-                idx = util.between(self.Intensity['wvl'], [wavelength.min(), wavelength.max()])
-                for idens in xrange(nDens):
-                    for iwvl in idx:
-                        wvlCalc = self.Intensity['wvl'][iwvl]
-                        aspectrum[idens] += useFilter(wavelength, wvlCalc, factor=useFactor)*self.Intensity['intensity'][idens, iwvl]
-        elif nDens == nTemp :
-            aspectrum = np.zeros((nDens, wavelength.size), 'float64')
-            if not 'errorMessage' in self.Intensity.keys():
-                idx = util.between(self.Intensity['wvl'], [wavelength.min(), wavelength.max()])
-                for idens in xrange(nDens):
-                    for iwvl in idx:
-                        wvlCalc = self.Intensity['wvl'][iwvl]
-                        aspectrum[idens] += useFilter(wavelength, wvlCalc, factor=useFactor)*self.Intensity['intensity'][idens, iwvl]
     #                    for iwvl, wvlCalc in enumerate(self.Intensity['wvl']):
     #                        aspectrum[itemp] += useFilter(wavelength, wvlCalc, factor=useFactor)*self.Intensity['intensity'][itemp, iwvl]
         self.Spectrum = {'intensity':aspectrum,  'wvl':wavelength, 'filter':useFilter.__name__, 'filterWidth':useFactor}
