@@ -11,6 +11,8 @@ chInteractive = chianti.chInteractive
 class spectrum:
     '''Calculate the emission spectrum as a function of temperature and density.
 
+    includes elemental abundances or ionization equilibria
+
     temperature and density can be arrays but, unless the size of either is one (1),
     the two must have the same size
 
