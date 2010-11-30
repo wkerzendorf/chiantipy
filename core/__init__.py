@@ -10,7 +10,7 @@ that is found in the LICENSE file
 import chianti
 #import os
 #import types
-##from datetime import *
+#from datetime import datetime
 ##from ConfigParser import *
 #import numpy as np
 #from scipy import interpolate

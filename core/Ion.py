@@ -3247,11 +3247,11 @@ class ionWeb(ion):
             em=self.Emiss
         #
         #
-        try:
-            ab=self.Abundance
-        except:
-            self.Abundance = util.abundanceRead()
-            ab=self.Abundance
+#        try:
+#            ab=self.Abundance
+#        except:
+#            self.Abundance = util.abundanceRead()
+#            ab=self.Abundance
         #
         fontsize=12
         #
@@ -3271,12 +3271,14 @@ class ionWeb(ion):
         else:
             igvl=range(len(wvl))
         nlines=len(igvl)
-        if nlines ==0:
+        if nlines < 2:
             if chInteractive:
-                print ' no lines in selected interval'
+                print ' less than 2 lines in selected interval'
             else:
-                self.message = ' no lines in selected interval'
+                self.message = ' less than 2 lines in selected interval'
+                self.Error = 1
             return
+        self.Error = 0
         # find the top most intense lines
         #
         if (top > nlines) or (top == 0):
