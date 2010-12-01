@@ -176,7 +176,8 @@ class spectrum:
         total = freeFree + freeBound + lineSpectrum + twoPhoton
         t2 = datetime.now()
         dt=t2-t1
-        print ' elapsed seconds = ', dt.seconds
+        if chInteractive:
+            print ' elapsed seconds = ', dt.seconds
         if type(em) != types.NoneType:
             if nEm == 1:
                 integrated = total*em
