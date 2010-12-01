@@ -8,6 +8,13 @@ import chianti.util as util
 #
 defaults = chianti.Defaults
 chInteractive = chianti.chInteractive
+if chInteractive:
+    import pylab as pl
+else:
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as pl
+
 class spectrum:
     '''Calculate the emission spectrum as a function of temperature and density.
 

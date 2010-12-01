@@ -10,6 +10,13 @@ import chianti.filters as chfilters
 import chianti.util as util
 #
 chInteractive = chianti.chInteractive
+if chInteractive:
+    import pylab as pl
+else:
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as pl
+
 try:
     import multiprocessing as mp
     from chianti import mputil
