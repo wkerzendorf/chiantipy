@@ -3585,12 +3585,12 @@ class ionWeb(ion):
         #
         intensityRatioFileName=self.IonStr
         for aline in num_idx:
-            addstr = '_%10.3f'%(wvl[topLines[aline]])
-            intensityRatioFileName+= addstr.strip()
+            addstr = '%10.3f'%(wvl[topLines[aline]])
+            intensityRatioFileName += '_' + addstr.strip()
         intensityRatioFileName+='_2'
         for aline in den_idx:
-            addstr = '_%10.3f'%(wvl[topLines[aline]])
-            intensityRatioFileName+= addstr.strip()
+            addstr = '%10.3f'%(wvl[topLines[aline]])
+            intensityRatioFileName += '_' + addstr.strip()
         #
         #  need to so the before the next save statements
         self.IntensityRatio={'ratio':intRatio,'desc':desc,
