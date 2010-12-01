@@ -191,3 +191,24 @@ class spectrum:
     #
     # -------------------------------------------------------------------------
     #
+    def lineSpectrumPlot(self, saveFile=0, plotContinuum=0, linLog = 'lin'):
+        ''' to plot the spectrum as a function of wavelength'''
+        # must follow setting top
+        #
+        pl.figure()
+        ylabel = 'Intensity'
+        #
+        xlabel = 'Wavelength ('+self.Defaults['wavelength'] +')'
+        #
+#        ymin = 10.**(np.log10(emiss.min()).round(0))
+        #
+        if chInteractive:
+            pl.ion()
+        else:
+            pl.ioff()
+        #
+        pl.plot(self.LineSpectrum['wavelength'], self.LineSpectrum['intensity'])
+        pl.xlabel(xlabel)
+        pl.ylabel(ylabel)
+        if saveFile:
+            pl.savefig(saveFile)
