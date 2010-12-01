@@ -2045,7 +2045,7 @@ class ion:
         #
         xlabel = 'Wavelength ('+self.Defaults['wavelength'] +')'
         #
-        ymin = 10.**(np.log10(emiss.min()).round(0)) - 0.5
+        ymin = 10.**(np.log10(emiss.min()).round(0)-0.5 )
         #
         if chInteractive:
             pl.ion()
