@@ -2045,7 +2045,7 @@ class ion:
         #
         xlabel = 'Wavelength ('+self.Defaults['wavelength'] +')'
         #
-        ymin = 10.**(np.log10(emiss.min()).round(0))
+        ymin = 10.**(np.log10(emiss.min()).round(0)) - 0.5
         #
         if chInteractive:
             pl.ion()
@@ -3421,11 +3421,11 @@ class ionWeb(ion):
 #            em=self.Emiss
         #
         #
-        try:
-            ab=self.Abundance
-        except:
-            self.Abundance = util.abundanceRead()
-            ab=self.Abundance
+#        try:
+#            ab=self.Abundance
+#        except:
+#            self.Abundance = util.abundanceRead()
+#            ab=self.Abundance
         emiss = em['emiss']
         wvl = em["wvl"]
         plotLabels=em["plotLabels"]
@@ -3583,7 +3583,7 @@ class ionWeb(ion):
 #        pl.ioff()
 #        pl.show()
         #
-        intensityRatioFileName=self.IonStr
+        intensityRatioFileName = self.IonStr
         for aline in num_idx:
             addstr = '%10.3f'%(wvl[topLines[aline]])
             intensityRatioFileName += '_' + addstr.strip()
@@ -3593,7 +3593,7 @@ class ionWeb(ion):
             intensityRatioFileName += '_' + addstr.strip()
         #
         #  need to so the before the next save statements
-        self.IntensityRatio={'ratio':intRatio,'desc':desc,
+        self.IntensityRatio = {'ratio':intRatio,'desc':desc,
                 'temperature':outTemperature,'density':outDensity,'filename':intensityRatioFileName}
         #
         if plotDir:
