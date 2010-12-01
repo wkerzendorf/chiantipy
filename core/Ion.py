@@ -3547,7 +3547,10 @@ class ionWeb(ion):
         denEmiss=np.zeros(len(xvalues),'float32')
         for aline in den_idx:
             denEmiss+=emiss[topLines[aline]]
+        #
+        intRatio = numEmiss/denEmiss
         fontsize = 12
+        #
         #
         # plot the desired ratio
         pl.figure()
@@ -3568,7 +3571,7 @@ class ionWeb(ion):
             ax2 = pl.twiny()
             xlabelDen=r'Electron Density (cm$^{-3}$)'
             pl.xlabel(xlabelDen, fontsize=fontsize)
-            pl.loglog(outDensity,numEmiss/denEmiss, visible=False)
+            pl.loglog(outDensity,intRatio, visible=False)
             ax2.xaxis.tick_top()
         else:
 #            pl.ylim(ymin, ymax)
@@ -3589,6 +3592,10 @@ class ionWeb(ion):
             addstr = '_%10.3f'%(wvl[topLines[aline]])
             intensityRatioFileName+= addstr.strip()
         #
+        #  need to so the before the next save statements
+        self.IntensityRatio={'ratio':intRatio,'desc':desc,
+                'temperature':outTemperature,'density':outDensity,'filename':intensityRatioFileName}
+        #
         if plotDir:
             plotFile = os.path.join(plotDir, intensityRatioFileName+'.png')
             pl.savefig(plotFile)
@@ -3597,8 +3604,6 @@ class ionWeb(ion):
             txtFile = os.path.join(saveDir, intensityRatioFileName+'.txt')
             self.intensityRatioSave(outFile = txtFile)
         #
-        self.IntensityRatio={'ratio':numEmiss/denEmiss,'desc':desc,
-                'temperature':outTemperature,'density':outDensity,'filename':intensityRatioFileName}
         #
         # -------------------------------------------------------------------------------------
         #
