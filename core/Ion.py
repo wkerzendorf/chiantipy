@@ -3582,10 +3582,12 @@ class ionWeb(ion):
         #
         intensityRatioFileName=self.IonStr
         for aline in num_idx:
-            intensityRatioFileName+= '_%3i'%(wvl[topLines[aline]])
+            addstr = '_%10.3f'%(wvl[topLines[aline]])
+            intensityRatioFileName+= addstr.strip()
         intensityRatioFileName+='_2'
         for aline in den_idx:
-            intensityRatioFileName+= '_%3i'%(wvl[topLines[aline]])
+            addstr = '_%10.3f'%(wvl[topLines[aline]])
+            intensityRatioFileName+= addstr.strip()
         #
         if plotDir:
             plotFile = os.path.join(plotDir, intensityRatioFileName+'.png')
