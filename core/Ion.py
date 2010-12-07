@@ -1361,10 +1361,10 @@ class ion:
                     l2=self.Psplups["lvl2"][isplups]-1
                     # for proton excitation, the levels are all below the ionization potential
                      #
-                    popmat[l1+ci,l2+ci] += self.PDensity*pdexRate[isplups, itemp]
-                    popmat[l2+ci,l1+ci] += self.PDensity*pexRate[isplups, itemp]
-                    popmat[l1+ci,l1+ci] -= self.PDensity*pexRate[isplups, itemp]
-                    popmat[l2+ci,l2+ci] -= self.PDensity*pdexRate[isplups, itemp]
+                    popmat[l1+ci,l2+ci] += self.PDensity[itemp]*pdexRate[isplups, itemp]
+                    popmat[l2+ci,l1+ci] += self.PDensity[itemp]*pexRate[isplups, itemp]
+                    popmat[l1+ci,l1+ci] -= self.PDensity[itemp]*pexRate[isplups, itemp]
+                    popmat[l2+ci,l2+ci] -= self.PDensity[itemp]*pdexRate[isplups, itemp]
                 # now include ionization rate from
                 if ci:
                     print ' ci = ', ci

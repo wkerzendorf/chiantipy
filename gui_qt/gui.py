@@ -5,7 +5,7 @@ import chianti
 from chianti.gui_qt.ui import *
 
 def chpicker(dir, filter='*.*', label='ChiantiPy'):
-    '''Select a filename using a gui dialog.'''
+    '''Select a filename using a Qt gui dialog.'''
     app=QtGui.QApplication(sys.argv)
     a=QtGui.QFileDialog()
     a.setDirectory(dir)
@@ -65,7 +65,7 @@ class selectorDialog(QtGui.QDialog):
 #from choice2DialogForm import *
 #
 class choice2Dialog(QtGui.QDialog):
-    '''Make a single or multiplee selection from a list of items and another
+    '''Make a single or multiple selection from a list of items and another
     single or multiple selection from the same list.
 
     Useful for picking numerators and denominators.
