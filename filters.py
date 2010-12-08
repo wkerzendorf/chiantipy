@@ -54,7 +54,7 @@ def boxcar(wvl, wvl0, factor=0):
     #
 def lorentz(wvl, wvl0, factor=0):
     '''the lorentz profile with the exception that all factors are in wavelength units
-    rather than frequency as the lorentz profile is usually defined
+    rather than frequency as the lorentz profile is usually defined.
     factor is the value of the so-called constant gamma'''
     if factor:
         gamma = factor

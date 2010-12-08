@@ -1,7 +1,7 @@
 ''' functions needed for multiprocessing module mspectrum'''
 import chianti
 def doFfQ(inQ, outQ):
-    ''' helper for freefree'''
+    ''' multiprocessing helper for freefree'''
     for inputs in iter(inQ.get, 'STOP'):
         ionS = inputs[0]
         temperature = inputs[1]
@@ -14,7 +14,7 @@ def doFfQ(inQ, outQ):
     # ----------------------------------------------
     #
 def doFbQ(inQ, outQ):
-    ''' helper for freefree'''
+    ''' multiprocessing helper for freeBound'''
     for inputs in iter(inQ.get, 'STOP'):
         ionS = inputs[0]
         temperature = inputs[1]
@@ -27,7 +27,7 @@ def doFbQ(inQ, outQ):
     # ----------------------------------------------
     #
 def doIonQ(inQueue, outQueue):
-    ''' helper for ion, also does two-photon'''
+    ''' multiprocessing helper for ion, also does two-photon'''
     for inputs in iter(inQueue.get, 'STOP'):
         ionS = inputs[0]
         temperature = inputs[1]

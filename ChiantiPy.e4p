@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-4.6.dtd">
 <!-- eric4 project file for project ChiantiPy -->
-<!-- Saved: 2010-12-08, 10:39:18 -->
+<!-- Saved: 2010-12-08, 11:07:43 -->
 <!-- Copyright (C) 2010 ,  -->
 <Project version="4.6">
   <Language>en</Language>
@@ -31,7 +31,6 @@
     <Source>core/Continuum.py</Source>
     <Source>core/Mspectrum.py</Source>
     <Source>core/Spectrum.py</Source>
-    <Source>extra.py</Source>
     <Source>version.py</Source>
   </Sources>
   <Forms>
@@ -188,6 +187,7 @@
               <list>
                 <unicode>setup.py</unicode>
                 <unicode>FortranFormat.py</unicode>
+                <unicode>version.py</unicode>
               </list>
             </value>
             <key>
