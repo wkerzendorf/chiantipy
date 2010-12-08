@@ -1012,9 +1012,9 @@ class ion:
         #
                 # the ciRate can be computed for all temperatures
                 #
-                de = cisplups['de'][itrans]
+                de = self.CiSplups['de'][isplups]
                 ekt = (de*1.57888e+5)/temperature
-                cirate[isplups] = const.collision*ups[isplups]*np.exp(-ekt)/np.sqrt(temperature)
+                exRate[isplups] = const.collision*ups[isplups]*np.exp(-ekt)/np.sqrt(temperature)
         #
         ups=np.where(ups > 0.,ups,0.)
         #
@@ -1023,7 +1023,7 @@ class ion:
         elif diel == 1:
             self.DielUpsilon = {'upsilon':ups, 'temperature':temperature, 'exRate':exRate}
         elif ci == 1:
-            self.CiUpsilon = {'upsilon':ups,  'temperature':temperature, 'rate':cirate}
+            self.CiUpsilon = {'upsilon':ups,  'temperature':temperature, 'rate':exRate}
         else:
             self.Upsilon = {'upsilon':ups, 'temperature':temperature, 'exRate':exRate, 'dexRate':dexRate}
         #
@@ -1256,7 +1256,7 @@ class ion:
                 popmat[l2+ci,l2+ci] -= self.PDensity*pdexRate[isplups]
            # now include ionization rate from
             if ci:
-                print ' ci = ', ci
+#                print ' ci = ', ci
                 #
                 # the ciRate can be computed for all temperatures
                 #
@@ -1293,7 +1293,7 @@ class ion:
                         self.DielUpsilon['branch'] =  branch
                     #
                     dielTot = 0.
-                    print ' Ndielsplups > 0 '
+#                    print ' Ndielsplups > 0 '
                     for isplups in range(0,self.Ndielsplups):
                         l1 = self.DielSplups["lvl1"][isplups]-1 + nlvls
                         l2 = self.DielSplups["lvl2"][isplups]-1
