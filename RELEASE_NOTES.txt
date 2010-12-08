@@ -6,6 +6,14 @@
 :Contact: kdere@gmu.edu
 
 
+Changes from 0.2 to 0.3
+--------------------------
+
+Added class mspectrum to calculate spectra using multiple processors.
+
+Bug fixes
+
+
 Changes from 0.1 to 0.2
 --------------------------
 

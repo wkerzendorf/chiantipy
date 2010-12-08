@@ -2,6 +2,14 @@
  Welcome to ChiantiPy
 ======================
 
+Changes from 0.2 to 0.3
+=======================
+
+Added class mspectrum to calculate spectra using multiple processors.
+
+Bug fixes
+
+
 What is ChiantiPy
 =================
 

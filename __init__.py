@@ -1,5 +1,6 @@
-'''the CHIANTI Python package'''
-__version__ = '0.3'
+'''the ChiantiPy - CHIANTI Python package
+calculates various aspects of emission line and continua from the
+CHIANTI atomic database for astrophysical spectroscopy'''
 import os
 import util
 import constants
@@ -25,4 +26,7 @@ Ip = util.ipRead()
 MasterList = util.masterListRead()
 AbundanceAll = util.abundanceRead(abundancename = Defaults['abundfile'])
 IoneqAll = util.ioneqRead(ioneqname = Defaults['ioneqfile'])
+import version
+__version__ = version.__version__
+__version_info__ = version.__version_info__
 import core

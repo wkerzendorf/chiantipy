@@ -1,6 +1,7 @@
 from distutils.core import setup
+import version
 setup(name = 'ChiantiPy',
-    version = '0.3',
+    version = version.__version__,
     description = 'a Python interface to the CHIANTI atomic database for astrophysical spectroscopy',
     long_description = open('README').read(),
     author = 'Ken Dere',
