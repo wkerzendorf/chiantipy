@@ -2,6 +2,7 @@ import os
 import types
 import numpy as np
 from scipy import interpolate
+import time
 #
 import chianti
 chInteractive = chianti.chInteractive
@@ -2283,6 +2284,9 @@ class ion:
             pl.ylim(ymin/1.2, 1.2*ymax)
             pl.title(title+desc_str,fontsize=fontsize)
         pl.draw()
+        #  need time to let matplotlib finish plotting
+        time.sleep(0.5)
+        #
         # get line selection
         #
         numden = gui.choice2Dialog(wvl[topLines])
@@ -2561,8 +2565,12 @@ class ion:
         ax = pl.subplot(111)
         nxvalues=len(xvalues)
         #  maxAll is an array
-        ymax = np.max(1.2*emiss[top-1]/maxAll)
-        ymin = np.min(emiss[0]/maxAll)  # was originally  = ymax
+#        print ' emiss = ', np.max(emiss[top-1]), np.max(emiss[0])
+#        print ' maxAll = ', maxAll
+#        ymax = np.max(1.2*emiss[top-1]/maxAll)
+        ymax = 1.2
+#        print ' ymax = ', ymax
+        ymin = ymax  #  np.min(emiss[0]/maxAll)  # was originally  = ymax
         for iline in range(top):
             tline=topLines[iline]
             pl.loglog(xvalues,emiss[tline]/maxAll)
@@ -2590,6 +2598,8 @@ class ion:
             pl.ylim(ymin, ymax)
             pl.title(title+desc_str,fontsize=fontsize)
         pl.draw()
+        #
+        time.sleep(0.5)
         #
 #        print ' topLInes = ', wvl[topLines]
         wvlChoices = []
