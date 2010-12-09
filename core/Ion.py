@@ -2069,6 +2069,8 @@ class ion:
         if plotFile:
             pl.savefig(plotFile)
         #
+        if not chInteractive:
+            delattr(pl.figure())
         idx = np.argsort(wvl)
         self.Emiss['wvlTop'] = wvl[idx]
         self.Emiss['emissTop'] = emiss[idx]
