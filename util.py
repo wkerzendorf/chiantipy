@@ -441,6 +441,9 @@ def elvlcRead(ions, filename = None, verbose=False):
         elvlname=fname+'.elvlc'
     else:
         elvlname = filename
+    if not os.path.isfile(elvlname):
+        print ' elvlc file does not exist:  ',elvlname
+        return -1
     input=open(elvlname,'r')
     s1=input.readlines()
     input.close()
