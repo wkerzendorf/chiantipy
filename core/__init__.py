@@ -7,7 +7,7 @@ that is found in the LICENSE file
 
 
 '''
-import chianti
+#import chianti
 #import os
 #import types
 #from datetime import datetime
