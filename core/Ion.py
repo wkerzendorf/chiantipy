@@ -1182,27 +1182,35 @@ class ion:
             highers = util.zion2name(self.Z, self.Ion+1)
             higher = ion(highers, temperature=self.Temperature, density=self.Density)
             higher.recombRate()
-#        print ' ci, rec = ', ci, rec, dielexRate
+        #print ' nlvls, ci, rec = ', nlvls, ci, rec
         #
         rad=np.zeros((nlvls+ci+rec,nlvls+ci+rec),"float64")  #  the populating matrix for radiative transitions
         #
         #
-        for iwgfa in range(0,nwgfa):
+        for iwgfa in range(0,nwgfa-1):
             l1 = self.Wgfa["lvl1"][iwgfa]-1
             l2 = self.Wgfa["lvl2"][iwgfa]-1
             rad[l1+ci,l2+ci] += self.Wgfa["avalue"][iwgfa]
             rad[l2+ci,l2+ci] -= self.Wgfa["avalue"][iwgfa]
+            # photo-excitation and stimulated emission
             if self.RadTemperature:
                 if not self.RPhot:
                     dilute = 0.5
                 else:
                     dilute = util.dilution(self.RPhot)
-                de = const.invCm2Erg*(self.Elvlc['ecm'][l2] - self.Elvlc['ecm'][l1])
-                dekt = de/(const.boltzmann*self.RadTemperature)
-                factor = dilute*(self.Elvlc['mult'][l2]/self.Elvlc['mult'][l1])/(np.exp(dekt)-1.)
-                rad[l2+ci,l1+ci] += self.Wgfa["avalue"][iwgfa]*factor
-                rad[l1+ci,l1+ci] -= self.Wgfa["avalue"][iwgfa]*factor
-
+                # next - don't include autoionization lines
+                if abs(self.Wgfa['wvl'][iwgfa]) > 0.:
+                    de = const.invCm2Erg*(self.Elvlc['ecm'][l2] - self.Elvlc['ecm'][l1])
+                    dekt = de/(const.boltzmann*self.RadTemperature)
+                    # photoexcitation
+                    phexFactor = dilute*(self.Elvlc['mult'][l2]/self.Elvlc['mult'][l1])/(np.exp(dekt) -1.)
+                    rad[l2+ci,l1+ci] += self.Wgfa["avalue"][iwgfa]*phexFactor
+                    rad[l1+ci,l1+ci] -= self.Wgfa["avalue"][iwgfa]*phexFactor
+                    # stimulated emission
+                    stemFactor = dilute/(1. - np.exp(-dekt))
+                    rad[l1+ci,l2+ci] += self.Wgfa["avalue"][iwgfa]*stemFactor
+                    rad[l2+ci,l2+ci] -= self.Wgfa["avalue"][iwgfa]*stemFactor
+                
         #
         self.rad=rad
         #
