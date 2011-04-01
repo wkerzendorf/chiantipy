@@ -516,9 +516,9 @@ class ion:
         #
     def rrRate(self, temperature=None):
         '''Provide the radiative recombination rate coefficient as a function of temperature (K).'''
-        try:
+        if hasattr(self, 'RrParams'):
             rrparams=self.RrParams
-        except:
+        else:
             self.RrParams = util.rrRead(self.IonStr)
             rrparams=self.RrParams
         #
@@ -606,17 +606,17 @@ class ion:
 
         Used in level population calculations.'''
         if type(temperature) == types.NoneType:
-            try:
+            if hasattr(self, 'Temperature'):
                 temperature=self.Temperature
-            except:
+            else:
                 print ' temperature is not defined'
                 self.ReclvlRate=None
-        try:
+        if hasttr(sel, 'Reclvl'):
             reclvl = self.Reclvl
             if reclvl == types.NoneType:
                 self.ReclvlRate = None
                 return
-        except:
+        else:
 #           print ' reading reclvl file'
             reclvl = util.cireclvlRead(self.IonStr, 'reclvl')
             if type(reclvl) == types.NoneType:
@@ -731,23 +731,23 @@ class ion:
         '''Calculates the proton density to electron density ratio.
 
         Uses the abundance and ionization equilibrium.'''
-        try:
+        if hasattr(self, 'Abundance'):
             ab=self.Abundance
-        except:
+        else:
             abundName = self.Defaults['abundfile']
             util.abundanceRead(abundancename = abundName)
-        try:
+        if hasattr(self, 'Ioneq'):
             ioneq=self.Ioneq
-        except:
+        else:
             ioneqname = self.Defaults['ioneqfile']
             self.IoneqAll = util.ioneqRead(ioneqname = ioneqname)
         #
-        try:
+        if hasattr(self, 'Temperature'):
             temperature=self.Temperature
-        except:
+        else:
             temperature = self.IoneqAll['ioneqTemperature']
 #                temperature=self.IoneqTemperature
-        else:  temperature=np.asarray(temperature,'float32')
+#        else:  temperature=np.asarray(temperature,'float32')
         #
         nTemp=temperature.size
         nEl=len(self.AbundanceAll['abundance'])
@@ -861,9 +861,9 @@ class ion:
         else:
             self.Temperature=temperature
         #
-        try:
+        if hasattr(self, 'Elvlc'):
             nlvls=len(self.Elvlc["lvl"])
-        except:
+        else:
             self.elvlcRead()
             nlvls=len(self.Elvlc["lvl"])
         #
@@ -1046,9 +1046,9 @@ class ion:
         nDens = self.Density.size
         useFilter = filter[0]
         useFactor= filter[1]
-        try:
+        if hasattr(self, 'Intensity'):
             intensity = self.Intensity
-        except:
+        else:
             self.intensity(wvlRange=[wavelength.min(), wavelength.max()])
             intensity = self.Intensity
         #
@@ -1713,11 +1713,11 @@ class ion:
 
         top specifies the number of the most highly populated levels to plot."""
         #self.Population={"temperature":temperature,"density":density,"population":pop}
-        try:
+        if hasattr(self, 'Population'):
             temperature=self.Population["temperature"]
             density=self.Population["density"]
             pop=self.Population["population"]
-        except:
+        else:
             self.populate()
             temperature=self.Population["temperature"]
             density=self.Population["density"]
@@ -1847,10 +1847,10 @@ class ion:
         """
         #
         #
-        doPopulate=False
-        try:
+        if hasattr(self, 'Population'):
+            doPopulate=False
             pop=self.Population['population']
-        except:
+        else:
             doPopulate=True
         #
         if temperature != None:
@@ -1970,9 +1970,9 @@ class ion:
         title=self.Spectroscopic
         #
         doEmiss=False
-        try:
+        if hasattr(self, 'Emiss'):
             em = self.Emiss
-        except:
+        else:
             try:
                 self.emiss()
                 em = self.Emiss
@@ -2100,14 +2100,14 @@ class ion:
             return
         em = emiss['emiss']
         wvl = emiss['wvl']
-        try:
+        if hasattr(self, 'Abundance'):
             ab=self.Abundance
-        except:
+        else:
             self.Abundance = util.abundanceRead()
             ab=self.Abundance
-        try:
+        if hasattr(self, 'IoneqOne'):
             thisIoneq=self.IoneqOne
-        except:
+        else:
             self.ioneqOne()
             thisIoneq=self.IoneqOne
         try:
@@ -2148,10 +2148,10 @@ class ion:
         #        self.Emiss={"temperature":temperature,"density":density,"wvl":wvl,"emiss":em,
         #        "plotLabels":plotLabels}
         #
-        doEmiss=False
-        try:
+        if hasattr(self, 'Emiss'):
+            doEmiss=False
             em = self.Emiss
-        except:
+        else:
             doEmiss = True
         #
         if temperature != None:
@@ -2373,26 +2373,30 @@ class ion:
             outfile=self.IntensityRatio['filename']
             if chInteractive:
                 print ' saving ratio to filename = ',outfile
-        temperature=self.IntensityRatio['temperature']
-        density=self.IntensityRatio['density']
-        ratio=self.IntensityRatio['ratio']
-        out=open(outFile,'w')
-        nvalues=len(ratio)
-        #
-        #  need to add 7 lines to maintain IDL like files
-        #
-        out.write(outFile+'\n')    #1
-        out.write(self.IntensityRatio['desc']+'\n') #2
-        out.write(' created with ChiantiPy version '+ chianti.__version__ +'\n')   #3
-        out.write(' columns are temperature, density, ratio'+'\n')  #5
-        tunit = 'K'
-        out.write(' temperature in '+tunit+', electron density in cm^(-3)'+'\n')  #6
-        out.write(' ratio given in '+self.Defaults['flux']+'\n')   #4
-        out.write(' '+'\n') #7
-        for ivalue in range(nvalues):
-            s='%12.3e %12.3e  %12.3e ' % (temperature[ivalue],density[ivalue],ratio[ivalue])
-            out.write(s+os.linesep)
-        out.close()
+        if hasattr(self, 'IntensityRatio'):
+            temperature=self.IntensityRatio['temperature']
+            density=self.IntensityRatio['density']
+            ratio=self.IntensityRatio['ratio']
+            out=open(outFile,'w')
+            nvalues=len(ratio)
+            #
+            #  need to add 7 lines to maintain IDL like files
+            #
+            out.write(outFile+'\n')    #1
+            out.write(self.IntensityRatio['desc']+'\n') #2
+            out.write(' created with ChiantiPy version '+ chianti.__version__ +'\n')   #3
+            out.write(' columns are temperature, density, ratio'+'\n')  #5
+            tunit = 'K'
+            out.write(' temperature in '+tunit+', electron density in cm^(-3)'+'\n')  #6
+            out.write(' ratio given in '+self.Defaults['flux']+'\n')   #4
+            out.write(' '+'\n') #7
+            for ivalue in range(nvalues):
+                s='%12.3e %12.3e  %12.3e ' % (temperature[ivalue],density[ivalue],ratio[ivalue])
+                out.write(s+os.linesep)
+            out.close()
+        else:
+            if chInteractive:
+                print ' in .intensityRatioSave(), no IntensityRatio is found'
         #
         # -------------------------------------------------------------------------------------
         #
@@ -2400,14 +2404,14 @@ class ion:
         '''Provide the ionization equilibrium for the selected ion as a function of temperature.
         returned in self.IoneqOne'''
         #
-        try:
+        if hasattr(self, 'Temperature'):
             temperature = self.Temperature
-        except:
+        else:
             return
         #
-        try:
+        if hasattr(self, 'IoneqAll'):
             ioneqAll = self.IoneqAll
-        except:
+        else:
             self.IoneqAll = util.ioneqRead(ioneqname = self.Defaults['ioneqfile'])
             ioneqAll=self.IoneqAll
         #
@@ -2450,10 +2454,10 @@ class ion:
         #self.emiss={"wvl":wvl,"emiss":em,"units":units,"plotLabels":plotLabels}
         #
         #
-        doEmiss=False
-        try:
+        if hasattr(self, 'Emiss'):
+            doEmiss=False
             em=self.Emiss
-        except:
+        else:
             doEmiss=True
         #
         if temperature != None:
@@ -2472,9 +2476,9 @@ class ion:
             em=self.Emiss
         #
         #
-        try:
+        if hasattr(self, 'Abundance'):
             ab=self.Abundance
-        except:
+        else:
             self.Abundance = util.abundanceRead()
             ab=self.Abundance
         #
@@ -2905,10 +2909,10 @@ class ionWeb(ion):
         #self.emiss={"wvl":wvl,"emiss":em,"units":units,"plotLabels":plotLabels}
         #
         #
-        doEmiss=False
-        try:
+        if hasattr(sel, 'Emiss'):
+            doEmiss=False
             em=self.Emiss
-        except:
+        else:
             doEmiss=True
         #
         #
@@ -2918,9 +2922,9 @@ class ionWeb(ion):
             em=self.Emiss
         #
         #
-        try:
+        if hasattr(self, 'Abundance'):
             ab=self.Abundance
-        except:
+        else:
             self.Abundance = util.abundanceRead()
             ab=self.Abundance
         #
@@ -3062,10 +3066,10 @@ class ionWeb(ion):
         #self.emiss={"wvl":wvl,"emiss":em,"units":units,"plotLabels":plotLabels}
         #
         #
-        doEmiss=False
-        try:
+        if hasattr(self, 'Emiss'):
+            doEmiss=False
             em=self.Emiss
-        except:
+        else:
             doEmiss=True
         #
         #
@@ -3075,9 +3079,9 @@ class ionWeb(ion):
             em=self.Emiss
         #
         #
-        try:
+        if hasattr(self, 'Abundance'):
             ab=self.Abundance
-        except:
+        else:
             self.Abundance = util.abundanceRead()
             ab=self.Abundance
         #
@@ -3252,10 +3256,10 @@ class ionWeb(ion):
         #self.emiss={"wvl":wvl,"emiss":em,"units":units,"plotLabels":plotLabels}
         #
         #
-        doEmiss=False
-        try:
+        if hasattr(self, 'Emiss'):
+            doEmiss=False
             em=self.Emiss
-        except:
+        else:
             doEmiss=True
         #
         #
