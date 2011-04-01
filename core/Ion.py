@@ -611,7 +611,7 @@ class ion:
             else:
                 print ' temperature is not defined'
                 self.ReclvlRate=None
-        if hasttr(sel, 'Reclvl'):
+        if hasattr(self, 'Reclvl'):
             reclvl = self.Reclvl
             if reclvl == types.NoneType:
                 self.ReclvlRate = None
