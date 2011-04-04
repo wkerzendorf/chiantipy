@@ -1084,6 +1084,7 @@ def ioneqRead(ioneqname=''):
         ion=out[1]
         ioneqAll[iz-1,ion-1].put(range(nTemperature),np.asarray(out[2:],'Float32'))
     ioneqRef=s1[nlines+1:-2]
+    del s1
     return {'ioneqname':ioneqname,'ioneqAll':ioneqAll,'ioneqTemperature':ioneqTemperature,'ioneqRef':ioneqRef}
     #
     # -------------------------------------------------------------------------------------

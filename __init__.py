@@ -19,14 +19,14 @@ except:
 #    matplotlib.use('Agg')
 #    import matplotlib.pyplot as pl
 ###
-xuvtop = os.environ['XUVTOP']
-#chInteractive=1
-Defaults = util.defaultsRead(verbose = chInteractive)
-Ip = util.ipRead()
-MasterList = util.masterListRead()
-AbundanceAll = util.abundanceRead(abundancename = Defaults['abundfile'])
-IoneqAll = util.ioneqRead(ioneqname = Defaults['ioneqfile'])
-import version
-__version__ = version.__version__
-__version_info__ = version.__version_info__
+#xuvtop = os.environ['XUVTOP']
+##chInteractive=1
+#Defaults = util.defaultsRead(verbose = chInteractive)
+#Ip = util.ipRead()
+#MasterList = util.masterListRead()
+#AbundanceAll = util.abundanceRead(abundancename = Defaults['abundfile'])
+#IoneqAll = util.ioneqRead(ioneqname = Defaults['ioneqfile'])
+#import version
+#__version__ = version.__version__
+#__version_info__ = version.__version_info__
 #import core

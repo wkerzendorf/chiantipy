@@ -107,7 +107,8 @@ class ion:
         self.Abundance = self.AbundanceAll['abundance'][self.Z-1]
         #
 #        self.IoneqAll = util.ioneqRead(ioneqname = self.Defaults['ioneqfile'])
-        self.IoneqAll = chdata.IoneqAll
+        if chInteractive:
+            self.IoneqAll = chdata.IoneqAll
         self.ioneqOne()
         #
         #  this needs to go after setting temperature and reading ionization equilibria
@@ -2412,8 +2413,9 @@ class ion:
         if hasattr(self, 'IoneqAll'):
             ioneqAll = self.IoneqAll
         else:
-            self.IoneqAll = util.ioneqRead(ioneqname = self.Defaults['ioneqfile'])
-            ioneqAll=self.IoneqAll
+            ioneqAll = util.ioneqRead(ioneqname = self.Defaults['ioneqfile'])
+            if chInteractive:
+                self.ioneqAll=self.IoneqAll
         #
         ioneqTemperature = ioneqAll['ioneqTemperature']
         Z=self.Z
@@ -2422,6 +2424,7 @@ class ion:
         ioneqOne = np.zeros_like(temperature)
         #
         thisIoneq=ioneqAll['ioneqAll'][Z-1,Ion-1 + Dielectronic].squeeze()
+        del ioneqAll
 #        thisIoneq = self.Ioneq
         gioneq=thisIoneq > 0.
         goodt1=self.Temperature >= ioneqTemperature[gioneq].min()
