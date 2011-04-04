@@ -5,11 +5,11 @@ try:
     from matplotlib.delaunay.triangulate import Triangulation
 except:
     from scikits.delaunay.triangulate import Triangulation
-import chianti
+import chianti.data as chdata
 import chianti.util as util
 import chianti.constants as const
-ip = chianti.Ip
-MasterList = chianti.MasterList
+ip = chdata.Ip
+MasterList = chdata.MasterList
 import chianti
 class continuum:
     '''The top level class for continuum calculations.
@@ -21,7 +21,7 @@ class continuum:
         self.Ion = nameDict['Ion']
         self.IonStr = ionStr
         self.Dielectronic = 0
-        self.Defaults = chianti.Defaults
+        self.Defaults = chdata.Defaults
         self.AbundanceName = self.Defaults['abundfile']
         self.IoneqName = self.Defaults['ioneqfile']
         #
@@ -30,7 +30,7 @@ class continuum:
         if self.Ion > 1:
             self.Ip=ip[self.Z-1, self.Ion-2]
         else:
-            if chianti.chInteractive:
+            if chdata.chInteractive:
                 print ' in continuum, trying to use the neutral ion'
             return
         #

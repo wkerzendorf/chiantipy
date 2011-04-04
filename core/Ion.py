@@ -4,8 +4,8 @@ import numpy as np
 from scipy import interpolate
 import time
 #
-import chianti
-chInteractive = chianti.chInteractive
+import chianti.data as chdata
+chInteractive = chdata.chInteractive
 if chInteractive:
     import pylab as pl
 else:
@@ -49,7 +49,7 @@ import chianti.constants as const
 #except:
 #    chInteractive = 1
 #
-xuvtop = chianti.xuvtop
+xuvtop = chdata.xuvtop
 #
 #ip = chianti.Ip
 #MasterList = chianti.MasterList
@@ -78,10 +78,10 @@ class ion:
         #
 #        self.__version__ = chianti.__version__
         self.IonStr=ionStr
-        self.Defaults=chianti.Defaults
+        self.Defaults=chdata.Defaults
         self.AbundanceName = self.Defaults['abundfile']
         self.IoneqName = self.Defaults['ioneqfile']
-        MasterList = chianti.MasterList
+        MasterList = chdata.MasterList
         #
         self.Z=util.convertName(ionStr)['Z']
         self.Ion=util.convertName(ionStr)['Ion']
@@ -94,20 +94,20 @@ class ion:
         #
         #  ip in eV, but don't read for bare ions
         if self.Ion <= self.Z:
-            self.Ip=chianti.Ip[self.Z-1, self.Ion-1-self.Dielectronic]
+            self.Ip=chdata.Ip[self.Z-1, self.Ion-1-self.Dielectronic]
             if self.Dielectronic:
-                self.UpperIp=chianti.Ip[self.Z-1, self.Ion-1]
+                self.UpperIp=chdata.Ip[self.Z-1, self.Ion-1]
         #
         if type(temperature) != types.NoneType:
             self.Temperature = np.array(temperature,'float64')
         #
         #
 #        self.AbundanceAll = util.abundanceRead(abundancename = self.AbundanceName)
-        self.AbundanceAll = chianti.AbundanceAll
+        self.AbundanceAll = chdata.AbundanceAll
         self.Abundance = self.AbundanceAll['abundance'][self.Z-1]
         #
 #        self.IoneqAll = util.ioneqRead(ioneqname = self.Defaults['ioneqfile'])
-        self.IoneqAll = chianti.IoneqAll
+        self.IoneqAll = chdata.IoneqAll
         self.ioneqOne()
         #
         #  this needs to go after setting temperature and reading ionization equilibria
@@ -1210,7 +1210,7 @@ class ion:
                     stemFactor = dilute/(1. - np.exp(-dekt))
                     rad[l1+ci,l2+ci] += self.Wgfa["avalue"][iwgfa]*stemFactor
                     rad[l2+ci,l2+ci] -= self.Wgfa["avalue"][iwgfa]*stemFactor
-                
+
         #
         self.rad=rad
         #
@@ -2384,7 +2384,7 @@ class ion:
             #
             out.write(outFile+'\n')    #1
             out.write(self.IntensityRatio['desc']+'\n') #2
-            out.write(' created with ChiantiPy version '+ chianti.__version__ +'\n')   #3
+            out.write(' created with ChiantiPy version '+ chdata.__version__ +'\n')   #3
             out.write(' columns are temperature, density, ratio'+'\n')  #5
             tunit = 'K'
             out.write(' temperature in '+tunit+', electron density in cm^(-3)'+'\n')  #6

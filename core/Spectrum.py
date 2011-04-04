@@ -2,12 +2,13 @@ import types
 from datetime import datetime
 import numpy as np
 import chianti
+import chianti.data as chdata
 import chianti.constants as const
 import chianti.filters as chfilters
 import chianti.util as util
 #
-defaults = chianti.Defaults
-chInteractive = chianti.chInteractive
+defaults = chdata.Defaults
+chInteractive = chdata.chInteractive
 if chInteractive:
     import pylab as pl
 else:
@@ -43,7 +44,7 @@ class spectrum:
     temperature/density.'''
     def __init__(self, temperature, density, wavelength, filter=(chfilters.gaussianR, 1000.),  ionList = 0, minAbund=0, doContinuum=1, em = None,  verbose=0, allLines=1):
         t1 = datetime.now()
-        masterlist = chianti.MasterList
+        masterlist = chdata.MasterList
         # use the ionList but make sure the ions are in the database
         if ionList:
             alist=[]
@@ -75,7 +76,7 @@ class spectrum:
                     print ' the emission measure array must be the same size as the temperature/density array'
                     return
         self.AbundanceName = defaults['abundfile']
-        self.AbundanceAll = chianti.AbundanceAll
+        self.AbundanceAll = chdata.AbundanceAll
         abundAll = self.AbundanceAll['abundance']
         nonzed = abundAll > 0.
         minAbundAll = abundAll[nonzed].min()

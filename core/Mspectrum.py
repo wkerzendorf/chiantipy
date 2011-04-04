@@ -4,12 +4,12 @@ import types
 
 #
 import numpy as np
-import chianti
+import chianti.data as chdata
 import chianti.constants as const
 import chianti.filters as chfilters
 import chianti.util as util
 #
-chInteractive = chianti.chInteractive
+chInteractive = chdata.chInteractive
 if chInteractive:
     import pylab as pl
 else:
@@ -25,8 +25,8 @@ except:
     if chInteractive:
         print ' your version of Python does not support multiprocessing \n you will not be able to use mspectrum'
 #
-defaults = chianti.Defaults
-Abundanceall = chianti.AbundanceAll
+defaults = chdata.Defaults
+Abundanceall = chdata.AbundanceAll
 #
 # the following is necessary to make chiantipy non interactive for the web
 #try:
@@ -67,7 +67,7 @@ class mspectrum:
     '''
     def __init__(self, temperature, density, wavelength, filter=(chfilters.gaussianR, 1000.),  ionList = 0, minAbund=0., doContinuum=1, allLines = 1, em = None,  proc=3,  verbose = 0,  timeout=0.1):
         t1 = datetime.now()
-        masterlist = chianti.MasterList
+        masterlist = chdata.MasterList
         # use the ionList but make sure the ions are in the database
         if ionList:
             alist=[]
@@ -102,7 +102,7 @@ class mspectrum:
         self.AllLines = allLines
         self.AbundanceName = self.Defaults['abundfile']
 #        self.AbundanceAll = util.abundanceRead(abundancename = self.AbundanceName)
-        self.AbundanceAll = chianti.AbundanceAll
+        self.AbundanceAll = chdata.AbundanceAll
         abundAll = self.AbundanceAll['abundance']
         nonzed = abundAll > 0.
         minAbundAll = abundAll[nonzed].min()
