@@ -9,9 +9,10 @@ chInteractive = chdata.chInteractive
 if chInteractive:
     import pylab as pl
 else:
-    import matplotlib
-    matplotlib.use('Agg')
+#    import matplotlib
+#    matplotlib.use('Agg')
     import matplotlib.pyplot as pl
+    pl.rcParams['backend'] = 'Agg'
 #
 if chInteractive:
     if pl.rcParams['backend'].lower() == 'qt4agg':
