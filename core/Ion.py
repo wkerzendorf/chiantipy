@@ -9,9 +9,10 @@ chInteractive = chdata.chInteractive
 if chInteractive:
     import pylab as pl
 else:
-    import matplotlib
-    matplotlib.use('Agg')
+#    import matplotlib
+#    matplotlib.use('Agg')
     import matplotlib.pyplot as pl
+    #  backend is set in matplotlibrc
 #    pl.rcParams['backend'] = 'Agg'
 #
 if chInteractive:
@@ -1353,6 +1354,8 @@ class ion:
             else:
                 fullpop = np.linalg.solve(popmat,b)
                 pop = fullpop[ci:]
+#            fullpop = np.linalg.solve(popmat,b)
+#            pop = fullpop[ci:ci+nlvls+rec-1]
         #   next, in case of a single density value
 #            pop = np.linalg.solve(popmat,b)
         elif ndens == 1:
