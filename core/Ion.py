@@ -1348,14 +1348,14 @@ class ion:
 #            popmat[nlvls/2]=norm
 #            b=np.zeros(nlvls+ci+rec,'float64')
 #            b[nlvls/2]=1.
-            if rec:
-                fullpop = np.linalg.solve(popmat,b)
-                pop = fullpop[ci:ci+nlvls+rec-1]
-            else:
-                fullpop = np.linalg.solve(popmat,b)
-                pop = fullpop[ci:]
-#            fullpop = np.linalg.solve(popmat,b)
-#            pop = fullpop[ci:ci+nlvls+rec-1]
+#            if rec:
+#                fullpop = np.linalg.solve(popmat,b)
+#                pop = fullpop[ci:ci+nlvls+rec-1]
+#            else:
+#                fullpop = np.linalg.solve(popmat,b)
+#                pop = fullpop[ci:]
+            fullpop = np.linalg.solve(popmat,b)
+            pop = fullpop[ci:ci+nlvls]
         #   next, in case of a single density value
 #            pop = np.linalg.solve(popmat,b)
         elif ndens == 1:
@@ -1381,7 +1381,7 @@ class ion:
                     popmat[l2+ci,l2+ci] -= self.PDensity[itemp]*pdexRate[isplups, itemp]
                 # now include ionization rate from
                 if ci:
-                    print ' ci = ', ci
+#                    print ' ci = ', ci
                     #
                     # the ciRate can be computed for all temperatures
                     #
@@ -1453,11 +1453,11 @@ class ion:
                 b=np.zeros(nlvls+ci+rec,'float64')
                 b[nlvls+ci+rec-1]=1.
                 thispop=np.linalg.solve(popmat,b)
-                if rec:
-                    pop[itemp] = thispop[ci:ci+nlvls+rec-1]
-                else:
-                    pop[itemp] = thispop[ci:]
-#                pop[itemp] = thispop
+#                if rec:
+#                    pop[itemp] = thispop[ci:ci+nlvls+rec-1]
+#                else:
+#                    pop[itemp] = thispop[ci:]
+                pop[itemp] = thispop[ci:ci+nlvls]
             #
         elif ntemp == 1:
 #            pop=np.zeros((ndens,nlvls),"float64")
@@ -1575,11 +1575,11 @@ class ion:
                 b=np.zeros(nlvls+ci+rec,'float64')
                 b[nlvls+ci+rec-1]=1.
                 thispop=np.linalg.solve(popmat,b)
-                if rec:
-                    pop[idens] = thispop[ci:ci+nlvls+rec-1]
-                else:
-                    pop[idens] = thispop[ci:]
-#                pop[idens] = thispop
+#                if rec:
+#                    pop[idens] = thispop[ci:ci+nlvls+rec-1]
+#                else:
+#                    pop[idens] = thispop[ci:]
+                pop[idens] = thispop[ci:ci+nlvls]
                 #
         elif ntemp>1  and ntemp==ndens:
             pop=np.zeros((ntemp,nlvls),"float64")
@@ -1700,11 +1700,11 @@ class ion:
                 b=np.zeros(nlvls+ci+rec,'float64')
                 b[nlvls+ci+rec-1]=1.
                 thispop=np.linalg.solve(popmat,b)
-                if rec:
-                    pop[itemp] = thispop[ci:ci+nlvls+rec-1]
-                else:
-                    pop[itemp] = thispop[ci:]
-#                pop[itemp] = thispop
+#                if rec:
+#                    pop[itemp] = thispop[ci:ci+nlvls+rec-1]
+#                else:
+#                    pop[itemp] = thispop[ci:]
+                pop[itemp] = thispop[ci:ci+nlvls]
             #
         pop=np.where(pop >0., pop,0.)
         self.Population={"temperature":temperature,"density":density,"population":pop, "protonDensity":protonDensity, "ci":ci, "rec":rec, 'popmat':popmat}
