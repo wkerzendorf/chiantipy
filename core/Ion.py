@@ -2121,23 +2121,68 @@ class ion:
             if thisIoneq.size == 1:
                 thisIoneq = np.ones(ntempden, 'float64')*thisIoneq
             for it in range(ntempden):
-                #  already done in emiss
-#                if self.Defaults['flux'] == 'energy':
-#                    intensity[it] = (const.planck*const.light*1.e+8/wvl)*ab*thisIoneq[it]*em[:, it]
-#                else:
-#                    intensity[it] = ab*thisIoneq[it]*em[:, it]
                 intensity[it] = ab*thisIoneq[it]*em[:, it]
+        except:
+            nwvl=len(em)
+            ntempden=1
+            intensity = ab*thisIoneq*em
+        self.Intensity = {'intensity':intensity, 'wvl':wvl}
+        #
+        # -------------------------------------------------------------------------------------
+        #
+        #
+        # ---------------------------------------------------------------------------
+        #
+    def boundBoundLoss(self,  wvlRange = None,  allLines=1):
+        """Calculate  the summed radiative loss rate for all lines of the specified ion.
+
+        wvlRange, a 2 element tuple, list or array determines the wavelength range
+
+        units:  ergs cm^-3 s^-1
+
+        includes elemental abundance and ionization fraction."""
+        # emiss ={"wvl":wvl, "emiss":em, "plotLabels":plotLabels}
+        #
+        self.emiss(wvlRange = wvlRange, allLines=allLines)
+        emiss = self.Emiss
+        if 'errorMessage'  in emiss.keys():
+            self.Intensity = {'errorMessage': self.Spectroscopic+' no lines in this wavelength region'}
+            return
+        em = emiss['emiss']
+        wvl = emiss['wvl']
+        if hasattr(self, 'Abundance'):
+            ab=self.Abundance
+        else:
+            self.Abundance = util.abundanceRead()
+            ab=self.Abundance
+        if hasattr(self, 'IoneqOne'):
+            thisIoneq=self.IoneqOne
+        else:
+            self.ioneqOne()
+            thisIoneq=self.IoneqOne
+        try:
+            nwvl, ntempden = em.shape
+            intensity = np.zeros((ntempden, nwvl),'Float64')
+            if thisIoneq.size == 1:
+                thisIoneq = np.ones(ntempden, 'float64')*thisIoneq
+            for it in range(ntempden):
+                #  already done in emiss
+                if self.Defaults['flux'] != 'energy':
+                    intensity[it] = 4.*const.pi*(const.planck*const.light*1.e+8/wvl)*ab*thisIoneq[it]*em[:, it]
+                else:
+                    intensity[it] = 4.*const.pi*ab*thisIoneq[it]*em[:, it]
+#                intensity[it] = 4.*const.pi*ab*thisIoneq[it]*em[:, it]
         except:
             nwvl=len(em)
             ntempden=1
 #            intensity = np.zeros(nwvl,'Float32')
 # this already done in emiss
-#            if self.Defaults['flux'] == 'energy':
-#                intensity = (const.planck*const.light*1.e+8/wvl)*ab*thisIoneq*em
-#            else:
-#                intensity = ab*thisIoneq*em
-            intensity = ab*thisIoneq*em
-        self.Intensity = {'intensity':intensity, 'wvl':wvl}
+            if self.Defaults['flux'] != 'energy':
+                intensity = 4.*const.pi*(const.planck*const.light*1.e+8/wvl)*ab*thisIoneq*em
+            else:
+                intensity = 4.*const.pi*ab*thisIoneq*em
+#            intensity = 4.*const.pi*ab*thisIoneq*em
+        self.Intensity = {'rate':intensity, 'wvlRange':wvlRange, temperature:'self.Temperature', 'density':self.Density}
         #
         # -------------------------------------------------------------------------------------
         #
