@@ -60,6 +60,7 @@ that is found in the LICENSE file
 from Spectrum import spectrum
 from Mspectrum import mspectrum
 from Continuum import continuum
+from RadLoss import radloss
 #from ion import ioneq
 from Ion import ion
 from Ion import ionWeb

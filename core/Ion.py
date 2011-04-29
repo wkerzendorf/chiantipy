@@ -2166,23 +2166,20 @@ class ion:
             if thisIoneq.size == 1:
                 thisIoneq = np.ones(ntempden, 'float64')*thisIoneq
             for it in range(ntempden):
-                #  already done in emiss
                 if self.Defaults['flux'] != 'energy':
                     intensity[it] = 4.*const.pi*(const.planck*const.light*1.e+8/wvl)*ab*thisIoneq[it]*em[:, it]
                 else:
                     intensity[it] = 4.*const.pi*ab*thisIoneq[it]*em[:, it]
-#                intensity[it] = 4.*const.pi*ab*thisIoneq[it]*em[:, it]
+            loss = intensity.sum(axis=1)
         except:
             nwvl=len(em)
             ntempden=1
-#            intensity = np.zeros(nwvl,'Float32')
-# this already done in emiss
             if self.Defaults['flux'] != 'energy':
                 intensity = 4.*const.pi*(const.planck*const.light*1.e+8/wvl)*ab*thisIoneq*em
             else:
                 intensity = 4.*const.pi*ab*thisIoneq*em
-#            intensity = 4.*const.pi*ab*thisIoneq*em
-        self.Intensity = {'rate':intensity, 'wvlRange':wvlRange, temperature:'self.Temperature', 'density':self.Density}
+            loss = intensity.sum()
+        self.BoundBoundLoss = {'rate':loss, 'wvlRange':wvlRange, 'temperature':self.Temperature, 'density':self.Density}
         #
         # -------------------------------------------------------------------------------------
         #

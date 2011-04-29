@@ -16,7 +16,7 @@ else:
     matplotlib.use('Agg')
     import matplotlib.pyplot as pl
 
-class spectrum:
+class radloss:
     '''Calculate the emission spectrum as a function of temperature and density.
 
     includes elemental abundances or ionization equilibria
@@ -42,7 +42,7 @@ class spectrum:
 
     em [for emission measure], can be a float or an array of the same length as the
     temperature/density.'''
-    def __init__(self, temperature, density, wavelength, filter=(chfilters.gaussianR, 1000.),  ionList = 0, minAbund=0, doContinuum=1, em = None,  verbose=0, allLines=1):
+    def __init__(self, temperature, density, ionList = 0, minAbund=0, doContinuum=1, verbose=0, allLines=1):
         t1 = datetime.now()
         masterlist = chdata.MasterList
         # use the ionList but make sure the ions are in the database
@@ -62,19 +62,6 @@ class spectrum:
         self.Density = np.asarray(density, 'float64')
         nDen = self.Density.size
         nTempDen = max([nTemp, nDen])
-        if type(em) != types.NoneType:
-            if type(em) == types.FloatType:
-                if nTempDen > 1:
-                    em = np.ones_like(self.Temperature)*em
-                    nEm = nTempDen
-                else:
-                    nEm = 1
-            else:
-                em = np.asarray(em, 'float64')
-                nEm = em.size
-                if nEm != nTempDen:
-                    print ' the emission measure array must be the same size as the temperature/density array'
-                    return
         self.AbundanceName = defaults['abundfile']
         self.AbundanceAll = chdata.AbundanceAll
         abundAll = self.AbundanceAll['abundance']
@@ -84,15 +71,11 @@ class spectrum:
             minAbund = minAbundAll
         self.minAbund = minAbund
         ionInfo = util.masterListInfo()
-        wavelength = np.asarray(wavelength)
-        nWvl = wavelength.size
-        self.Wavelength = wavelength
-        wvlRange = [wavelength.min(), wavelength.max()]
         #
-        freeFree = np.zeros((nTempDen, nWvl), 'float64').squeeze()
-        freeBound = np.zeros((nTempDen, nWvl), 'float64').squeeze()
-        twoPhoton = np.zeros((nTempDen, nWvl), 'float64').squeeze()
-        lineSpectrum = np.zeros((nTempDen, nWvl), 'float64').squeeze()
+        freeFreeLoss = np.zeros((nTempDen), 'float64').squeeze()
+        freeBoundLoss = np.zeros((nTempDen), 'float64').squeeze()
+        twoPhotonLoss = np.zeros((nTempDen), 'float64').squeeze()
+        boundBoundLoss = np.zeros((nTempDen), 'float64').squeeze()
         #
         #
         for iz in range(31):
@@ -107,16 +90,12 @@ class spectrum:
                     masterListTest = ionS in masterlist
                     masterListInfoTest = ionS in ionInfo.keys()
                     if masterListTest or masterListInfoTest:
-                        wvlTestMin = self.Wavelength.min() <= ionInfo[ionS]['wmax']
-                        wvlTestMax = self.Wavelength.max() >= ionInfo[ionS]['wmin']
                         ioneqTest = (self.Temperature.max() >= ionInfo[ionS]['tmin']) and (self.Temperature.min() <= ionInfo[ionS]['tmax'])
                     # construct similar test for the dielectronic files
                     ionSd = util.zion2name(iz, ionstage, dielectronic=1)
                     masterListTestD = ionSd in masterlist
                     masterListInfoTestD = ionSd in ionInfo.keys()
                     if masterListTestD or masterListInfoTestD:
-                        wvlTestMinD = self.Wavelength.min() <= ionInfo[ionSd]['wmax']
-                        wvlTestMaxD = self.Wavelength.max() >= ionInfo[ionSd]['wmin']
                         ioneqTestD = (self.Temperature.max() >= ionInfo[ionSd]['tmin']) and (self.Temperature.min() <=ionInfo[ionSd]['tmax'])
                     ionstageTest = ionstage > 1
                     if ionstageTest and ioneqTest and doContinuum:
@@ -124,79 +103,69 @@ class spectrum:
                         if chInteractive:
                             print ' calculating continuum for :  ',  ionS
                         cont = chianti.core.continuum(ionS, temperature)
-                        cont.freeFree(wavelength)
+                        cont.freeFreeLoss()
     #                   print dir(thisIon)
     #                   print ' wvl = ', thisIon.FreeFree['wvl']
-                        if nTempDen ==1:
-                            freeFree += cont.FreeFree['rate']
-                        else:
-                            for iTempDen in range(nTempDen):
-                                freeFree[iTempDen] += cont.FreeFree['rate'][iTempDen]
+#                        if nTempDen ==1:
+                        freeFreeLoss += cont.FreeFreeLoss['rate']
+#                        else:
+#                            for iTempDen in range(nTempDen):
+#                                freeFreeLoss[iTempDen] += cont.FreeFreeLoss['rate'][iTempDen]
                     #
-                        cont.freeBound(wavelength)
-                        if 'errorMessage' not in cont.FreeBound.keys():
+                        cont.freeBoundLoss()
+                        if 'errorMessage' not in cont.FreeBoundLoss.keys():
                             #  an fblvl file exists for this ions
-                            if nTempDen == 1:
-                                freeBound += cont.FreeBound['rate']
-                            else:
-                                for iTempDen in range(nTempDen):
-                                    freeBound[iTempDen] += cont.FreeBound['rate'][iTempDen]
-                    if masterListTest and wvlTestMin and wvlTestMax and ioneqTest:
+#                            if nTempDen == 1:
+                            freeBoundLoss += cont.FreeBoundLoss['rate']
+#                            else:
+#                                freeBound[iTempDen] += cont.FreeBound['rate'][iTempDen]
+                    if masterListTest and ioneqTest:
                         if chInteractive:
                             print ' calculating spectrum for  :  ', ionS
                         thisIon = chianti.core.ion(ionS, temperature, density)
 #                       print ' dir = ', dir(thisIon)
 #                        thisIon.emiss(wvlRange = wvlRange, allLines=allLines)
-                        thisIon.intensity(wvlRange = wvlRange, allLines=allLines)
+                        thisIon.boundBoundLoss( allLines=allLines)
                         # check that there are lines in this wavelength range
-                        if 'errorMessage' not in  thisIon.Intensity.keys():
-                            thisIon.spectrum(wavelength, filter=filter)
+                        if 'errorMessage' not in  thisIon.BoundBoundLoss.keys():
+                            thisIon.boundBoundLoss()
 #                           intensity = thisIon.Intensity['intensity']
-                            if nTempDen == 1:
-                                lineSpectrum += thisIon.Spectrum['intensity']
-                            else:
-                                for iTempDen in range(nTempDen):
-                                    lineSpectrum[iTempDen] += thisIon.Spectrum['intensity'][iTempDen]
+#                            if nTempDen == 1:
+                            boundBoundLoss += thisIon.BoundBoundLoss['rate']
+#                            else:
+#                                for iTempDen in range(nTempDen):
+#                                    lineSpectrum[iTempDen] += thisIon.Spectrum['intensity'][iTempDen]
                         # get 2 photon emission for H and He sequences
                         if (iz - ionstage) in [0, 1]:
-                            thisIon.twoPhoton(wavelength)
-                            twoPhoton += thisIon.TwoPhoton['rate']
+                            thisIon.twoPhotonLoss()
+                            twoPhotonLoss += thisIon.TwoPhotonLoss['rate']
                     # get dielectronic lines
-                    if masterListTestD and wvlTestMinD and wvlTestMaxD and ioneqTestD:
+                    if masterListTestD and ioneqTestD:
                         print ' calculating spectrum for  :  ', ionSd
                         thisIon = chianti.core.ion(ionSd, temperature, density)
 #                       print ' dir = ', dir(thisIon)
 #                       have to do all lines for the dielectronic satellites
 #                        thisIon.emiss(allLines=1)
-                        thisIon.intensity(wvlRange = wvlRange, allLines=allLines)
+                        thisIon.intensity(allLines=allLines)
                         # check that there are lines in this wavelength range - probably not redundant
                         if 'errorMessage' not in  thisIon.Intensity.keys():
-                            thisIon.spectrum(wavelength, filter=filter)
-                            if nTempDen == 1:
-                                lineSpectrum += thisIon.Spectrum['intensity']
-                            else:
-                                for iTempDen in range(nTempDen):
-                                    lineSpectrum[iTempDen] += thisIon.Spectrum['intensity'][iTempDen]
-        self.FreeFree = {'wavelength':wavelength, 'intensity':freeFree.squeeze()}
-        self.FreeBound = {'wavelength':wavelength, 'intensity':freeBound.squeeze()}
-        self.LineSpectrum = {'wavelength':wavelength, 'intensity':lineSpectrum.squeeze()}
-        self.TwoPhoton = {'wavelength':wavelength, 'intensity':twoPhoton.squeeze()}
+                            thisIon.boundBoundLoss()
+#                            if nTempDen == 1:
+                            boundBoundLoss += thisIon.BoundBoundLoss['rate']
+#                            else:
+#                                for iTempDen in range(nTempDen):
+#                                    lineSpectrum[iTempDen] += thisIon.Spectrum['intensity'][iTempDen]
+        self.FreeFreeLoss = freeFreeLoss
+        self.FreeBoundLoss = freeBoundLoss
+        self.LineSpectrumLoss = boundBoundLoss
+        self.TwoPhotonLoss = twoPhotonLoss
         #
-        total = freeFree + freeBound + lineSpectrum + twoPhoton
+        total = freeFreeLoss + freeBoundLoss + boundBoundLoss + twoPhotonLoss
         t2 = datetime.now()
         dt=t2-t1
         if chInteractive:
             print ' elapsed seconds = ', dt.seconds
-        if type(em) != types.NoneType:
-            if nEm == 1:
-                integrated = total*em
-            else:
-                integrated = np.zeros_like(wavelength)
-                for iTempDen in range(nTempDen):
-                    integrated += total[iTempDen]*em[iTempDen]
-            self.Spectrum ={'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1], 'integrated':integrated, 'em':em}
-        else:
-            self.Spectrum ={'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1]}
+        self.RadLoss ={'rate':total, 'temperature':self.Temperature, 'density':self.Density}
     #
     # -------------------------------------------------------------------------
     #

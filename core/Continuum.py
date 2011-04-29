@@ -677,7 +677,7 @@ class continuum:
                 gffint = self.Gffint['gffint']
                 g2 = self.Gffint['g2']
             except:
-                self.Gffint = self.gffintRead()
+                self.Gffint = util.gffintRead()
                 gffint = self.Gffint['gffint']
                 g2 = self.Gffint['g2']
             #
