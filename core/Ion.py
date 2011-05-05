@@ -1185,12 +1185,12 @@ class ion:
             highers = util.zion2name(self.Z, self.Ion+1)
             higher = ion(highers, temperature=self.Temperature, density=self.Density)
             higher.recombRate()
-        #print ' nlvls, ci, rec = ', nlvls, ci, rec
+        print ' nlvls, ci, rec = ', nlvls, ci, rec
         #
         rad=np.zeros((nlvls+ci+rec,nlvls+ci+rec),"float64")  #  the populating matrix for radiative transitions
         #
         #
-        for iwgfa in range(0,nwgfa-1):
+        for iwgfa in range(nwgfa):
             l1 = self.Wgfa["lvl1"][iwgfa]-1
             l2 = self.Wgfa["lvl2"][iwgfa]-1
             rad[l1+ci,l2+ci] += self.Wgfa["avalue"][iwgfa]
@@ -1728,6 +1728,12 @@ class ion:
             density=self.Population["density"]
             pop=self.Population["population"]
         #
+        if len(pop.shape) == 1:
+            if chInteractive:
+                print ' population is not a function of temperature or density'
+            else:
+                self.Population['error_message'] = ' not a function of temperature or density'
+            return
         #
         # find the top most populated levels
         #
@@ -2171,6 +2177,7 @@ class ion:
                 else:
                     intensity[it] = 4.*const.pi*ab*thisIoneq[it]*em[:, it]
             loss = intensity.sum(axis=1)
+            print ' loss.max() = ', loss.max()
         except:
             nwvl=len(em)
             ntempden=1

@@ -54,22 +54,22 @@ class continuum:
         the specified ion is the target ion'''
         #
         wvl = np.asarray(wvl, 'float64')
-        try:
+        if hasattr(self, 'Temperature'):
             temperature = self.Temperature
-        except:
+        else:
             print ' temperature undefined'
             return
         #
-        try:
+        if hasattr(self, 'Fblvl'):
             fblvl = self.Fblvl
-        except:
+        else:
             fblvlname = util.zion2filename(self.Z,self.Ion-1)+'.fblvl'
             self.Fblvl = util.fblvlRead(fblvlname)
             fblvl = self.Fblvl
         #  need some data for the recombining ion
-        try:
+        if hasattr(self, 'rFblvl'):
             rFblvl = self.rFblvl
-        except:
+        else:
             if self.Ion == self.Z+1:
                 # then we looking for the bare ion
                 rFblvl = {'mult':[1., 1.]}
@@ -77,7 +77,7 @@ class continuum:
                 rfblvlname = util.zion2filename(self.Z,self.Ion)+'.fblvl'  # previously self.Ion)
                 self.rFblvl = util.fblvlRead(rfblvlname)
                 rFblvl = self.rFblvl
-        #  6/9/2010 the recombining iion is the present ion
+        #  6/9/2010 the recombining ion is the present ion
         #
         # for the ionization potential, Ip, must use that of the recombined ion
         ipcm = self.Ip/const.invCm2Ev
@@ -470,22 +470,22 @@ class continuum:
             return
         #
         if self.Ion > 1:
-            self.Ip=ip[self.Z-1, self.Ion-1]
+            self.Ip=ip[self.Z-1, self.Ion-2]
         else:
             print ' in freeBound, trying to use the neutral ion as the recombining ion'
             self.FreeBound={}
             return
         #
-        try:
+        if hasattr(self, 'Fblvl'):
             fblvl = self.Fblvl
-        except:
+        else:
             fblvlname = util.zion2filename(self.Z,self.Ion-1)+'.fblvl'
             self.Fblvl = util.fblvlRead(fblvlname)
             fblvl = self.Fblvl
     #  need some data for the recombining/target ion
-        try:
+        if hasattr(self, 'rFblvl'):
             rFblvl = self.rFblvl
-        except:
+        else:
             if self.Ion == self.Z+1:
                 # then we looking for the bare ion
                 rFblvl = {'mult':[1., 1.]}
@@ -493,50 +493,50 @@ class continuum:
                 rfblvlname = util.zion2filename(self.Z,self.Ion)+'.fblvl'
                 self.rFblvl = util.fblvlRead(rfblvlname)
                 rFblvl = self.rFblvl
-        try:
+        if hasattr(self, 'IoneqOne'):
             gIoneq = self.IoneqOne
-        except:
+        else:
             self.ioneqOne()
             gIoneq = self.IoneqOne
         #
-        try:
+        if hasattr(self, 'Abundance'):
             abund = self.Abundance
-        except:
+        else:
             self.AbundanceAll = util.abundanceRead(abundancename = self.AbundanceName)
             self.Abundance = self.AbundanceAll['abundance'][self.Z-1]
             abund = self.Abundance
-            #
-            #ipcm = self.Ip/const.invCm2Ev
-            #
-            nlvls = len(fblvl['lvl'])
-            # pqn = principle quantum no. n
-            pqn = fblvl['pqn']
-            # l is angular moment quantum no. L
-            l = fblvl['l']
-            # energy level in inverse cm
-            ecm = fblvl['ecm']
-            # get log of photon energy relative to the ionization potential
-            mult = fblvl['mult']
-            multr = rFblvl['mult']
-            #
-            #
-            #wecm=1.e+8/(ipcm-ecm)
-            #
-            # get karzas-latter Gaunt factors
-            try:
-                klgfb = self.Klgfb
-            except:
-                self.Klgfb = util.klgfbRead()
-                klgfb = self.Klgfb
-            #
-            nTemp = temperature.size
+        #
+        #ipcm = self.Ip/const.invCm2Ev
+        #
+        nlvls = len(fblvl['lvl'])
+        # pqn = principle quantum no. n
+        pqn = fblvl['pqn']
+        # l is angular moment quantum no. L
+        l = fblvl['l']
+        # energy level in inverse cm
+        ecm = fblvl['ecm']
+        # get log of photon energy relative to the ionization potential
+        mult = fblvl['mult']
+        multr = rFblvl['mult']
+        #
+        #
+        #wecm=1.e+8/(ipcm-ecm)
+        #
+        # get karzas-latter Gaunt factors
+        if hasattr(self, 'Klgfb'):
+            klgfb = self.Klgfb
+        else:
+            self.Klgfb = util.klgfbRead()
+            klgfb = self.Klgfb
+        #
+        nTemp = temperature.size
         # statistical weigths/multiplicities
-            mult = fblvl['mult']
-            multr = rFblvl['mult']
-            #
-            #
-            #wecm=1.e+8/(ipcm-ecm)
-            #
+        mult = fblvl['mult']
+        multr = rFblvl['mult']
+        #
+        #
+        #wecm=1.e+8/(ipcm-ecm)
+        #
         fbrate = np.zeros((nlvls,nTemp),'float64')
         ratg = np.zeros((nlvls),'float64')
         for ilvl in range(nlvls):
@@ -668,15 +668,15 @@ class continuum:
         if self.Ion == 1:
             self.FreeFree = {'errorMessage':' freefree is not produced by neutrals'}
         else:
-            try:
+            if hasattr(self, 'Temperature'):
                 temperature = self.Temperature
-            except:
+            else:
                 print ' temperature undefined'
                 return
-            try:
+            if hasattr(self, 'Gffint'):
                 gffint = self.Gffint['gffint']
                 g2 = self.Gffint['g2']
-            except:
+            else:
                 self.Gffint = util.gffintRead()
                 gffint = self.Gffint['gffint']
                 g2 = self.Gffint['g2']
@@ -686,20 +686,20 @@ class continuum:
             spl = interpolate.splrep(g2, gffint)
             gff = interpolate.splev(np.log(gamma2), spl)
             #
-            try:
+            if hasattr(self, 'IoneqOne'):
                 gIoneq = self.IoneqOne
-            except:
+            else:
                 self.ioneqOne()
                 gIoneq = self.IoneqOne
             #
-            try:
+            if hasattr(self, 'Abundance'):
                 abund = self.Abundance
-            except:
+            else:
                 self.AbundanceAll = util.abundanceRead(abundancename = self.AbundanceName)
                 self.Abundance = self.AbundanceAll['abundance'][self.Z-1]
                 abund = self.Abundance
                 #
-            ffRate = const.freeFreeloss*(self.Z)**2*abund*gIoneq*gff*np.sqrt(temperature)
+            ffRate = const.freeFreeLoss*(self.Z)**2*abund*gIoneq*gff*np.sqrt(temperature)
             self.FreeFreeLoss = {'rate':ffRate, 'temperature':temperature}
         #
         # ----------------------------------------------------------------------------------------

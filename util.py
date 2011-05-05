@@ -1151,7 +1151,7 @@ def gffintRead():
         s1[ivalue] = float(values[2])
         s2[ivalue] = float(values[3])
         s3[ivalue] = float(values[4])
-    ivalue += 1
+        ivalue += 1
     #
     return {'g2':g2, 'gffint':gffint, 's1':s1, 's2':s2, 's3':s3}
     #

@@ -1,7 +1,7 @@
 import types
 from datetime import datetime
 import numpy as np
-import chianti
+import chianti.core
 import chianti.data as chdata
 import chianti.constants as const
 import chianti.filters as chfilters
