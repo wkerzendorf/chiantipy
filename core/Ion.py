@@ -2965,7 +2965,7 @@ class ionWeb(ion):
         #self.emiss={"wvl":wvl,"emiss":em,"units":units,"plotLabels":plotLabels}
         #
         #
-        if hasattr(sel, 'Emiss'):
+        if hasattr(self, 'Emiss'):
             doEmiss=False
             em=self.Emiss
         else:
