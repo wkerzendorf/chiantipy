@@ -1,6 +1,7 @@
 import types
 from datetime import datetime
 import numpy as np
+np.seterr(over='ignore')
 import chianti.core
 import chianti.data as chdata
 import chianti.constants as const
