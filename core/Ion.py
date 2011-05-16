@@ -1185,7 +1185,7 @@ class ion:
             highers = util.zion2name(self.Z, self.Ion+1)
             higher = ion(highers, temperature=self.Temperature, density=self.Density)
             higher.recombRate()
-        print ' nlvls, ci, rec = ', nlvls, ci, rec
+#        print ' nlvls, ci, rec = ', nlvls, ci, rec
         #
         rad=np.zeros((nlvls+ci+rec,nlvls+ci+rec),"float64")  #  the populating matrix for radiative transitions
         #
@@ -1345,6 +1345,9 @@ class ion:
             popmat[nlvls+ci+rec-1]=norm
             b=np.zeros(nlvls+ci+rec,'float64')
             b[nlvls+ci+rec-1]=1.
+#            print ' norm = ', norm
+#            print 'popmat, last line',  popmat[-1]
+#            print ' b = ', b
 #            popmat[nlvls/2]=norm
 #            b=np.zeros(nlvls+ci+rec,'float64')
 #            b[nlvls/2]=1.
@@ -2177,7 +2180,6 @@ class ion:
                 else:
                     intensity[it] = 4.*const.pi*ab*thisIoneq[it]*em[:, it]
             loss = intensity.sum(axis=1)
-            print ' loss.max() = ', loss.max()
         except:
             nwvl=len(em)
             ntempden=1
