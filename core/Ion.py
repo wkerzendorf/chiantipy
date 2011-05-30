@@ -146,45 +146,61 @@ class ion:
                 self.Elvlc = util.elvlcRead(self.IonStr, verbose=verbose)
                 self.Wgfa = util.wgfaRead(self.IonStr)
                 self.Nwgfa=len(self.Wgfa['lvl1'])
-                try:
+                nlvlWgfa = max(self.Wgfa['lvl2'])
+                nlvlList =[nlvlWgfa]
+                splupsfile = util.ion2filename(self.IonStr)+'.splups'
+                if os.path.isfile(splupsfile):
                     # happens the case of fe_3 and prob. a few others
                     self.Splups = util.splupsRead(self.IonStr)
                     self.Nsplups=len(self.Splups['lvl1'])
                     nlvlSplups = max(self.Splups['lvl2'])
-                except:
+                    nlvlList.append(nlvlSplups)
+                else:
                     self.Nsplups = 0
                     nlvlSplups = 0
 ##                self.Nlvls = nlvlElvlc
                 #
-                self.CiSplups = util.splupsRead(self.IonStr,ci=1)
-                if type(self.CiSplups) != types.NoneType:
+                cisplupsfile = util.ion2filename(self.IonStr)+'.cisplups'
+                if os.path.isfile(cisplupsfile):
+                    self.CiSplups = util.splupsRead(self.IonStr,ci=1)
                     self.Ncisplups=len(self.CiSplups["lvl1"])
+                    nlvlCiSplups = max(self.CiSplups['lvl2'])
+                    nlvlList.append(nlvlCiSplups)
                 else:
                     self.Ncisplups = 0
                 #  .reclvl file may not exist
-                self.Reclvl = util.cireclvlRead(self.IonStr, 'reclvl')
-                if type(self.Reclvl) != types.NoneType:
+                reclvlfile = util.ion2filename(self.IonStr)+'.cireclvl'
+                if os.path.isfile(reclvlfile):
+                    self.Reclvl = util.cireclvlRead(self.IonStr, 'reclvl')
                     self.Nreclvl = len(self.Reclvl['lvl1'])
+                    nlvlReclvl = max(self.Reclvl['lvl2'])
+                    nlvlList.append(nlvlReclvl)
                 else:
                     self.Nreclvl = 0
                 #  .dielsplups file may not exist
-                self.DielSplups = util.splupsRead(self.IonStr, diel=1)
-                if type(self.DielSplups) != types.NoneType:
+                dielsplupsfile = util.ion2filename(self.IonStr)+'.dielsplups'
+                if os.path.isfile(dielsplupsfile):
+                    self.DielSplups = util.splupsRead(self.IonStr, diel=1)
                     self.Ndielsplups=len(self.DielSplups["lvl1"])
+                    nlvlDielSplups = max(self.DielSplups['lvl2'])
+                    nlvlList.append(nlvlDielSplups)
                 else:
                     self.Ndielsplups =0
                 #
                 #  psplups file may not exist
-                self.Psplups = util.splupsRead(self.IonStr, prot=True)
-                if type(self.Psplups) != types.NoneType:
+                psplupsfile = util.ion2filename(self.IonStr)+'.psplups'
+                if os.path.isfile(psplupsfile):
+                    self.Psplups = util.splupsRead(self.IonStr, prot=True)
                     self.Npsplups=len(self.Psplups["lvl1"])
                 else:
                     self.Npsplups = 0
                 #
                 # need to determine the number of levels that can be populated
                 nlvlElvlc = len(self.Elvlc['lvl'])
-                nlvlWgfa = max(self.Wgfa['lvl2'])
-                self.Nlvls = max([nlvlElvlc, nlvlWgfa, nlvlSplups])
+                print ' nlvlElvlc = ', nlvlElvlc
+                print ' other nlvls = ',  nlvlList
+#                nlvlWgfa = max(self.Wgfa['lvl2'])
+                self.Nlvls = min([nlvlElvlc, max(nlvlList)])
         #
         # ------------------------------------------------------------------------------
         #
@@ -1741,7 +1757,8 @@ class ion:
         # find the top most populated levels
         #
         lvl=self.Elvlc["lvl"]
-        nlvls=len(lvl)
+#        nlvls=len(lvl)
+        nlvls = self.Nlvls
         maxpop=np.zeros(nlvls,'Float32')
         for ilvl in range(nlvls):
             maxpop[ilvl]=pop[:,ilvl].max()
