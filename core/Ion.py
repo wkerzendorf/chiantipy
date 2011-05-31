@@ -197,9 +197,10 @@ class ion:
                 #
                 # need to determine the number of levels that can be populated
                 nlvlElvlc = len(self.Elvlc['lvl'])
-                print ' nlvlElvlc = ', nlvlElvlc
-                print ' other nlvls = ',  nlvlList
+#                print ' nlvlElvlc = ', nlvlElvlc
+#                print ' other nlvls = ',  nlvlList
 #                nlvlWgfa = max(self.Wgfa['lvl2'])
+                #  elvlc file can have more levels than the rate level files
                 self.Nlvls = min([nlvlElvlc, max(nlvlList)])
         #
         # ------------------------------------------------------------------------------

@@ -463,9 +463,9 @@ class continuum:
         including the elemental abundance and the ionization equilibrium population
         uses the Gaunt factors of Karzas, W.J, Latter, R, 1961, ApJS, 6, 167
         provides rate = ergs cm^-2 s^-1 '''
-        try:
+        if hasattr(self, 'Temperature'):
             temperature = self.Temperature
-        except:
+        else:
             print ' temperature undefined'
             return
         #
@@ -507,17 +507,7 @@ class continuum:
             abund = self.Abundance
         #
         #ipcm = self.Ip/const.invCm2Ev
-        #
-        nlvls = len(fblvl['lvl'])
-        # pqn = principle quantum no. n
-        pqn = fblvl['pqn']
-        # l is angular moment quantum no. L
-        l = fblvl['l']
-        # energy level in inverse cm
-        ecm = fblvl['ecm']
         # get log of photon energy relative to the ionization potential
-        mult = fblvl['mult']
-        multr = rFblvl['mult']
         #
         #
         #wecm=1.e+8/(ipcm-ecm)
@@ -531,28 +521,40 @@ class continuum:
         #
         nTemp = temperature.size
         # statistical weigths/multiplicities
-        mult = fblvl['mult']
-        multr = rFblvl['mult']
         #
         #
         #wecm=1.e+8/(ipcm-ecm)
         #
-        fbrate = np.zeros((nlvls,nTemp),'float64')
-        ratg = np.zeros((nlvls),'float64')
-        for ilvl in range(nlvls):
-            # scaled energy is relative to the ionization potential of each individual level
-            # will add the average energy of a free electron to this to get typical photon energy to
-            # evaluate the gaunt factor
-            hnuEv = 1.5*const.boltzmann*temperature/const.ev2Erg
-            ipLvlEv = self.Ip - const.invCm2Ev*ecm[ilvl]
-            scaledE = np.log(hnuEv/ipLvlEv)
-            thisGf = klgfb['klgfb'][pqn[ilvl]-1, l[ilvl]]
-            spl = interpolate.splrep(klgfb['pe'], thisGf)
-            gf = np.exp(interpolate.splev(scaledE, spl))
-            ratg[ilvl] = float(mult[ilvl])/float(multr[0]) # ratio of statistical weights
-            ipLvlErg = const.ev2Erg*ipLvlEv
-            fbrate[ilvl] = ratg[ilvl]*(ipLvlErg**2/float(pqn[ilvl]))*gf/np.sqrt(temperature)
-        fbRate = abund*gIoneq*const.freeBoundLoss*(fbrate.sum(axis=0))
+        # sometime the rFblvl file does not exist
+        if fblvl.has_key('mult') and rFblvl.has_key('mult'):
+            #
+            nlvls = len(fblvl['lvl'])
+            # pqn = principle quantum no. n
+            pqn = fblvl['pqn']
+            # l is angular moment quantum no. L
+            l = fblvl['l']
+            # energy level in inverse cm
+            ecm = fblvl['ecm']
+            mult = fblvl['mult']
+            multr = rFblvl['mult']
+            fbrate = np.zeros((nlvls,nTemp),'float64')
+            ratg = np.zeros((nlvls),'float64')
+            for ilvl in range(nlvls):
+                # scaled energy is relative to the ionization potential of each individual level
+                # will add the average energy of a free electron to this to get typical photon energy to
+                # evaluate the gaunt factor
+                hnuEv = 1.5*const.boltzmann*temperature/const.ev2Erg
+                ipLvlEv = self.Ip - const.invCm2Ev*ecm[ilvl]
+                scaledE = np.log(hnuEv/ipLvlEv)
+                thisGf = klgfb['klgfb'][pqn[ilvl]-1, l[ilvl]]
+                spl = interpolate.splrep(klgfb['pe'], thisGf)
+                gf = np.exp(interpolate.splev(scaledE, spl))
+                ratg[ilvl] = float(mult[ilvl])/float(multr[0]) # ratio of statistical weights
+                ipLvlErg = const.ev2Erg*ipLvlEv
+                fbrate[ilvl] = ratg[ilvl]*(ipLvlErg**2/float(pqn[ilvl]))*gf/np.sqrt(temperature)
+            fbRate = abund*gIoneq*const.freeBoundLoss*(fbrate.sum(axis=0))
+        else:
+            fbRate = np.zeros((nTemp),'float64')
         self.FreeBoundLoss = {'rate':fbRate, 'temperature':temperature}
         #
         # ----------------------------------------------------------------------------------------
