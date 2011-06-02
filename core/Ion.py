@@ -1374,8 +1374,14 @@ class ion:
 #            else:
 #                fullpop = np.linalg.solve(popmat,b)
 #                pop = fullpop[ci:]
-            fullpop = np.linalg.solve(popmat,b)
-            pop = fullpop[ci:ci+nlvls]
+#            fullpop = np.linalg.solve(popmat,b)
+            try:
+                fullpop=np.linalg.solve(popmat,b)
+                pop = fullpop[ci:ci+nlvls]
+            except np.linalg.LinAlgError:
+                pop = np.zeros(nlvls, 'float64')
+                print ' error in matrix inversion, setting populations to zero at T = ', ('%8.2e')%(temperature)
+            #
         #   next, in case of a single density value
 #            pop = np.linalg.solve(popmat,b)
         elif ndens == 1:
@@ -1472,12 +1478,12 @@ class ion:
                 popmat[nlvls+ci+rec-1]=norm
                 b=np.zeros(nlvls+ci+rec,'float64')
                 b[nlvls+ci+rec-1]=1.
-                thispop=np.linalg.solve(popmat,b)
-#                if rec:
-#                    pop[itemp] = thispop[ci:ci+nlvls+rec-1]
-#                else:
-#                    pop[itemp] = thispop[ci:]
-                pop[itemp] = thispop[ci:ci+nlvls]
+                try:
+                    thispop=np.linalg.solve(popmat,b)
+                    pop[itemp] = thispop[ci:ci+nlvls]
+                except np.linalg.LinAlgError:
+                    pop[itemp] = np.zeros(nlvls, 'float64')
+                    print ' error in matrix inversion, setting populations to zero at T = ', ('%8.2e')%(temperature[itemp])
             #
         elif ntemp == 1:
 #            pop=np.zeros((ndens,nlvls),"float64")
@@ -1594,12 +1600,18 @@ class ion:
                 popmat[nlvls+ci+rec-1]=norm
                 b=np.zeros(nlvls+ci+rec,'float64')
                 b[nlvls+ci+rec-1]=1.
-                thispop=np.linalg.solve(popmat,b)
+                try:
+                    thispop=np.linalg.solve(popmat,b)
+                    pop[idens] = thispop[ci:ci+nlvls]
+                except np.linalg.LinAlgError:
+                    pop[idens] = np.zeros(nlvls, 'float64')
+                    print ' error in matrix inversion, setting populations to zero at density = ', ('%8.2e')%(density[idens])
+#                thispop=np.linalg.solve(popmat,b)
 #                if rec:
 #                    pop[idens] = thispop[ci:ci+nlvls+rec-1]
 #                else:
 #                    pop[idens] = thispop[ci:]
-                pop[idens] = thispop[ci:ci+nlvls]
+#                pop[idens] = thispop[ci:ci+nlvls]
                 #
         elif ntemp>1  and ntemp==ndens:
             pop=np.zeros((ntemp,nlvls),"float64")
@@ -1719,12 +1731,18 @@ class ion:
                 popmat[nlvls+ci+rec-1]=norm
                 b=np.zeros(nlvls+ci+rec,'float64')
                 b[nlvls+ci+rec-1]=1.
-                thispop=np.linalg.solve(popmat,b)
+                try:
+                    thispop=np.linalg.solve(popmat,b)
+                    pop[itemp] = thispop[ci:ci+nlvls]
+                except np.linalg.LinAlgError:
+                    pop[itemp] = np.zeros(nlvls, 'float64')
+                    print ' error in matrix inversion, setting populations to zero at T = ', ('%8.2e')%(temperature[itemp])
+#                thispop=np.linalg.solve(popmat,b)
 #                if rec:
 #                    pop[itemp] = thispop[ci:ci+nlvls+rec-1]
 #                else:
 #                    pop[itemp] = thispop[ci:]
-                pop[itemp] = thispop[ci:ci+nlvls]
+#                pop[itemp] = thispop[ci:ci+nlvls]
             #
         pop=np.where(pop >0., pop,0.)
         self.Population={"temperature":temperature,"density":density,"population":pop, "protonDensity":protonDensity, "ci":ci, "rec":rec, 'popmat':popmat}
@@ -1792,28 +1810,69 @@ class ion:
                 self.Message = ' only a single temperature and density'
             return
         elif ndens == 1:
+            toppops = np.zeros((top, ntemp), 'float64')
+            for ilvl in range(top):
+                toppops[ilvl] = pop[:, toplvl[ilvl]-1]
+            nonzero = toppops > 0.
+            ymin = min(toppops[nonzero])
+            print ' ymin = ', ymin
             for lvl in toplvl:
-                pl.loglog(temperature,pop[:,lvl-1])
+                # for some low temperature, populations can not be calculated
+                good = pop[:, lvl-1] > 0
+                pl.loglog(temperature[good],pop[good,lvl-1])
                 skip=3
-                start=divmod(lvl,ntemp)[1]
-                for itemp in range(start,ntemp,ntemp/skip):
-                    pl.text(temperature[itemp],pop[itemp,lvl-1],str(lvl))
+                if good.sum() == ntemp:
+                    start=divmod(lvl,ntemp)[1]
+                    for itemp in range(start,ntemp,ntemp/skip):
+                        pl.text(temperature[itemp],pop[itemp,lvl-1],str(lvl))
+                else:
+                    newtemp=[]
+                    for i, one in enumerate(temperature):
+                        if good[i]:
+                            newtemp.append(one)
+                    start = divmod(lvl, len(newtemp))[1] + ntemp - good.sum()
+                    for itemp in range(start,ntemp,ntemp/skip):
+                        pl.text(temperature[itemp],pop[itemp,lvl-1],str(lvl))
             xlabel='Temperature (K)'
             pl.xlabel(xlabel,fontsize=fontsize)
             pl.ylabel(ylabel,fontsize=fontsize)
             dstr=' -  Density = %10.2e (cm$^{-3}$)' % density
             pl.title(title+dstr,fontsize=fontsize)
             pl.xlim(temperature.min(),temperature.max())
-            yl=pl.ylim()
-            pl.ylim(yl[0],1.2)
+#            nonzero = pop
+#            yl=pl.ylim()
+            pl.ylim(ymin,1.2)
         elif ntemp == 1:
             xlabel=r'Electron Density (cm$^{-3}$)'
+#            for lvl in toplvl:
+#                pl.loglog(density,pop[:,lvl-1])
+#                skip=min(3, ndens)
+#                start=divmod(lvl,ndens)[1]
+#                for idens in range(start,ndens,ndens/skip):
+#                    pl.text(density[idens],pop[idens,lvl-1],str(lvl))
+            toppops = np.zeros((top, ndens), 'float64')
+            for ilvl in range(top):
+                toppops[ilvl] = pop[:, toplvl[ilvl]-1]
+            nonzero = toppops > 0.
+            ymin = min(toppops[nonzero])
+            print ' ymin = ', ymin
             for lvl in toplvl:
-                pl.loglog(density,pop[:,lvl-1])
-                skip=min(3, ndens)
-                start=divmod(lvl,ndens)[1]
-                for idens in range(start,ndens,ndens/skip):
-                    pl.text(density[idens],pop[idens,lvl-1],str(lvl))
+                # for some low temperature, populations can not be calculated
+                good = pop[:, lvl-1] > 0
+                pl.loglog(density[good],pop[good,lvl-1])
+                skip=3
+                if good.sum() == ndens:
+                    start=divmod(lvl,ndens)[1]
+                    for idens in range(start,ndens,ndens/skip):
+                        pl.text(density[idens],pop[idens,lvl-1],str(lvl))
+                else:
+                    newdens=[]
+                    for i, one in enumerate(density):
+                        if good[i]:
+                            newdens.append(one)
+                    start = divmod(lvl, len(newdens))[1] + ndens - good.sum()
+                    for idens in range(start,ndens,ndens/skip):
+                        pl.text(density[idens],pop[idens, lvl-1],str(lvl))
             pl.xlabel(xlabel,fontsize=fontsize)
             pl.ylabel(ylabel,fontsize=fontsize)
             tstr=' -  T = %10.2e (K)' % temperature
@@ -1824,19 +1883,43 @@ class ion:
         else:
 #            pl.figure()
             ax = pl.subplot(111)
+#            for lvl in toplvl:
+#                pl.loglog(temperature,pop[:,lvl-1])
+#                skip = min(3, ntemp)
+#                start=divmod(lvl,ntemp)[1]
+#                for itemp in range(start,ntemp,ntemp/skip):
+#                    pl.text(temperature[itemp],pop[itemp,lvl-1],str(lvl))
+            toppops = np.zeros((top, ntemp), 'float64')
+            for ilvl in range(top):
+                toppops[ilvl] = pop[:, toplvl[ilvl]-1]
+            nonzero = toppops > 0.
+            ymin = min(toppops[nonzero])
+            print ' ymin = ', ymin
             for lvl in toplvl:
-                pl.loglog(temperature,pop[:,lvl-1])
-                skip = min(3, ntemp)
-                start=divmod(lvl,ntemp)[1]
-                for itemp in range(start,ntemp,ntemp/skip):
-                    pl.text(temperature[itemp],pop[itemp,lvl-1],str(lvl))
+                # for some low temperature, populations can not be calculated
+                good = pop[:, lvl-1] > 0
+                pl.loglog(temperature[good],pop[good,lvl-1])
+                skip=3
+                if good.sum() == ntemp:
+                    start=divmod(lvl,ntemp)[1]
+                    for itemp in range(start,ntemp,ntemp/skip):
+                        pl.text(temperature[itemp],pop[itemp,lvl-1],str(lvl))
+                else:
+                    newtemp=[]
+                    for i, one in enumerate(temperature):
+                        if good[i]:
+                            newtemp.append(one)
+                    start = divmod(lvl, len(newtemp))[1] + ntemp - good.sum()
+                    for itemp in range(start,ntemp,ntemp/skip):
+                        pl.text(temperature[itemp],pop[itemp,lvl-1],str(lvl))
             xlabel='Temperature (K)'
             pl.xlabel(xlabel,fontsize=fontsize)
             pl.ylabel(ylabel,fontsize=fontsize)
 #            pl.title(title,fontsize=fontsize)
-            pl.xlim(temperature.min(),temperature.max())
-            yl=pl.ylim()
-#            pl.ylim(yl[0],1.2)
+#            pl.xlim(temperature.min(),temperature.max())
+#            yl=pl.ylim()
+#            pl.ylim(ymin,1.2)
+            pl.axis([temperature.min(),temperature.max(), ymin, 1.2])
             pl.text(0.1, 0.5,title, horizontalalignment='center', verticalalignment='center', fontsize=fontsize,  transform = ax.transAxes)
             #
             ax2 = pl.twiny()
@@ -1857,7 +1940,7 @@ class ion:
 #            pl.title(title,fontsize=fontsize)
 #            pl.xlim(density.min(),density.max())
 #            yl=pl.ylim()
-            pl.ylim(yl[0],1.2)
+#            pl.ylim(yl[0],1.2)
         if plotFile:
             pl.savefig(plotFile)
         self.Population['toplvl'] = toplvl

@@ -1,3 +1,4 @@
+import os
 import types
 import numpy as np
 from scipy import interpolate
@@ -480,8 +481,12 @@ class continuum:
             fblvl = self.Fblvl
         else:
             fblvlname = util.zion2filename(self.Z,self.Ion-1)+'.fblvl'
-            self.Fblvl = util.fblvlRead(fblvlname)
-            fblvl = self.Fblvl
+            if os.path.isfile(fblvlname):
+                self.Fblvl = util.fblvlRead(fblvlname)
+                fblvl = self.Fblvl
+            else:
+                # can't compute this ion
+                fblvl = {}
     #  need some data for the recombining/target ion
         if hasattr(self, 'rFblvl'):
             rFblvl = self.rFblvl
@@ -491,8 +496,12 @@ class continuum:
                 rFblvl = {'mult':[1., 1.]}
             else:
                 rfblvlname = util.zion2filename(self.Z,self.Ion)+'.fblvl'
-                self.rFblvl = util.fblvlRead(rfblvlname)
-                rFblvl = self.rFblvl
+                if os.path.isfile(rfblvlname):
+                    self.rFblvl = util.fblvlRead(rfblvlname)
+                    rFblvl = self.rFblvl
+                else:
+                    # can't do this ion
+                    rmult = {}
         if hasattr(self, 'IoneqOne'):
             gIoneq = self.IoneqOne
         else:
