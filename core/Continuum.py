@@ -463,7 +463,8 @@ class continuum:
         the ion is taken to be the recombined iion,
         including the elemental abundance and the ionization equilibrium population
         uses the Gaunt factors of Karzas, W.J, Latter, R, 1961, ApJS, 6, 167
-        provides rate = ergs cm^-2 s^-1 '''
+        provides rate = ergs cm^-2 s^-1
+        '''
         if hasattr(self, 'Temperature'):
             temperature = self.Temperature
         else:
@@ -485,6 +486,7 @@ class continuum:
                 self.Fblvl = util.fblvlRead(fblvlname)
                 fblvl = self.Fblvl
             else:
+                print ' cannot find file - ', fblvlname
                 # can't compute this ion
                 fblvl = {}
     #  need some data for the recombining/target ion
@@ -500,8 +502,9 @@ class continuum:
                     self.rFblvl = util.fblvlRead(rfblvlname)
                     rFblvl = self.rFblvl
                 else:
+                    print ' cannot find file - ', rfblvlname
                     # can't do this ion
-                    rmult = {}
+                    rFblvl = {}
         if hasattr(self, 'IoneqOne'):
             gIoneq = self.IoneqOne
         else:

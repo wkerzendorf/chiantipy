@@ -169,7 +169,7 @@ class ion:
                 else:
                     self.Ncisplups = 0
                 #  .reclvl file may not exist
-                reclvlfile = util.ion2filename(self.IonStr)+'.cireclvl'
+                reclvlfile = util.ion2filename(self.IonStr)+'.reclvl'
                 if os.path.isfile(reclvlfile):
                     self.Reclvl = util.cireclvlRead(self.IonStr, 'reclvl')
                     self.Nreclvl = len(self.Reclvl['lvl1'])
@@ -1166,7 +1166,7 @@ class ion:
 #                    print ' doing reclvlDescale in populate'
                     self.reclvlDescale()
                     reclvlRate = self.ReclvlRate
-                rec = 1
+                    rec = 1
             elif self.Ndielsplups:
                 self.upsilonDescale(temperature=temperature,diel=1)
                 dielexRate = self.DielUpsilon['exRate']
@@ -1456,15 +1456,22 @@ class ion:
                             dielTot += self.Density*dielexRate[isplups, itemp]*branch[isplups]
                     else:
                         dielTot = 0.
+                    if self.Nreclvl:
+                        recTot = self.ReclvlRate['rate'][:, itemp].sum()
+                    else:
+                        recTot = 0.
                 #
                     popmat[-1,  ci] += self.Density*self.IonizRate['rate'][itemp]
                     popmat[ci, ci] -= self.Density*self.IonizRate['rate'][itemp]
-                    popmat[ci, -1] += self.Density*(higher.RecombRate['rate'][itemp]- self.ReclvlRate['rate'][:, itemp].sum()) - dielTot
-                    popmat[-1, -1] -= self.Density*(higher.RecombRate['rate'][itemp]- self.ReclvlRate['rate'][:, itemp].sum()) + dielTot
+                    popmat[ci, -1] += self.Density*(higher.RecombRate['rate'][itemp]- recTot) - dielTot
+                    popmat[-1, -1] -= self.Density*(higher.RecombRate['rate'][itemp]- recTot) + dielTot
+#                    popmat[ci, -1] += self.Density*(higher.RecombRate['rate'][itemp]- self.ReclvlRate['rate'][:, itemp].sum()) - dielTot
+#                    popmat[-1, -1] -= self.Density*(higher.RecombRate['rate'][itemp]- self.ReclvlRate['rate'][:, itemp].sum()) + dielTot
 #                    popmat[ci, -1] += self.Density*higher.RecombRate['rate'][itemp]
 #                    popmat[-1, -1] -= self.Density*higher.RecombRate['rate'][itemp]
                     #
-                    for itrans in range(len(reclvl['lvl1'])):
+#                    for itrans in range(len(reclvl['lvl1'])):
+                    for itrans in range(self.Nreclvl):
                         lvl1 = reclvl['lvl1'][itrans]-1
                         lvl2 = reclvl['lvl2'][itrans]-1
                         popmat[lvl2+ci, -1] += self.Density*self.ReclvlRate['rate'][itrans, itemp]
@@ -1529,7 +1536,7 @@ class ion:
                     popmat[l2+ci,l2+ci] -= self.PDensity[idens]*pdexRate[isplups]
                 # now include ionization rate from
                 if ci:
-#                   print ' ci = ', ci
+#                    print ' ci = ', ci
                     #
                     #
                     ciTot = 0.
@@ -1551,6 +1558,7 @@ class ion:
                     popmat[0, 1] += self.Density[idens]*self.RecombRate['rate']
                     popmat[1, 1] -= self.Density[idens]*self.RecombRate['rate']
                 if rec:
+#                    print ' rec = ', rec
                     if self.Ndielsplups:
                         branch = np.zeros(self.Ndielsplups, 'float64')
                         for isplups in range(0,self.Ndielsplups):
@@ -1576,17 +1584,23 @@ class ion:
                             dielTot += self.Density[idens]*dielexRate[isplups]*branch[isplups]
                     else:
                         dielTot = 0.
+                    if self.Nreclvl:
+                        print ' ReclvlRate.shape = ', self.ReclvlRate['rate'].shape
+                        recTot = self.ReclvlRate['rate'].sum()
+                    else:
+                        recTot = 0.
                     #
                     popmat[-1,  ci] += self.Density[idens]*self.IonizRate['rate']
                     popmat[ci, ci] -= self.Density[idens]*self.IonizRate['rate']
                     popmat[ci, -1] += self.Density[idens]*(higher.RecombRate['rate']
-                        - self.ReclvlRate['rate'].sum()) - dielTot
+                        - recTot) - dielTot
                     popmat[-1, -1] -= self.Density[idens]*(higher.RecombRate['rate']
-                        - self.ReclvlRate['rate'].sum()) + dielTot
+                        - recTot) + dielTot
 #                    popmat[ci, -1] += self.Density[idens]*higher.RecombRate['rate']
 #                    popmat[-1, -1] -= self.Density[idens]*higher.RecombRate['rate']
                     #
-                    for itrans in range(len(reclvl['lvl1'])):
+#                    for itrans in range(len(reclvl['lvl1'])):
+                    for itrans in range(self.Nreclvl):
                         lvl1 = reclvl['lvl1'][itrans]-1
                         lvl2 = reclvl['lvl2'][itrans]-1
                         popmat[lvl2+ci, -1] += self.Density[idens]*self.ReclvlRate['rate'][itrans]
@@ -1706,18 +1720,22 @@ class ion:
                             dielTot += self.Density[itemp]*dielexRate[isplups, itemp]*branch[isplups]
                     else:
                         dielTot = 0.
+                    if self.Nreclvl:
+                        recTot = self.ReclvlRate['rate'][:, itemp].sum()
+                    else:
+                        recTot = 0.
                 #
 #                   print ' rec = ', rec
                     popmat[-1,  ci] += self.Density[itemp]*self.IonizRate['rate'][itemp]
                     popmat[ci, ci] -= self.Density[itemp]*self.IonizRate['rate'][itemp]
                     popmat[ci, -1] += self.Density[itemp]*(higher.RecombRate['rate'][itemp]
-                        - self.ReclvlRate['rate'][:, itemp].sum()) - dielTot
+                        - recTot) - dielTot
                     popmat[-1, -1] -= self.Density[itemp]*(higher.RecombRate['rate'][itemp]
-                        - self.ReclvlRate['rate'][:, itemp].sum()) + dielTot
+                        - recTot) + dielTot
 #                    popmat[ci, -1] += self.Density[itemp]*higher.RecombRate['rate'][itemp]
 #                    popmat[-1, -1] -= self.Density[itemp]*higher.RecombRate['rate'][itemp]
                     #
-                    for itrans in range(len(reclvl['lvl1'])):
+                    for itrans in range(self.Nreclvl):
                         lvl1 = reclvl['lvl1'][itrans]-1
                         lvl2 = reclvl['lvl2'][itrans]-1
                         popmat[lvl2+ci, -1] += self.Density[itemp]*self.ReclvlRate['rate'][itrans, itemp]
@@ -1815,7 +1833,6 @@ class ion:
                 toppops[ilvl] = pop[:, toplvl[ilvl]-1]
             nonzero = toppops > 0.
             ymin = min(toppops[nonzero])
-            print ' ymin = ', ymin
             for lvl in toplvl:
                 # for some low temperature, populations can not be calculated
                 good = pop[:, lvl-1] > 0
@@ -1855,7 +1872,6 @@ class ion:
                 toppops[ilvl] = pop[:, toplvl[ilvl]-1]
             nonzero = toppops > 0.
             ymin = min(toppops[nonzero])
-            print ' ymin = ', ymin
             for lvl in toplvl:
                 # for some low temperature, populations can not be calculated
                 good = pop[:, lvl-1] > 0
@@ -1894,7 +1910,6 @@ class ion:
                 toppops[ilvl] = pop[:, toplvl[ilvl]-1]
             nonzero = toppops > 0.
             ymin = min(toppops[nonzero])
-            print ' ymin = ', ymin
             for lvl in toplvl:
                 # for some low temperature, populations can not be calculated
                 good = pop[:, lvl-1] > 0
