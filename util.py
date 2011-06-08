@@ -174,6 +174,42 @@ def masterListRead():
     #
     # -------------------------------------------------------------------------------------
     #
+def photoxRead(ions):
+    """read chianti photoionization .photox files and return
+        {"energy", "cross"} where energy is in Rydbergs and the
+        cross section is in cm^2  """
+    #
+    zion=convertName(ions)
+    if zion['Z'] < zion['Ion']:
+        print ' this is a bare nucleus that has no ionization rate'
+        return
+    #
+    fname=ion2filename(ions)
+    paramname=fname+'.photox'
+    input=open(paramname,'r')
+    lines = input.readlines()
+    input.close
+    # get number of energies
+    neng = int(lines[0][0:6])
+    irsl = int(lines[1][0:6])
+    ind0 = int(lines[1][6:11])
+    ener = lines[1][11:].split()
+    energy = np.array(ener, 'float64')
+    #
+    irsl = int(lines[2][0:6])
+    ind0 = int(lines[2][6:11])
+    crs = lines[2][11:].split()
+    cross = np.array(crs, 'float64')
+    if not lines[3].count('-1'):
+        # this is more data
+        print ' have not read all data from file: ', fname
+        return {'energy':energy, 'cross':cross}
+    else:
+        ref = lines[4:-1]
+        return {'energy':energy, 'cross':cross,  'ref':ref}
+    #
+    # -------------------------------------------------------------------------------------
+    #
 def ionrecdatRead(filename):
     """ read chianti ionxdat, ionizdat, recombdat files and return
     {"ev":ev,"cross":cross,"crosserr":crosserr,"ref":ref}  not tested """
