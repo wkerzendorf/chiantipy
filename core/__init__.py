@@ -65,6 +65,7 @@ from RadLoss import radLoss
 from Ion import ion
 from Ion import ionWeb
 from Ion import ioneq
+from Ion import photoioneq
 ##from ionweb import ionWeb
 #
 #if chInteractive:

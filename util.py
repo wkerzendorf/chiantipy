@@ -208,6 +208,19 @@ def photoxRead(ions):
         ref = lines[4:-1]
         return {'energy':energy, 'cross':cross,  'ref':ref}
     #
+    # ---------------------------------------------------------------------
+    #
+def blackbody(self, temperature, variable, hnu=1):
+    ''' to calculate the black body photon distribution as a function of energy in erg (hnu = 1) or as a function
+    of wavelength (Angstroms) (hnu=0) '''
+    if hnu:
+        energy = variable
+        bb =((2.*const.pi)/(const.hc)**2)*energy**2/(np.exp(energy/(const.boltzmann*temperature)) - 1.)
+    else:
+        wvl = 1.e-8*variable
+        bb = ((2.*const.pi*const.light)/wvl**4)/(np.exp(const.hc/(wvl*const.boltzmann*temperature)) - 1.)
+    return bb
+    #
     # -------------------------------------------------------------------------------------
     #
 def ionrecdatRead(filename):

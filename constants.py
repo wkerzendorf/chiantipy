@@ -26,6 +26,8 @@ emass = 9.10938215e-28  #  electron mass in gram
 bohr = 0.52917720859e-8  # bohr radius in cm
 #
 # derived constants
+hc = planck*light
+#
 std2fwhm = 2.*np.sqrt(2.*np.log(2.))
 #
 invCm2Erg = planck*light

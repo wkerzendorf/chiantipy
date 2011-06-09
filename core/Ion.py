@@ -3976,7 +3976,7 @@ class photoioneq(ion):
     The variable z is the atomic number of the element.  Acceptable values are from 1 to 30.'''
     def __init__(self,z, radTemperature, rPhot, temperature, density,  verbose=False):
 #        phexFactor = dilute*(self.Elvlc['mult'][l2]/self.Elvlc['mult'][l1])/(np.exp(dekt) -1.)
-#       ionList=[]
+        ionList=[]
         chIons=[]
         self.Z=z
         self.Temperature = np.array(temperature, 'float64')
@@ -4058,7 +4058,9 @@ class photoioneq(ion):
     #            print ' ionsum = ', ionsum
                 ioneq[:, it]=ioneq[:, it]/ionsum
             self.Ioneq=ioneq
-#
+        #
+        # ---------------------------------------------------------------------
+        #
     def plot(self, stages=None, xr=None, yr=None, oplot=False, label=True, title=True,  bw=False):
         '''Plots the ionization equilibria.
 
