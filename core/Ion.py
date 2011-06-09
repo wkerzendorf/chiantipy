@@ -67,7 +67,7 @@ class ion:
     radTemperature, the radiation black-body temperature in Kelvin
     rPlot, the distance from the center of the star in stellar radii
     '''
-    def __init__(self, ionStr, temperature=None, density=None, pDensity='default', radTemperature=0, rPhot=1.,verbose=0, setup=True):
+    def __init__(self, ionStr, temperature=None, density=None, pDensity='default', radTemperature=0, rStar=1.,verbose=0, setup=True):
         '''The top level class for performing spectral calculations for an ion in the CHIANTI database.
 
         ionStr is a string corresponding such as 'c_5' that corresponds to the C V ion.
@@ -92,7 +92,7 @@ class ion:
         self.FileName=util.zion2filename(self.Z, self.Ion,dielectronic=self.Dielectronic )
         #
         self.RadTemperature = radTemperature
-        self.RPhot = rPhot
+        self.RStar = rStar
         #
         #  ip in eV, but don't read for bare ions
         if self.Ion <= self.Z:
@@ -522,7 +522,7 @@ class ion:
         Calls diRate and eaRate.'''
         if self.Z < self.Ion:
 #            print ' this is a bare nucleus and has no ionization rate'
-            self.IonizRate=None
+            self.IonizRate = {'rate':np.zeros_like(temperature), 'temperature':self.Temperature}
             return
         self.diRate(temperature=temperature)
         self.eaRate(temperature=temperature)
@@ -530,11 +530,25 @@ class ion:
             ionizrate=self.DiRate['rate']
         else:
             ionizrate=self.DiRate['rate']+self.EaRate['rate']
-        self.IonizRate={'rate':ionizrate, 'temperature':self.DiRate['temperature']}
+        self.IonizRate = {'rate':ionizrate, 'temperature':self.DiRate['temperature']}
         return
         #
         # -------------------------------------------------------------------------------------
         #
+    def photoionizRate(self, radTemperature,  rStar):
+        ''' to calculate the photoionization rate for a black body with temperature and rStar
+        will do a gauss-lagurre integration'''
+        if self.Z < self.Ion:
+#            print ' this is a bare nucleus and has no ionization rate'
+            self.PhotoionizRate = {'rate':np.zeros_like(self.Temperature), 'radTemperature':radTemperature,  'rStar':rStar}
+            return
+        kt = const.boltzmann*radTemperature
+        egl = self.Ip*const.ev2Erg + kt*const.xgl # energiesin erg
+        y2 = interpolate.splrep(np.log(self.Photox['energy']*const.ryd2erg), np.log(self.Photox['cross']))
+        crossgl = np.exp(interpolate.splev(np.log(egl),y2))
+        bb = util.blackbody(radTemperature, egl )
+        rate = const.wgl*crossgl*bb['photons']
+        self.PhotoionizRate = {'rate':rate.sum(), 'radTemperature':radTemperature,  'rStar':rStar}
         #
         # -------------------------------------------------------------------------------------
         #
@@ -1098,7 +1112,7 @@ class ion:
        #
         # -------------------------------------------------------------------------------------
         #
-    def populate(self,temperature=None,density=None,pDensity=None, popCorrect=1, radTemperature=0,rPhot=1.):
+    def populate(self,temperature=None,density=None,pDensity=None, popCorrect=1, radTemperature=0,rStar=1.):
         """Calculate level populations for specified ion.  This is a new version that will enable the calculation
         of dielectronic satellite lines without resorting to the dielectronic ions, such as c_5d"""
         #
@@ -1143,7 +1157,7 @@ class ion:
         #
         if radTemperature:
             self.RadTemperature = radTemperature
-            self.RPhot = rPhot
+            self.RStar = rStar
         #
         # the Dielectronic test should eventually go away
         if popCorrect and (not self.Dielectronic):
@@ -1218,10 +1232,10 @@ class ion:
             rad[l2+ci,l2+ci] -= self.Wgfa["avalue"][iwgfa]
             # photo-excitation and stimulated emission
             if self.RadTemperature:
-                if not self.RPhot:
+                if not self.RStar:
                     dilute = 0.5
                 else:
-                    dilute = util.dilution(self.RPhot)
+                    dilute = util.dilution(self.RStar)
                 # next - don't include autoionization lines
                 if abs(self.Wgfa['wvl'][iwgfa]) > 0.:
                     de = const.invCm2Erg*(self.Elvlc['ecm'][l2] - self.Elvlc['ecm'][l1])
@@ -3974,7 +3988,7 @@ class ioneq(ion):
 class photoioneq(ion):
     '''Calculates the ionization equilibrium for an element as a function of photoionization source with a radiation temperture, the distance from the source in terms of the source radius, the local temperature and density.
     The variable z is the atomic number of the element.  Acceptable values are from 1 to 30.'''
-    def __init__(self,z, radTemperature, rPhot, temperature, density,  verbose=False):
+    def __init__(self,z, radTemperature, rStar, temperature, density,  verbose=False):
 #        phexFactor = dilute*(self.Elvlc['mult'][l2]/self.Elvlc['mult'][l1])/(np.exp(dekt) -1.)
         ionList=[]
         chIons=[]
@@ -3986,6 +4000,7 @@ class photoioneq(ion):
             print z, stage, ionStr
             atom=ion(ionStr, temperature = self.Temperature)
             atom.ionizRate()
+            atom.photoionizRate(radTemperature, rStar)
             atom.recombRate()
             chIons.append(atom)
 #        for anIon in chIons:
@@ -4005,7 +4020,7 @@ class photoioneq(ion):
             factor = []
             for anIon in chIons:
                 if type(anIon.IonizRate) != types.NoneType and type(anIon.RecombRate) != types.NoneType:
-                    rat=anIon.IonizRate['rate']/anIon.RecombRate['rate']
+                    rat=(anIon.IonizRate['rate'] + anIon.PhotoionizRate['rate'])/anIon.RecombRate['rate']
                     factor.append(rat**2 + rat**(-2))
                 else:
                     factor.append(0.)
@@ -4016,12 +4031,12 @@ class photoioneq(ion):
             ioneq[ionmax]=1.
             #
             for iz in range(ionmax+1, z+1):
-                ionrate=chIons[iz-1].IonizRate['rate']
+                ionrate=chIons[iz-1].IonizRate['rate'] + chIons[iz-1].PhotoionizRate['rate']
                 recrate=chIons[iz].RecombRate['rate']
                 ioneq[iz]=ionrate*ioneq[iz-1]/recrate
             #
             for iz in range(ionmax-1, -1, -1):
-                ionrate=chIons[iz].IonizRate['rate']
+                ionrate=chIons[iz].IonizRate['rate'] + chIons[iz-1].PhotonizRate['rate']
                 recrate=chIons[iz+1].RecombRate['rate']
                 ioneq[iz]=recrate*ioneq[iz+1]/ionrate
             ionsum=ioneq.sum()
