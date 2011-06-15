@@ -24,6 +24,8 @@ ryd2erg = 2.17987197e-11  #ergs
 fine = 7.2973525376e-3  # fine structure constant ~ 1./137
 emass = 9.10938215e-28  #  electron mass in gram
 bohr = 0.52917720859e-8  # bohr radius in cm
+rsun = 6.955e+10  # mean radius of Sun in cm
+parsec = 3.08568025e+18  # cm
 #
 # derived constants
 hc = planck*light

@@ -281,21 +281,18 @@ class ion:
         #
         #-----------------------------------------------------------
         #
-    def diRate(self, temperature=None):
+    def diRate(self):
         '''Calculate the direct ionization rate coefficient as a function of temperature (K).'''
-        try:
+        if hasattr(self, 'DiParams'):
             DiParams = self.DiParams
-        except:
+        else:
             DiParams = util.diRead(self.IonStr)
         #
-        if type(temperature) == types.NoneType:
-            try:
-                temperature=self.Temperature
-            except:
-                print ' temperature is not defined'
-                return
-        elif type(temperature) != np.ndarray:
-            temperature = np.array(temperature,'float64')
+        if hasattr(self, 'Temperature'):
+            temperature=self.Temperature
+        else:
+            print ' temperature is not defined'
+            return
         #
         #   gauss laguerre n=12
         #
@@ -341,25 +338,24 @@ class ion:
             #
             #-----------------------------------------------------------
             #
-    def eaDescale(self,temperature=None):
+    def eaDescale(self):
         """Calculates the effective collision strengths (upsilon) for excitation-autoionization as a function of temperature."""
         #
         #  xt=kt/de
         #
         #  need to make sure elvl is >0, except for ground level
         #
-        try:
+        if hasattr(self, 'EaParams'):
             eaparams=self.EaParams
-        except:
+        else:
             self.EaParams = util.eaRead(self.IonStr)
             eaparams=self.EaParams
         #
-        if type(temperature) == types.NoneType:
-            try:
-                temperature=self.Temperature
-            except:
-                print ' temperature is not defined'
-                return
+        if hasattr(self, 'Temperature'):
+            temperature=self.Temperature
+        else:
+            print ' temperature is not defined'
+            return
         ntemp=temperature.size
         nsplups=len(eaparams['de'])
         if ntemp > 1:
@@ -470,33 +466,32 @@ class ion:
         #
         # -------------------------------------------------------------------------------------
         #
-    def eaRate(self, temperature=None):
+    def eaRate(self):
         '''Calculate the excitation-autoionization rate coefficient.'''
         # get neaev from diparams file
         #
-        try:
+        if hasattr(self, 'DiParams'):
             diparams=self.DiParams
-        except:
+        else:
             self.DiParams = util.diRead(self.IonStr)
         #
         if self.DiParams['info']['neaev'] == 0:
 #            print ' no EA rates'
             return
         else:
-            if type(temperature) == types.NoneType:
-                try:
-                    temperature=self.Temperature
-                except:
-                    bte=0.1*np.arange(10)
-                    bte[0]=0.01
-                    dum=np.ones(10, 'float32')
-                    [temperature, dum]=util.descale_bt(bte, dum, self.EaParams['cups'][0], self.DiParams['de'][0])
-                    self.Temperature=temperature
-            try:
+            if hasattr(self, 'Temperature'):
+                temperature=self.Temperature
+            else:
+                bte=0.1*np.arange(10)
+                bte[0]=0.01
+                dum=np.ones(10, 'float32')
+                [temperature, dum]=util.descale_bt(bte, dum, self.EaParams['cups'][0], self.DiParams['de'][0])
+                self.Temperature=temperature
+            if hasattr(self, 'EaParams'):
                 eaparams=self.EaParams
-            except:
+            else:
                 self.eaParams = util.eaRead(self.IonStr)
-                self.eaDescale(temperature=temperature)
+                self.eaDescale()
                 eaparams=self.EaParams
             #
             #  need to replicate neaev
@@ -516,7 +511,7 @@ class ion:
         #
         # -------------------------------------------------------------------------------------
         #
-    def ionizRate(self, temperature=None):
+    def ionizRate(self):
         '''Provides the total ionization rate.
 
         Calls diRate and eaRate.'''
@@ -524,8 +519,8 @@ class ion:
 #            print ' this is a bare nucleus and has no ionization rate'
             self.IonizRate = {'rate':np.zeros_like(temperature), 'temperature':self.Temperature}
             return
-        self.diRate(temperature=temperature)
-        self.eaRate(temperature=temperature)
+        self.diRate()
+        self.eaRate()
         if self.DiParams['info']['neaev'] == 0:
             ionizrate=self.DiRate['rate']
         else:
@@ -535,37 +530,60 @@ class ion:
         #
         # -------------------------------------------------------------------------------------
         #
-    def photoionizRate(self, radTemperature,  rStar):
+    def photoionizRate(self, radTemperature=0,  rStar=0):
         ''' to calculate the photoionization rate for a black body with temperature and rStar
         will do a gauss-lagurre integration'''
+        if not radTemperature:
+            if hasattr(self, 'RadTemperature'):
+                radTemperature = self.RadTemperature
+            else:
+                self.PhotoionizRate = {'rate':np.zeros_like(self.Temperature), 'radTemperature':radTemperature,  'rStar':rStar}
+                return
+            if not rStar:
+                if hasattr(self, 'rStar'):
+                    rStar = self.RStar
+                else:
+                    rStar = 1.
         if self.Z < self.Ion:
 #            print ' this is a bare nucleus and has no ionization rate'
             self.PhotoionizRate = {'rate':np.zeros_like(self.Temperature), 'radTemperature':radTemperature,  'rStar':rStar}
             return
         kt = const.boltzmann*radTemperature
-        egl = self.Ip*const.ev2Erg + kt*const.xgl # energiesin erg
+#        egl = self.Ip*const.ev2Erg + kt*const.xgl # energiesin erg
+#        y2 = interpolate.splrep(np.log(self.Photox['energy']*const.ryd2erg), np.log(self.Photox['cross']))
+#        crossgl = np.exp(interpolate.splev(np.log(egl),y2))
+#        bb = util.blackbody(radTemperature, egl )
+#        rate = const.pi*(const.rsun**2)*const.wgl*crossgl*bb['photons']*util.dilute(rStar)
+
+        de = self.Ip*const.ev2Erg*0.01
+        ener = self.Ip*const.ev2Erg + de*np.arange(100)
         y2 = interpolate.splrep(np.log(self.Photox['energy']*const.ryd2erg), np.log(self.Photox['cross']))
-        crossgl = np.exp(interpolate.splev(np.log(egl),y2))
-        bb = util.blackbody(radTemperature, egl )
-        rate = const.wgl*crossgl*bb['photons']
+        crossgl = np.exp(interpolate.splev(np.log(ener),y2))
+        bb = util.blackbody(radTemperature, ener )
+        product = crossgl*bb['photons']
+        rate = const.pi*(const.rsun/rStar)**2*product.sum()*de
+
         self.PhotoionizRate = {'rate':rate.sum(), 'radTemperature':radTemperature,  'rStar':rStar}
         #
         # -------------------------------------------------------------------------------------
         #
-    def rrRate(self, temperature=None):
+    def rrRate(self):
         '''Provide the radiative recombination rate coefficient as a function of temperature (K).'''
+        if hasattr(self, 'Temperature'):
+            temperature=self.Temperature
+        else:
+            print ' temperature is not defined'
+            return
+        rrparamsfile = util.ion2filename(self.IonStr) + '.rrparams'
         if hasattr(self, 'RrParams'):
             rrparams=self.RrParams
-        else:
+        elif os.path.isfile(rrparamsfile):
             self.RrParams = util.rrRead(self.IonStr)
             rrparams=self.RrParams
+        else:
+            self.RrRate={'temperature':temperature, 'rate':np.zeros_like(temperature)}
+            return
         #
-        if type(temperature) == types.NoneType:
-            try:
-                temperature=self.Temperature
-            except:
-                print ' temperature is not defined'
-                return
 #        print ' rr params type = ', rrparams['rrtype']
         #
         if rrparams['rrtype'] == 1:
@@ -590,85 +608,86 @@ class ion:
             b=rrparams['params'][3]
             rate=a/(temperature/1.e+4)**b
             self.RrRate={'temperature':temperature, 'rate':rate}
+        else:
+            self.RrRate={'temperature':temperature, 'rate':np.zeros_like(temperature)}
+
         #
         # -------------------------------------------------------------------------------------
         #
         #
         # -------------------------------------------------------------------------------------
         #
-    def drRate(self, temperature=None):
+    def drRate(self):
         '''Provide the dielectronic recombination rate coefficient as a function of temperature (K).'''
-        try:
+        #
+        if hasattr(self, 'Temperature'):
+            temperature=self.Temperature
+        else:
+            print ' temperature is not defined'
+            return {}
+        drparamsfile = util.ion2filename(self.IonStr) + 'drparams'
+        if hasattr(self, 'DrParams'):
             drparams=self.DrParams
-        except:
+        elif os.path.isfile(drparamsfile):
             self.DrParams = util.drRead(self.IonStr)
             drparams=self.DrParams
-        #
-        if type(temperature) == types.NoneType:
-            try:
-                temperature=self.Temperature
-            except:
-                print ' temperature is not defined'
-                return
+        else:
+            self.DrRate = {'rate':np.zeros_like(temperature), 'temperature':temperature}
+            return
 #        print ' dr params type = ', drparams['drtype']
         #
-        if type(drparams) == types.NoneType:
-            self.DrRate=None
-        else:
-            if drparams['drtype'] == 1:
-                # badnell type
-                drenergy=drparams['eparams']
-                drcoef=drparams['cparams']
-                gcoef = drenergy > 0.
-                ncoef=gcoef.sum()
+        if drparams['drtype'] == 1:
+            # badnell type
+            drenergy=drparams['eparams']
+            drcoef=drparams['cparams']
+            gcoef = drenergy > 0.
+            ncoef=gcoef.sum()
 #                print ' ncoef = ', gcoef.sum()
-                rate=np.zeros(temperature.size, 'float32')
-                for icoef in range(ncoef):
-                    rate+=drcoef[icoef]*np.exp(-drenergy[icoef]/temperature)
-                rate=rate/temperature**1.5
-                self.DrRate={'temperature':temperature, 'rate':rate}
-            elif drparams['drtype'] == 2:
-                # shull type
-                params = drparams['params']
-                adi = params[0]
-                bdi = params[1]
-                t0 = params[2]
-                t1 = params[3]
-                rate=adi*np.exp(-t0/temperature)*(1.+bdi*np.exp(-t1/temperature))/temperature**1.5
-                self.DrRate={'temperature':temperature, 'rate':rate}
+            rate=np.zeros(temperature.size, 'float32')
+            for icoef in range(ncoef):
+                rate+=drcoef[icoef]*np.exp(-drenergy[icoef]/temperature)
+            rate=rate/temperature**1.5
+            self.DrRate={'temperature':temperature, 'rate':rate}
+        elif drparams['drtype'] == 2:
+            # shull type
+            params = drparams['params']
+            adi = params[0]
+            bdi = params[1]
+            t0 = params[2]
+            t1 = params[3]
+            rate=adi*np.exp(-t0/temperature)*(1.+bdi*np.exp(-t1/temperature))/temperature**1.5
+            self.DrRate={'temperature':temperature, 'rate':rate}
         #
         # -------------------------------------------------------------------------------------
         #
-    def reclvlDescale(self, temperature=None):
+    def reclvlDescale(self):
         '''Interpolate and extrapolate reclvl rates.
 
         Used in level population calculations.'''
-        if type(temperature) == types.NoneType:
-            if hasattr(self, 'Temperature'):
-                temperature=self.Temperature
-            else:
-                print ' temperature is not defined'
-                self.ReclvlRate=None
+        if hasattr(self, 'Temperature'):
+            temperature=self.Temperature
+        else:
+            print ' temperature is not defined'
+            self.ReclvlRate = None
+            return
+        reclvlfile = util.ion2filename(self.IonStr)+'.reclvl'
         if hasattr(self, 'Reclvl'):
             reclvl = self.Reclvl
-            if reclvl == types.NoneType:
-                self.ReclvlRate = None
-                return
-        else:
+        elif os.path.isfile(reclvlfile):
 #           print ' reading reclvl file'
             reclvl = util.cireclvlRead(self.IonStr, 'reclvl')
-            if type(reclvl) == types.NoneType:
-                self.ReclvlRate = None
-                return
+        else:
+            self.ReclvlRate = {'rate':zeros_like(temperature)}
+            return
         #
         #  the rates and temperatures in reclvl are not all the same
         #
         ntemp = temperature.size
         if ntemp == 1:
             recRate = np.zeros(( len(reclvl['lvl1'])), 'float64')
-            if temperature < reclvl['temperature'].min():
-                self.ReclvlRate = None
-            elif temperature > reclvl['temperature'].max():
+            # previous takes care of temperatures below reclvl['temperature'].min()
+            if temperature > reclvl['temperature'].max():
+                # extrapolate as 1/temperature
                 for itrans in range(len(reclvl['lvl1'])):
 #                   lvl2 = self.Reclvl['lvl2'][itrans]
                     nrecTemp = reclvl['ntemp'][itrans]
@@ -707,13 +726,15 @@ class ion:
                 newRec = np.zeros(ntemp, 'float64')
                 index = 0
                 if goodLow.sum() == 1:
-                    lowRec = np.exp(interpolate.splev(np.log(lowT),y2))
-                    newRec[index] = lowRec
+#                    lowRec = np.exp(interpolate.splev(np.log(lowT),y2))
+#                    newRec[index] = lowRec
+                    newRec[index] = 0.
                     index += 1
                 elif goodLow.sum() > 1:
-                    lowRec = np.exp(interpolate.splev(np.log(lowT),y2))
+#                    lowRec = np.exp(interpolate.splev(np.log(lowT),y2))
                     for idx in range(goodLow.sum()):
-                        newRec[index] = lowRec[idx]
+#                        newRec[index] = lowRec[idx]
+                        newRec[index] = 0.
                         index += 1
                 if realgood.sum() == 1:
                     midRec = np.exp(interpolate.splev(np.log(midT),y2))
@@ -725,38 +746,39 @@ class ion:
                         newRec[index] = midRec[idx]
                         index += 1
                 if goodHigh.sum() == 1:
-                    highRec = np.exp(interpolate.splev(np.log(highT),y2))
-                    newRec[index] = highRec
+#                    highRec = np.exp(interpolate.splev(np.log(highT),y2))
+#                    newRec[index] = highRec
+                    newRec[index] = 0.
                     index += 1
                 elif goodHigh.sum() > 1:
-                    highRec = np.exp(interpolate.splev(np.log(highT),y2))
+#                    highRec = np.exp(interpolate.splev(np.log(highT),y2))
                     for idx in range(goodHigh.sum()):
 #                       print ' index, idx = ', index,  idx
-                        newRec[index] = highRec[idx]
+#                        newRec[index] = highRec[idx]
+                        newRec[index] = 0.
                         index += 1
                 recRate[itrans] = newRec
         self.ReclvlRate = {'rate':recRate, 'lvl2':reclvl['lvl2'], 'temperature':temperature}
         #
         # -------------------------------------------------------------------------------------
         #
-    def recombRate(self, temperature=None):
+    def recombRate(self):
         '''Provides the total recombination rate coefficient.
 
         Calls diRate and eaRate'''
+        #
+        if hasattr(self, 'Temperature'):
+            temperature=self.Temperature
+        else:
+            print ' temperature is not defined'
+            self.RecombRate = None
         if self.Ion == 1:
 #            print ' this is a neutral and has no recombination rate'
-            self.RecombRate=None
+            self.RecombRate = {'rate':np.zeros_like(temperature), 'temperature':temperature}
             return
-        #
-        if type(temperature) == types.NoneType:
-            try:
-                temperature=self.Temperature
-            except:
-                print ' temperature is not defined'
-                self.RecombRate=None
-        self.rrRate(temperature=temperature)
-        self.drRate(temperature=temperature)
-        if type(self.DrRate) == types.NoneType:
+        self.rrRate()
+        self.drRate()
+        if not hasattr(self, 'DrRate'):
             rate=self.RrRate['rate']
         else:
             rate=self.RrRate['rate']+self.DrRate['rate']
@@ -836,7 +858,7 @@ class ion:
         #
         # -------------------------------------------------------------------------------------
         #
-    def upsilonDescale(self, temperature=None, prot=0, ci=0,  diel=0):
+    def upsilonDescale(self, prot=0, ci=0,  diel=0):
         """Provides the temperatures and effective collision strengths (upsilons)
         set prot for proton rates, ci for collision ionization rates
         otherwise, ce will be set for electron collision rates"""
@@ -890,14 +912,11 @@ class ion:
                     nsplups = len(self.Splups["lvl1"])
         #
         #
-        if temperature == None:
-            try:
-                temperature=self.Temperature
-            except:
-                print ' Temperature unknown'
-                return
+        if hasattr(self, 'Temperature'):
+            temperature=self.Temperature
         else:
-            self.Temperature=temperature
+            print ' Temperature undefined'
+            return
         #
         if hasattr(self, 'Elvlc'):
             nlvls=len(self.Elvlc["lvl"])
@@ -1178,9 +1197,10 @@ class ion:
 #            try:
             if self.Nreclvl:
                 reclvl = self.Reclvl
-                try:
+                if hasattr(self, 'ReclvlRate'):
                     reclvlRate = self.ReclvlRate
-                except:
+                    rec = 1
+                else:
 #                    print ' doing reclvlDescale in populate'
                     self.reclvlDescale()
                     reclvlRate = self.ReclvlRate
@@ -1212,7 +1232,7 @@ class ion:
         #
         if rec:
             if self.Ndielsplups:
-                self.upsilonDescale(temperature=temperature,diel=1)
+                self.upsilonDescale(diel=1)
                 dielexRate = self.DielUpsilon['exRate']
             # get ionization rate of this iion
             self.ionizRate()
@@ -1253,13 +1273,13 @@ class ion:
         self.rad=rad
         #
         if self.Nsplups:
-            self.upsilonDescale(temperature=temperature)
+            self.upsilonDescale()
             ups = self.Upsilon['upsilon']
             exRate = self.Upsilon['exRate']
             dexRate = self.Upsilon['dexRate']
         #
         if npsplups:
-            self.upsilonDescale(temperature=temperature,prot=1)
+            self.upsilonDescale(prot=1)
 #            pups = self.PUpsilon['upsilon']
             pexRate = self.PUpsilon['exRate']
             pdexRate = self.PUpsilon['dexRate']
@@ -1398,7 +1418,7 @@ class ion:
                 pop = fullpop[ci:ci+nlvls]
             except np.linalg.LinAlgError:
                 pop = np.zeros(nlvls, 'float64')
-                print ' error in matrix inversion, setting populations to zero at T = ', ('%8.2e')%(temperature)
+#                print ' error in matrix inversion, setting populations to zero at T = ', ('%8.2e')%(temperature)
             #
         #   next, in case of a single density value
 #            pop = np.linalg.solve(popmat,b)
@@ -1508,7 +1528,7 @@ class ion:
                     pop[itemp] = thispop[ci:ci+nlvls]
                 except np.linalg.LinAlgError:
                     pop[itemp] = np.zeros(nlvls, 'float64')
-                    print ' error in matrix inversion, setting populations to zero at T = ', ('%8.2e')%(temperature[itemp])
+#                    print ' error in matrix inversion, setting populations to zero at T = ', ('%8.2e')%(temperature[itemp])
             #
         elif ntemp == 1:
 #            pop=np.zeros((ndens,nlvls),"float64")
@@ -1603,7 +1623,7 @@ class ion:
                     else:
                         dielTot = 0.
                     if self.Nreclvl:
-                        print ' ReclvlRate.shape = ', self.ReclvlRate['rate'].shape
+#                        print ' ReclvlRate.shape = ', self.ReclvlRate['rate'].shape
                         recTot = self.ReclvlRate['rate'].sum()
                     else:
                         recTot = 0.
@@ -1637,7 +1657,7 @@ class ion:
                     pop[idens] = thispop[ci:ci+nlvls]
                 except np.linalg.LinAlgError:
                     pop[idens] = np.zeros(nlvls, 'float64')
-                    print ' error in matrix inversion, setting populations to zero at density = ', ('%8.2e')%(density[idens])
+#                    print ' error in matrix inversion, setting populations to zero at density = ', ('%8.2e')%(density[idens])
 #                thispop=np.linalg.solve(popmat,b)
 #                if rec:
 #                    pop[idens] = thispop[ci:ci+nlvls+rec-1]
@@ -1772,7 +1792,7 @@ class ion:
                     pop[itemp] = thispop[ci:ci+nlvls]
                 except np.linalg.LinAlgError:
                     pop[itemp] = np.zeros(nlvls, 'float64')
-                    print ' error in matrix inversion, setting populations to zero at T = ', ('%8.2e')%(temperature[itemp])
+#                    print ' error in matrix inversion, setting populations to zero at T = ', ('%8.2e')%(temperature[itemp])
 #                thispop=np.linalg.solve(popmat,b)
 #                if rec:
 #                    pop[itemp] = thispop[ci:ci+nlvls+rec-1]
@@ -1981,7 +2001,7 @@ class ion:
         #
         # -------------------------------------------------------------------------------------
         #
-    def emiss(self,temperature=None,density=None,pDensity=None,  wvlRange = None,  allLines=1):
+    def emiss(self, temperature=None,density=None,pDensity=None,  wvlRange = None,  allLines=1):
         """Calculate the emissivities for lines of the specified ion.
 
         wvlRange can be set to limit the calculation to a particular wavelength range
@@ -4003,6 +4023,7 @@ class photoioneq(ion):
             atom.photoionizRate(radTemperature, rStar)
             atom.recombRate()
             chIons.append(atom)
+        print ' number of ions = ', len(chIons)
 #        for anIon in chIons:
 #            print ' this ion = ', anIon.Ions
 #            if type(anIon.IonizRate) != NoneType:
@@ -4016,29 +4037,45 @@ class photoioneq(ion):
         ntemp=chIons[0].IonizRate['temperature'].size
         print ' ntemp = ',ntemp
         if ntemp == 1:
+            #
+            for anIon in chIons:
+                print ' ion = ', anIon.IonStr
+                recrate = density*anIon.RecombRate['rate']
+                print ' ioniz, ph, rec = ', density*anIon.IonizRate['rate'], anIon.PhotoionizRate['rate'], recrate
+            #
             ioneq=np.zeros((z+1), 'float32')
             factor = []
-            for anIon in chIons:
-                if type(anIon.IonizRate) != types.NoneType and type(anIon.RecombRate) != types.NoneType:
-                    rat=(anIon.IonizRate['rate'] + anIon.PhotoionizRate['rate'])/anIon.RecombRate['rate']
+#            for anIon in chIons:
+#                if type(anIon.IonizRate) != types.NoneType and type(anIon.RecombRate) != types.NoneType:
+#                    rat=(density*anIon.IonizRate['rate'] + anIon.PhotoionizRate['rate'])/density*anIon.RecombRate['rate']
+#                    factor.append(rat**2 + rat**(-2))
+#                else:
+#                    factor.append(0.)
+            # neutral and bare are missing certain rates
+            for iz in range(z):
+                if hasattr(chIons[iz], 'IonizRate') and hasattr(chIons[iz], 'PhotoionizRate') and hasattr(chIons[iz+1], 'RecombRate'):
+                    num = (chIons[iz].IonizRate['rate'] + chIons[iz].PhotoionizRate['rate'])
+                    denom = chIons[iz+1].RecombRate['rate']
+                    rat = num/denom
                     factor.append(rat**2 + rat**(-2))
-                else:
-                    factor.append(0.)
-            factor[0]=max(factor)
-            factor[-1]=max(factor)
-            ionmax=factor.index(min(factor))
-#            print ' it, ionmax', it, ionmax
+#            factor[0]=max(factor)
+#            factor[-1]=max(factor)
+            print ' factor = ', factor
+            ionmax=factor.index(min(factor))+1
+            print ' ionmax', ionmax
             ioneq[ionmax]=1.
             #
             for iz in range(ionmax+1, z+1):
-                ionrate=chIons[iz-1].IonizRate['rate'] + chIons[iz-1].PhotoionizRate['rate']
-                recrate=chIons[iz].RecombRate['rate']
+                print ' iz, ion = ', iz, chIons[iz].IonStr
+                ionrate = density*chIons[iz-1].IonizRate['rate'] + chIons[iz-1].PhotoionizRate['rate']
+                recrate = density*chIons[iz].RecombRate['rate']
                 ioneq[iz]=ionrate*ioneq[iz-1]/recrate
+                print ' ioniz, ph, rec = ', density*chIons[iz-1].IonizRate['rate'], chIons[iz-1].PhotoionizRate['rate'], recrate
             #
             for iz in range(ionmax-1, -1, -1):
-                ionrate=chIons[iz].IonizRate['rate'] + chIons[iz-1].PhotonizRate['rate']
-                recrate=chIons[iz+1].RecombRate['rate']
-                ioneq[iz]=recrate*ioneq[iz+1]/ionrate
+                ionrate = density*chIons[iz].IonizRate['rate'] + chIons[iz].PhotoionizRate['rate']
+                recrate = density*chIons[iz+1].RecombRate['rate']
+                ioneq[iz] = recrate*ioneq[iz+1]/ionrate
             ionsum=ioneq.sum()
 #            print ' ionsum = ', ionsum
             ioneq=ioneq/ionsum

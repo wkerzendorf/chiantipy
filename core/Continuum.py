@@ -486,7 +486,7 @@ class continuum:
                 self.Fblvl = util.fblvlRead(fblvlname)
                 fblvl = self.Fblvl
             else:
-                print ' cannot find file - ', fblvlname
+#                print ' cannot find file - ', fblvlname
                 # can't compute this ion
                 fblvl = {}
     #  need some data for the recombining/target ion
@@ -502,7 +502,7 @@ class continuum:
                     self.rFblvl = util.fblvlRead(rfblvlname)
                     rFblvl = self.rFblvl
                 else:
-                    print ' cannot find file - ', rfblvlname
+#                    print ' cannot find file - ', rfblvlname
                     # can't do this ion
                     rFblvl = {}
         if hasattr(self, 'IoneqOne'):

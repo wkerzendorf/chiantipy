@@ -14,6 +14,7 @@ import cPickle
 import numpy as np
 from FortranFormat import *
 import chianti.constants as const
+#import chianti.util as util
 #
 def between(array,limits):
     '''returns an index array of elements of array where the values lie
@@ -212,10 +213,11 @@ def photoxRead(ions):
     #
 def blackbody(temperature, variable, hnu=1):
     ''' to calculate the black body photon distribution as a function of energy in erg (hnu = 1) or as a function
-    of wavelength (Angstroms) (hnu=0) '''
+    of wavelength (Angstroms) (hnu=0)
+    photons cm^-2 s^-1 str^-1 ergs^-1'''
     if hnu:
         energy = variable
-        bb =((2.*const.pi)/(const.hc)**2)*energy**2/(np.exp(energy/(const.boltzmann*temperature)) - 1.)
+        bb =(2./(const.planck*(const.hc**2)))*energy**2/(np.exp(energy/(const.boltzmann*temperature)) - 1.)
         return {'photons':bb, 'temperature':temperature, 'energy':energy}
     else:
         wvl = 1.e-8*variable
@@ -874,7 +876,7 @@ def cireclvlRead(ions, type):
         idat += 1
     return {'temperature':temp, 'ntemp':ntemp,'lvl1':lvl1, 'lvl2':lvl2, 'rate':ci,'ref':lines[ndata+1:-1], 'ionS':ions}
     #
-def dilution(radius):
+def dilute(radius):
     ''' to calculate the dilution factor as a function distance from the center of a star in units of the stellar radius
     a radius of less than 1.0 (incorrect) results in a dilution factor of 0.'''
     if radius >= 1.:
@@ -1013,32 +1015,35 @@ def rrRead(ions):
     #
     fname=ion2filename(ions)
     paramname=fname+'.rrparams'
-    input=open(paramname,'r')
-    #  need to read first line and see how many elements
-    lines=input.readlines()
-    input.close()
-    rrtype=int(lines[0])
-    ref=lines[3:-2]
-    #
-    if rrtype == 1:
-        # a Badnell type
-        fmt=FortranFormat('3i5,e12.4,f10.5,2e12.4')
-        params=FortranLine(lines[1],fmt)
-        RrParams={'rrtype':rrtype, 'params':params, 'ref':ref}
-    elif rrtype == 2:
-        # a Badnell type
-        fmt=FortranFormat('3i5,e12.4,f10.5,2e11.4,f10.5,e12.4')
-        params=FortranLine(lines[1],fmt)
-        RrParams={'rrtype':rrtype, 'params':params, 'ref':ref}
-    elif rrtype == 3:
-        # a Shull type
-        fmt=FortranFormat('2i5,2e12.4')
-        params=FortranLine(lines[1],fmt)
-        RrParams={'rrtype':rrtype, 'params':params, 'ref':ref}
+    if os.path.isfile(paramname):
+        input=open(paramname,'r')
+        #  need to read first line and see how many elements
+        lines=input.readlines()
+        input.close()
+        rrtype=int(lines[0])
+        ref=lines[3:-2]
+        #
+        if rrtype == 1:
+            # a Badnell type
+            fmt=FortranFormat('3i5,e12.4,f10.5,2e12.4')
+            params=FortranLine(lines[1],fmt)
+            RrParams={'rrtype':rrtype, 'params':params, 'ref':ref}
+        elif rrtype == 2:
+            # a Badnell type
+            fmt=FortranFormat('3i5,e12.4,f10.5,2e11.4,f10.5,e12.4')
+            params=FortranLine(lines[1],fmt)
+            RrParams={'rrtype':rrtype, 'params':params, 'ref':ref}
+        elif rrtype == 3:
+            # a Shull type
+            fmt=FortranFormat('2i5,2e12.4')
+            params=FortranLine(lines[1],fmt)
+            RrParams={'rrtype':rrtype, 'params':params, 'ref':ref}
+        else:
+            RrParams=None
+            print ' for ion %5s unknown RR type = %5i' %(ions, rrtype)
+        return RrParams
     else:
-        RrParams=None
-        print ' for ion %5s unknown RR type = %5i' %(ions, rrtype)
-    return RrParams
+        return {'rrtype':-1}
 
     #
     # -------------------------------------------------------------------------------------
