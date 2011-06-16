@@ -77,6 +77,7 @@ class radLoss:
         freeBoundLoss = np.zeros((nTempDen), 'float64').squeeze()
         twoPhotonLoss = np.zeros((nTempDen), 'float64').squeeze()
         boundBoundLoss = np.zeros((nTempDen), 'float64').squeeze()
+        twoPhotonLoss = np.zeros((nTempDen), 'float64').squeeze()
         #
         #
         for iz in range(31):

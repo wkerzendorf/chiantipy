@@ -3047,24 +3047,25 @@ class ion:
         includes the elemental abundance and the ionization equilibrium'''
         if self.Z -self.Ion > 1 or self.Dielectronic:
             # this is not a hydrogen-like or helium-like ion
-            print ' not doing 2 photon for ', self.Ions
-            self.TwoPhoton = {'emiss':np.zeros(nWvl, 'float64'), 'wvl':wvl}
-            return
+            nTempDens = max(self.Temperature.size, self.Density.size)
+#            if nTempDens > 1:
+            rate = np.zeros((nTempDens), 'float64')
+            self.TwoPhotonLoss = {'rate':rate}
         else:
-            try:
+            if hasattr(self, 'Abundance'):
                 ab=self.Abundance
-            except:
+            else:
                 self.Abundance = util.abundanceRead()
                 ab=self.Abundance
-            try:
+            if hasattr(self, 'IoneqOne'):
                 thisIoneq=self.IoneqOne
-            except:
+            else:
                 self.ioneqOne()
                 thisIoneq=self.IoneqOne
-            try:
+            if hasattr(self, 'Population'):
                 pop = self.Population['population']
                 nTempDens = max(self.Temperature.size, self.Density.size)
-            except:
+            else:
                 self.populate()
                 pop = self.Population['population']
                 nTempDens = max(self.Temperature.size, self.Density.size)
