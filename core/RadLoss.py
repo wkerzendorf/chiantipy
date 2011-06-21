@@ -167,4 +167,4 @@ class radLoss:
         dt=t2-t1
         if chInteractive:
             print ' elapsed seconds = ', dt.seconds
-        self.RadLoss ={'rate':total, 'temperature':self.Temperature, 'density':self.Density}
+        self.RadLoss ={'rate':total, 'temperature':self.Temperature, 'density':self.Density, 'minAbund':minAbund, 'abundance':self.AbundanceName}

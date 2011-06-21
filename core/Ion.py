@@ -3083,7 +3083,7 @@ class ion:
                 density = self.Density
             if self.Z == self.Ion:
                 # H seq
-                l1 = 1-1
+                l1 = 1 - 1
                 l2 = 2 - 1
                 wvl0 = 1.e+8/(self.Elvlc['ecm'][l2] - self.Elvlc['ecm'][l1])
                 dist = util.twophotonHRead()
@@ -3097,7 +3097,7 @@ class ion:
                 self.TwoPhotonLoss = {'temperature':self.Temperature,'density':self.Density,'rate':rate}
             else:
                 # He seq
-                l1 = 1-1
+                l1 = 1 - 1
                 l2 = 3 - 1
                 wvl0 = 1.e+8/(self.Elvlc['ecm'][l2] - self.Elvlc['ecm'][l1])
                 dist = util.twophotonHeRead()
