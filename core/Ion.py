@@ -26,7 +26,7 @@ if chInteractive:
         import chianti.gui_cl.gui as gui
     elif pl.rcParams['backend'].lower() == 'agg':
         import chianti.gui_cl.gui as gui
-    elif pl.rcParams['backend'].lower() == 'macosx ':
+    elif pl.rcParams['backend'].lower() == 'macosx':
         import chianti.gui_cl.gui as gui
     else:
         print ' - Warning - '
@@ -549,21 +549,25 @@ class ion:
             self.PhotoionizRate = {'rate':np.zeros_like(self.Temperature), 'radTemperature':radTemperature,  'rStar':rStar}
             return
         kt = const.boltzmann*radTemperature
-#        egl = self.Ip*const.ev2Erg + kt*const.xgl # energiesin erg
-#        y2 = interpolate.splrep(np.log(self.Photox['energy']*const.ryd2erg), np.log(self.Photox['cross']))
-#        crossgl = np.exp(interpolate.splev(np.log(egl),y2))
-#        bb = util.blackbody(radTemperature, egl )
-#        rate = const.pi*(const.rsun**2)*const.wgl*crossgl*bb['photons']*util.dilute(rStar)
-
-        de = self.Ip*const.ev2Erg*0.01
-        ener = self.Ip*const.ev2Erg + de*np.arange(100)
+        #
+        # first see how high in energy it is necessary to go
+        nener = 100.
+        de1 = self.Ip*const.ev2Erg/nener
+        ener1 = self.Ip*const.ev2Erg + de1*np.arange(nener)
         y2 = interpolate.splrep(np.log(self.Photox['energy']*const.ryd2erg), np.log(self.Photox['cross']))
+        crossgl = np.exp(interpolate.splev(np.log(ener1),y2))
+        bb1 = util.blackbody(radTemperature, ener1 )
+        product = crossgl*bb1['photons']
+        cprod = product.cumsum()
+        good = np.where(cprod/max(cprod) > 0.999, np.arange(nener), nener)
+        maxgood = min(good)
+        de = self.Ip*const.ev2Erg*(maxgood/nener)/nener
+        ener = self.Ip*const.ev2Erg + de*np.arange(nener)
         crossgl = np.exp(interpolate.splev(np.log(ener),y2))
-        bb = util.blackbody(radTemperature, ener )
-        product = crossgl*bb['photons']
+        bb1 = util.blackbody(radTemperature, ener)
+        product = crossgl*bb1['photons']
         rate = const.pi*(const.rsun/rStar)**2*product.sum()*de
-
-        self.PhotoionizRate = {'rate':rate.sum(), 'radTemperature':radTemperature,  'rStar':rStar}
+        self.PhotoionizRate = {'rate':rate, 'radTemperature':radTemperature,  'rStar':rStar, 'energy':ener}
         #
         # -------------------------------------------------------------------------------------
         #

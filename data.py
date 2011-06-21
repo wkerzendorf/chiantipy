@@ -19,7 +19,7 @@ else:
 ###
 xuvtop = os.environ['XUVTOP']
 #chInteractive=1
-Defaults = util.defaultsRead(verbose = chInteractive)
+Defaults = util.defaultsRead()
 Ip = util.ipRead()
 MasterList = util.masterListRead()
 AbundanceAll = util.abundanceRead(abundancename = Defaults['abundfile'])
