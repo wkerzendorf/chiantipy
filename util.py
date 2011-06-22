@@ -96,7 +96,7 @@ def masterListInfo():
                 haveDielectronic[z, stage] = 1
             else:
                 haveStage[z, stage] = 1
-            thisIoneq = ioneq['ioneqAll'][z- 1, stage - 1 - dielectronic]
+            thisIoneq = ioneq['ioneqAll'][z- 1, stage - 1 + dielectronic]
             good = thisIoneq > 0.
             goodTemp = ioneq['ioneqTemperature'][good]
             tmin = goodTemp.min()
