@@ -11,7 +11,7 @@ import chianti.util as util
 import chianti.constants as const
 ip = chdata.Ip
 MasterList = chdata.MasterList
-import chianti
+#import chianti
 class continuum:
     '''The top level class for continuum calculations.
 
