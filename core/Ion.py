@@ -1210,7 +1210,7 @@ class ion:
                     reclvlRate = self.ReclvlRate
                     rec = 1
             elif self.Ndielsplups:
-                self.upsilonDescale(temperature=temperature,diel=1)
+                self.upsilonDescale(diel=1)
                 dielexRate = self.DielUpsilon['exRate']
                 rec = 1
             else:
