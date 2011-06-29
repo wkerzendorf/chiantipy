@@ -539,6 +539,39 @@ def elvlcRead(ions, filename = None, verbose=False):
     #
     # -------------------------------------------------------------------------------------
     #
+def elvlcWrite(info):
+    ''' info is a dictionary that must contain the following keys
+    ionS, the Chianti style name of the ion such as c_4
+    conf, an integer denoting the configuration - no too essential
+    term, a string showing the configuration
+    spin, an integer of the spin of the state in LS coupling
+    l, an integer of the angular momentum quantum number
+    spd, an string for the alphabetic symbol of the angular momemtum, S, P, D, etc
+    j, a floating point number, the total angular momentum
+    ecm, the observed energy in inverse cm, if unknown, the value is 0.
+    eryd, the observed energy in Rydbergs, if unknown, the value is 0.
+    ecmth, the calculated energy from the scattering calculation, in inverse cm
+    erydth, the calculated energy from the scattering calculation in Rydbergs
+    ref, the references in the literature to the data in the input info'''
+    gname = info['ionS']
+    elvlcname = gname + '.elvlc'
+    print ' elvlc file name = ', elvlcname
+    out = open(elvlcname, 'w')
+    for i,  conf in enumerate(info['conf']):
+        mult = int(2.*info['j'][i]+1.)
+        pstring = '%3i%6s%15s%3i%3i%2s%5.1f%3i%15.3f%15.6f%15.3f%15.6f \n'%(i+1, conf, info['term'][i], info['spin'][i], info['l'][i], info['spd'][i], info['j'][i], mult, info['ecm'][i], info['eryd'][i], info['ecmth'][i], info['erydth'][i])
+    #i3,a6,a15,2i3,a2,f5.1,i3,f15.3,f15.6,f15.3,f15.6
+        out.write(pstring)
+    out.write(' -1\n')
+    out.write('%filename:  ' + elvlcname + '\n')
+    for one in info['ref']:
+        out.write(one+'\n')
+    out.write(' -1\n')
+    out.close()
+    return
+    #
+    # -------------------------------------------------------------------------------------
+    #
 def wgfaRead(ions, filename = None):
     """ reads chianti wgfa file and returns
     {"lvl1":lvl1,"lvl2":lvl2,"wvl":wvl,"gf":gf,"avalue":avalue,"ref":ref}"""
@@ -579,6 +612,46 @@ def wgfaRead(ions, filename = None):
         ref.append(s1a.strip())
     Wgfa={"lvl1":lvl1,"lvl2":lvl2,"wvl":wvl,"gf":gf,"avalue":avalue,"ref":ref, 'ionS':ions}
     return Wgfa
+    #
+    # --------------------------------------
+    #
+def wgfaWrite(info, minAvalue=1.e-29):
+    ''' to write a wgfa file
+    info is a dictionary the contains the following elements
+    ionS, the Chianti style name of the ion such as c_4 for C IV
+    lvl1 - the lower level, the ground level is 1
+    lvl2 - the upper level
+    wvl - the wavelength in Angstroms
+    gf - the weighted oscillator strength
+    avalue - the A value
+    lower - descriptive text of the lower level (optional)
+    upper - descriptive text of the upper level (optiona)
+    ref - reference text, a list of strings
+    minAvalue:  A value must be greater that this value to enter file - 1.e-29 works for ADAS'''
+    #
+    gname = info['ionS']
+    wgfaname = gname + '.wgfa'
+    print ' wgfa file name = ', wgfaname
+    out = open(wgfaname, 'w')
+    ntrans = len(info['lvl1'])
+    if info.has_key('lower'):
+        pformat = '%5i%5i%15.4f%15.3e%15.3e%20s - %20s'
+    else:
+        pformat = '%5i%5i%15.4f%15.3e%15.3e'
+    for itrans, avalue in enumerate(info['avalue']):
+        if avalue > minAvalue:
+            if info.has_key('lower'):
+                pstring= pformat%(info['lvl1'][itrans], info['lvl2'][itrans], info['wvl'][itrans], info['gf'][itrans], avalue, info['lower'][itrans], info['upper'][itrans])
+                out.write(pstring+'\n')
+            else:
+                pstring= pformat%(info['lvl1'][itrans], info['lvl2'][itrans], info['wvl'][itrans], info['gf'][itrans], avalue)
+                out.write(pstring+'\n')
+    out.write(' -1\n')
+    out.write('%filename:  ' + wgfaname + '\n')
+    for one in info['ref']:
+        out.write(one+'\n')
+    out.write(' -1\n')
+    out.close()
     #
     # -------------------------------------------------------------------------------------
     #

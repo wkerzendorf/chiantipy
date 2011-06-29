@@ -19,6 +19,7 @@ pi = 3.1415926535897931
 boltzmann = 1.3806504e-16  # cgs
 boltzmannEv = 8.617343e-5
 invCm2Ev = 1./8.06554465e+3
+invCm2ryd = 1./109737.32
 ryd2Ev = 13.6056923
 ryd2erg = 2.17987197e-11  #ergs
 fine = 7.2973525376e-3  # fine structure constant ~ 1./137
