@@ -1056,8 +1056,8 @@ class ion:
                 dexRate[isplups] = const.collision*ups[isplups]/(fmult2*np.sqrt(temp))
                 exRate[isplups] = const.collision*ups[isplups]*np.exp(-ekt)/(fmult1*np.sqrt(temp))
             elif diel:
-                de = np.abs((self.Elvlc["eryd"][l2] - self.Ip/const.ryd2Ev) - self.Elvlc["eryd"][l1])
 #                print ' diel lvl1 %5i  lvl2 %5i de %10.2e'%(l1, l2, de)
+                de = np.abs((self.Elvlc["eryd"][l2] - self.Ip/const.ryd2Ev) - self.Elvlc["eryd"][l1])
                 ekt = (de*const.ryd2erg)/(const.boltzmann*temp)
                 fmult1 = float(self.Elvlc["mult"][l1])
                 fmult2 = float(self.Elvlc["mult"][l2])
