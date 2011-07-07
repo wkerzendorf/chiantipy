@@ -62,11 +62,13 @@ from Mspectrum import mspectrum
 from Continuum import continuum
 #  the following will come in version 0.4
 from RadLoss import radLoss
+from PNe import pne
 #from ion import ioneq
 from Ion import ion
 from Ion import ionWeb
 from Ion import ioneq
 from Ion import photoioneq
+from Ion import pion
 ##from ionweb import ionWeb
 #
 #if chInteractive:
