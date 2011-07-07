@@ -195,12 +195,12 @@ def photoxRead(ions):
     irsl = int(lines[1][0:6])
     ind0 = int(lines[1][6:11])
     ener = lines[1][11:].split()
-    energy = np.array(ener, 'float64')
+    energy = np.asarray(ener, 'float64')
     #
     irsl = int(lines[2][0:6])
     ind0 = int(lines[2][6:11])
     crs = lines[2][11:].split()
-    cross = np.array(crs, 'float64')
+    cross = np.asarray(crs, 'float64')
     if not lines[3].count('-1'):
         # this is more data
         print ' have not read all data from file: ', fname

@@ -1,11 +1,16 @@
+import numpy as np
+import chianti.constants as const
 class blackStar:
     '''temperature in K, radius is the stellar radius in cm '''
     def __init__(self, temperature, radius):
-        self.temperature = temperature
-        self.radius = radius
+        self.Temperature = temperature
+        self.Radius = radius
     def incident(self, distance, energy):
         ''' distance in cm and energy in erg'''
-        bb = pi*(self.radius/distance)**2*blackbody(temperature, energy)
+        print distance
+        print energy
+        bb = blackbody(self.Temperature, energy)
+        out = const.pi*(self.Radius/distance)**2*bb['photons']
         self.Incident = bb
     #
     # ---------------------------------------------------------------------
