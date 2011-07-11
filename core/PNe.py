@@ -6,6 +6,13 @@ import matplotlib.pyplot as pl
 class pne:
     ''' classs top model a planetary nebula'''
     def __init__(self,  source, distance, temperature, density, elements = ['h','he']):
+        ''' source is a function providing the spectral radiance at the souce as a function
+        of energy
+        for example, source = chianti.sources.blackStar(temperature, radius)
+        distance is the distance from the center of the source in cm
+        temperature is the local temperature (K)
+        density is the local density (cm^-3)
+        '''
         self.Source = source
         self.Distance = distance
         self.Temperature = temperature
