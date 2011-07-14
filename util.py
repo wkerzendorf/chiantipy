@@ -463,7 +463,7 @@ def qrp(z,u):
     #
     # -------------------------------------------------------------------------------------
     #
-def elvlcRead(ions, filename = None, verbose=False):
+def elvlcRead(ions, filename = None, verbose=0,  useTh=1):
     """ read a chianti energy level file and returns
     {"lvl":lvl,"conf":conf,"term":term,"spin":spin,"l":l,"spd":spd,"j":j
     ,"mult":mult,"ecm":ecm,"eryd":eryd,"ecmth":ecmth,"erydth":erydth,"ref":ref}
@@ -524,8 +524,9 @@ def elvlcRead(ions, filename = None, verbose=False):
         ecmth[i]=inpt[10]
         erydth[i]=inpt[11]
         if ecm[i] == 0.:
-            ecm[i] = ecmth[i]
-            eryd[i] = erydth[i]
+            if useTh:
+                ecm[i] = ecmth[i]
+                eryd[i] = erydth[i]
         stuff = ' %20s %1i%1s%3.1f'%(term[i], spin[i], spd[i], j[i])
         pretty[i] = stuff.strip()
     ref=[]
@@ -639,7 +640,7 @@ def wgfaWrite(info, minAvalue=1.e-29):
     else:
         pformat = '%5i%5i%15.4f%15.3e%15.3e'
     for itrans, avalue in enumerate(info['avalue']):
-        if avalue > minAvalue:
+        if avalue > minAvalue and info['lvl1'][itrans] > 0 and info['lvl2'][itrans] > 0:
             if info.has_key('lower'):
                 pstring= pformat%(info['lvl1'][itrans], info['lvl2'][itrans], info['wvl'][itrans], info['gf'][itrans], avalue, info['lower'][itrans], info['upper'][itrans])
                 out.write(pstring+'\n')
