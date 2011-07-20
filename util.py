@@ -11,6 +11,7 @@ import os
 from types import *
 from ConfigParser import *
 import cPickle
+from datetime import date
 import numpy as np
 from FortranFormat import *
 import chianti.constants as const
@@ -541,9 +542,11 @@ def elvlcRead(ions, filename = None, verbose=0,  useTh=1):
     # -------------------------------------------------------------------------------------
     #
 def elvlcWrite(info):
-    ''' info is a dictionary that must contain the following keys
+    ''' creates a .elvlc in the current directory
+    info is a dictionary that must contain the following keys
     ionS, the Chianti style name of the ion such as c_4
-    conf, an integer denoting the configuration - no too essential
+    conf, an integer denoting the configuration - not
+    too essential
     term, a string showing the configuration
     spin, an integer of the spin of the state in LS coupling
     l, an integer of the angular momentum quantum number
@@ -565,6 +568,9 @@ def elvlcWrite(info):
         out.write(pstring)
     out.write(' -1\n')
     out.write('%filename:  ' + elvlcname + '\n')
+    info['ref'].append(' produced as a part of the George Mason University, University of Cambridge, University of Michigan \'CHIANTI\' atomic database for astrophysical spectroscopy consortium')
+    today = date.today()
+    info['ref'].append(' K. Dere (GMU) - ' + today.strftime('%Y %B %d'))
     for one in info['ref']:
         out.write(one+'\n')
     out.write(' -1\n')

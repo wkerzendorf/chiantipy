@@ -51,14 +51,15 @@ freeFreeLoss = (8./3.)*np.sqrt(pi*boltzmann/(6.*emass**3))*(planck/pi)**2*fine**
 #
 freeBoundLoss = ((16.*fine*(planck**2))/(3.*pi*np.sqrt(3.)*(emass**3)*(light**2)))*np.sqrt(emass/(2.*pi*boltzmann))
 
-El=['h','he','li','be','b','c','n','o','f','ne','na', \
+El = ['h','he','li','be','b','c','n','o','f','ne','na', \
     'mg','al','si','p','s','cl','ar','k','ca','sc','ti', \
     'v','cr','mn','fe','co','ni','cu','zn',\
     'ga','ge','as','se','br','kr']
-Ionstage=['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII', \
+Ionstage = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII', \
     'XIV','XV','XVI','XVII','XVIII','XIX','XX','XXI',' XXII','XXIII','XXIV', \
     'XXV','XXVI','XXVII','XXVIII','XXIX','XXX','XXXI','XXXII','XXXIII','XXXIV', \
     'XXXV','XXXVI','XXXVII']
+Spd = ['S', 'P', 'D', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'O', 'Q', 'R', 'T', 'U']
 #
 #  data for Gauss-Laguerre integration
 ngl =  12
