@@ -528,7 +528,7 @@ def elvlcRead(ions, filename = None, verbose=0,  useTh=1):
             if useTh:
                 ecm[i] = ecmth[i]
                 eryd[i] = erydth[i]
-        stuff = ' %20s %1i%1s%3.1f'%(term[i], spin[i], spd[i], j[i])
+        stuff = term[i].strip() + ' %1i%1s%3.1f'%( spin[i], spd[i], j[i])
         pretty[i] = stuff.strip()
     ref=[]
     for i in range(nlvls+1,len(s1)-1):
