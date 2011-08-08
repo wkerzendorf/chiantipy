@@ -518,7 +518,7 @@ class ion:
         Calls diRate and eaRate.'''
         if self.Z < self.Ion:
 #            print ' this is a bare nucleus and has no ionization rate'
-            self.IonizRate = {'rate':np.zeros_like(temperature), 'temperature':self.Temperature}
+            self.IonizRate = {'rate':np.zeros_like(self.Temperature), 'temperature':self.Temperature}
             return
         self.diRate()
         self.eaRate()
@@ -534,14 +534,14 @@ class ion:
     def photoionizRate(self):
         ''' to calculate the photoionization rate for a black body with temperature and rStar
         will do a gauss-lagurre integration'''
+        radTemperature = self.RadTemperature
+        rStar = self.RStar
         if not hasattr(self, 'Photox'):
             self.Photox = util.photoxRead(self.IonStr)
         if self.Z < self.Ion:
 #            print ' this is a bare nucleus and has no ionization rate'
-            self.PhotoionizRate = {'rate':np.zeros_like(self.Temperature), 'radTemperature':radTemperature,  'rStar':rStar}
+            self.PhotoionizRate = {'totalRate':0.,'rate':np.zeros_like(self.Temperature), 'radTemperature':radTemperature,  'rStar':rStar}
             return
-        radTemperature = self.RadTemperature
-        rStar = self.RStar
         kt = const.boltzmann*radTemperature
         #
         lvl1 = self.Photox['lvl1']
