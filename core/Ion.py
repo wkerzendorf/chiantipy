@@ -5,6 +5,7 @@ from scipy import interpolate
 import time
 #
 import chianti.data as chdata
+import chianti.sources as sources
 chInteractive = chdata.chInteractive
 if chInteractive:
     import pylab as pl
@@ -530,44 +531,48 @@ class ion:
         #
         # -------------------------------------------------------------------------------------
         #
-    def photoionizRate(self, radTemperature=0,  rStar=0):
+    def photoionizRate(self):
         ''' to calculate the photoionization rate for a black body with temperature and rStar
         will do a gauss-lagurre integration'''
-        if not radTemperature:
-            if hasattr(self, 'RadTemperature'):
-                radTemperature = self.RadTemperature
-            else:
-                self.PhotoionizRate = {'rate':np.zeros_like(self.Temperature), 'radTemperature':radTemperature,  'rStar':rStar}
-                return
-            if not rStar:
-                if hasattr(self, 'rStar'):
-                    rStar = self.RStar
-                else:
-                    rStar = 1.
+        if not hasattr(self, 'Photox'):
+            self.Photox = util.photoxRead(self.IonStr)
         if self.Z < self.Ion:
 #            print ' this is a bare nucleus and has no ionization rate'
             self.PhotoionizRate = {'rate':np.zeros_like(self.Temperature), 'radTemperature':radTemperature,  'rStar':rStar}
             return
+        radTemperature = self.RadTemperature
+        rStar = self.RStar
         kt = const.boltzmann*radTemperature
         #
+        lvl1 = self.Photox['lvl1']
+        nlvl = len(lvl1)
+        lvl2 = self.Photox['lvl2']
+        nlvl2 = len(lvl2)
+        energy = self.Photox['energy'] # in Ryd
+        cross = self.Photox['cross']
         # first see how high in energy it is necessary to go
         nener = 100.
-        de1 = self.Ip*const.ev2Erg/nener
-        ener1 = self.Ip*const.ev2Erg + de1*np.arange(nener)
-        y2 = interpolate.splrep(np.log(self.Photox['energy']*const.ryd2erg), np.log(self.Photox['cross']))
-        crossgl = np.exp(interpolate.splev(np.log(ener1),y2))
-        bb1 = util.blackbody(radTemperature, ener1 )
-        product = crossgl*bb1['photons']
-        cprod = product.cumsum()
-        good = np.where(cprod/max(cprod) > 0.999, np.arange(nener), nener)
-        maxgood = min(good)
-        de = self.Ip*const.ev2Erg*(maxgood/nener)/nener
-        ener = self.Ip*const.ev2Erg + de*np.arange(nener)
-        crossgl = np.exp(interpolate.splev(np.log(ener),y2))
-        bb1 = util.blackbody(radTemperature, ener)
-        product = crossgl*bb1['photons']
-        rate = const.pi*(const.rsun/rStar)**2*product.sum()*de
-        self.PhotoionizRate = {'rate':rate, 'radTemperature':radTemperature,  'rStar':rStar, 'energy':ener}
+        totalRate = 0.
+        rate = np.zeros((nlvl), 'float64')
+        for i,  lvl1 in enumerate(lvl1):
+            de1 = energy[i, 0]*const.ryd2erg/nener
+            ener1 = energy[i, 0]*const.ryd2erg + de1*np.arange(nener)
+            y2 = interpolate.splrep(np.log(self.Photox['energy'][i]*const.ryd2erg), np.log(self.Photox['cross'][i]))
+            crossgl = np.exp(interpolate.splev(np.log(ener1),y2))
+            bb1 = sources.blackbody(radTemperature, ener1 )
+            product = crossgl*bb1['photons']
+            cprod = product.cumsum()
+            good = np.where(cprod/max(cprod) > 0.999, np.arange(nener), nener)
+            maxgood = min(good)
+            de = energy[i, 0]*const.ryd2erg*(maxgood/nener)/nener
+            ener = energy[i, 0]*const.ryd2erg + de*np.arange(nener)
+            crossgl = np.exp(interpolate.splev(np.log(ener),y2))
+            bb1 = sources.blackbody(radTemperature, ener)
+            product = crossgl*bb1['photons']
+            rate[i] = const.pi*(1./rStar)**2*product.sum()*de
+            if lvl1 == 1:
+                totalRate += const.pi*(1./rStar)**2*product.sum()*de
+        self.PhotoionizRate = {'rate':rate, 'totalRate':totalRate, 'radTemperature':radTemperature,  'rStar':rStar, 'energy':ener, 'lvl1':lvl1,  'lvl2':lvl2}
         #
         # -------------------------------------------------------------------------------------
         #
@@ -4191,7 +4196,7 @@ class ioneq(ion):
 class photoioneq(ion):
     '''Calculates the ionization equilibrium for an element as a function of photoionization source with a radiation temperture, the distance from the source in terms of the source radius, the local temperature and density.
     The variable z is the atomic number of the element.  Acceptable values are from 1 to 30.'''
-    def __init__(self,z, source, distance, temperature, density,  verbose=False):
+    def __init__(self,z, radTemperature, rStar, temperature, density,  verbose=False):
         ''' source is a function providing the spectral radiance at the souce as a function
         of energy
         for example, source = chianti.sources.blackStar(temperature, radius)
@@ -4208,9 +4213,10 @@ class photoioneq(ion):
             ionStr=util.zion2name(z, stage)
             ionList.append(ionStr)
             print z, stage, ionStr
-            atom=ion(ionStr, temperature, density, source=source)
+            atom=ion(ionStr, temperature, density, radTemperature=radTemperature, rStar=rStar)
             atom.ionizRate()
-            atom.photoionizRate(distance)
+            atom.photoionizRate()
+            print ' total Rate = ', atom.PhotoionizRate['totalRate']
             atom.recombRate()
             chIons.append(atom)
         print ' number of ions = ', len(chIons)
@@ -4231,7 +4237,7 @@ class photoioneq(ion):
             for anIon in chIons:
                 print ' ion = ', anIon.IonStr
                 recrate = density*anIon.RecombRate['rate']
-                print ' ioniz, ph, rec = ', density*anIon.IonizRate['rate'], anIon.PhotoionizRate['rate'], recrate
+                print ' ioniz, ph, rec = ', density*anIon.IonizRate['rate'], anIon.PhotoionizRate['totalRate'], recrate
             #
             ioneq=np.zeros((z+1), 'float32')
             factor = []
@@ -4244,7 +4250,7 @@ class photoioneq(ion):
             # neutral and bare are missing certain rates
             for iz in range(z):
                 if hasattr(chIons[iz], 'IonizRate') and hasattr(chIons[iz], 'PhotoionizRate') and hasattr(chIons[iz+1], 'RecombRate'):
-                    num = (chIons[iz].IonizRate['rate'] + chIons[iz].PhotoionizRate['rate'])
+                    num = (chIons[iz].IonizRate['rate'] + chIons[iz].PhotoionizRate['totalRate'])
                     denom = chIons[iz+1].RecombRate['rate']
                     rat = num/denom
                     factor.append(rat**2 + rat**(-2))
@@ -4257,13 +4263,13 @@ class photoioneq(ion):
             #
             for iz in range(ionmax+1, z+1):
                 print ' iz, ion = ', iz, chIons[iz].IonStr
-                ionrate = density*chIons[iz-1].IonizRate['rate'] + chIons[iz-1].PhotoionizRate['rate']
+                ionrate = density*chIons[iz-1].IonizRate['rate'] + chIons[iz-1].PhotoionizRate['totalRate']
                 recrate = density*chIons[iz].RecombRate['rate']
                 ioneq[iz]=ionrate*ioneq[iz-1]/recrate
                 print ' ioniz, ph, rec = ', density*chIons[iz-1].IonizRate['rate'], chIons[iz-1].PhotoionizRate['rate'], recrate
             #
             for iz in range(ionmax-1, -1, -1):
-                ionrate = density*chIons[iz].IonizRate['rate'] + chIons[iz].PhotoionizRate['rate']
+                ionrate = density*chIons[iz].IonizRate['rate'] + chIons[iz].PhotoionizRate['totalRate']
                 recrate = density*chIons[iz+1].RecombRate['rate']
                 ioneq[iz] = recrate*ioneq[iz+1]/ionrate
             ionsum=ioneq.sum()

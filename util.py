@@ -193,22 +193,37 @@ def photoxRead(ions):
     input.close
     # get number of energies
     neng = int(lines[0][0:6])
-    irsl = int(lines[1][0:6])
-    ind0 = int(lines[1][6:11])
-    ener = lines[1][11:].split()
-    energy = np.asarray(ener, 'float64')
-    #
-    irsl = int(lines[2][0:6])
-    ind0 = int(lines[2][6:11])
-    crs = lines[2][11:].split()
-    cross = np.asarray(crs, 'float64')
-    if not lines[3].count('-1'):
-        # this is more data
-        print ' have not read all data from file: ', fname
-        return {'energy':energy, 'cross':cross}
-    else:
-        ref = lines[4:-1]
-        return {'energy':energy, 'cross':cross,  'ref':ref}
+    dataEnd = 0
+    lvl1 = []
+    lvl2 = []
+    energy = []
+    cross = []
+    icounter = 1
+    while not dataEnd:
+        lvl11 = int(lines[icounter][0:6])
+        lvl21 = int(lines[icounter][6:11])
+        ener = lines[icounter][11:].split()
+        energy1 = np.asarray(ener, 'float64')
+        #
+        icounter += 1
+        irsl = int(lines[icounter][0:6])
+        ind0 = int(lines[icounter][6:11])
+        if irsl != lvl11 or ind0 != lvl21:
+            print ' lvl1, lvl2 = ', lvl11, lvl21
+            print ' irsl, indo = ', irsl,  ind0
+            return
+        crs = lines[icounter][11:].split()
+        cross1 = np.asarray(crs, 'float64')
+        lvl1.append(lvl11)
+        lvl2.append(lvl21)
+        energy.append(energy1)
+        cross.append(cross1)
+        icounter += 1
+        dataEnd = lines[icounter].count('-1')
+    ref = lines[icounter+1:-1]
+    cross = np.asarray(cross, 'float64')
+    energy = np.asarray(energy, 'float64')
+    return {'lvl1':lvl1, 'lvl2':lvl2,'energy':energy, 'cross':cross,  'ref':ref}
     #
     # -------------------------------------------------------------------------------------
     #
