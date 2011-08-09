@@ -143,13 +143,16 @@ class ion:
             #
             # read in all data if in masterlist
             #  if not, there should still be ionization and recombination rates
+            #
             if self.IonStr in MasterList:
                 self.Elvlc = util.elvlcRead(self.IonStr, verbose=verbose)
                 self.Wgfa = util.wgfaRead(self.IonStr)
                 self.Nwgfa=len(self.Wgfa['lvl1'])
                 nlvlWgfa = max(self.Wgfa['lvl2'])
                 nlvlList =[nlvlWgfa]
-                splupsfile = util.ion2filename(self.IonStr)+'.splups'
+                fileName = util.ion2filename(self.IonStr)
+                print 'fileName = ', fileName
+                splupsfile = fileName + '.splups'
                 if os.path.isfile(splupsfile):
                     # happens the case of fe_3 and prob. a few others
                     self.Splups = util.splupsRead(self.IonStr)
@@ -161,7 +164,7 @@ class ion:
                     nlvlSplups = 0
 ##                self.Nlvls = nlvlElvlc
                 #
-                cisplupsfile = util.ion2filename(self.IonStr)+'.cisplups'
+                cisplupsfile = fileName +'.cisplups'
                 if os.path.isfile(cisplupsfile):
                     self.CiSplups = util.splupsRead(self.IonStr,ci=1)
                     self.Ncisplups=len(self.CiSplups["lvl1"])
@@ -170,7 +173,7 @@ class ion:
                 else:
                     self.Ncisplups = 0
                 #  .reclvl file may not exist
-                reclvlfile = util.ion2filename(self.IonStr)+'.reclvl'
+                reclvlfile = fileName +'.reclvl'
                 if os.path.isfile(reclvlfile):
                     self.Reclvl = util.cireclvlRead(self.IonStr, 'reclvl')
                     self.Nreclvl = len(self.Reclvl['lvl1'])
@@ -179,7 +182,7 @@ class ion:
                 else:
                     self.Nreclvl = 0
                 #  .dielsplups file may not exist
-                dielsplupsfile = util.ion2filename(self.IonStr)+'.dielsplups'
+                dielsplupsfile = fileName +'.dielsplups'
                 if os.path.isfile(dielsplupsfile):
                     self.DielSplups = util.splupsRead(self.IonStr, diel=1)
                     self.Ndielsplups=len(self.DielSplups["lvl1"])
@@ -189,12 +192,21 @@ class ion:
                     self.Ndielsplups = 0
                 #
                 #  psplups file may not exist
-                psplupsfile = util.ion2filename(self.IonStr)+'.psplups'
+                psplupsfile = fileName +'.psplups'
                 if os.path.isfile(psplupsfile):
                     self.Psplups = util.splupsRead(self.IonStr, prot=True)
                     self.Npsplups=len(self.Psplups["lvl1"])
                 else:
                     self.Npsplups = 0
+                #
+                drparamsFile = fileName +'.drparams'
+                if os.path.isfile(drparamsFile):
+                    self.DrParams = util.drRead(self.IonStr)
+                #
+                rrparamsFile = fileName +'.rrparams'
+                if os.path.isfile(rrparamsFile):
+                    self.RrParams = util.rrRead(self.IonStr)
+
                 #
                 photoxfile = util.ion2filename(self.IonStr)+'.photox'
                 if os.path.isfile(photoxfile):
@@ -623,18 +635,17 @@ class ion:
         #
         # -------------------------------------------------------------------------------------
         #
-        #
-        # -------------------------------------------------------------------------------------
-        #
     def drRate(self):
-        '''Provide the dielectronic recombination rate coefficient as a function of temperature (K).'''
+        '''Provide the dielectronic recombination rate coefficient as a function of temperature (K).
+        '''
         #
         if hasattr(self, 'Temperature'):
             temperature=self.Temperature
+            print ' T = ', temperature
         else:
             print ' temperature is not defined'
             return {}
-        drparamsfile = util.ion2filename(self.IonStr) + 'drparams'
+        drparamsfile = util.ion2filename(self.IonStr) + '.drparams'
         if hasattr(self, 'DrParams'):
             drparams=self.DrParams
         elif os.path.isfile(drparamsfile):
@@ -643,7 +654,6 @@ class ion:
         else:
             self.DrRate = {'rate':np.zeros_like(temperature), 'temperature':temperature}
             return
-#        print ' dr params type = ', drparams['drtype']
         #
         if drparams['drtype'] == 1:
             # badnell type
@@ -651,7 +661,7 @@ class ion:
             drcoef=drparams['cparams']
             gcoef = drenergy > 0.
             ncoef=gcoef.sum()
-#                print ' ncoef = ', gcoef.sum()
+#            print ' ncoef = ', gcoef.sum()
             rate=np.zeros(temperature.size, 'float32')
             for icoef in range(ncoef):
                 rate+=drcoef[icoef]*np.exp(-drenergy[icoef]/temperature)
