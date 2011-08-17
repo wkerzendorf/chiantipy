@@ -560,8 +560,7 @@ def elvlcWrite(info):
     ''' creates a .elvlc in the current directory
     info is a dictionary that must contain the following keys
     ionS, the Chianti style name of the ion such as c_4
-    conf, an integer denoting the configuration - not
-    too essential
+    conf, an integer denoting the configuration - not too essential
     term, a string showing the configuration
     spin, an integer of the spin of the state in LS coupling
     l, an integer of the angular momentum quantum number
