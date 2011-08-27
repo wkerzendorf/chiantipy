@@ -1893,13 +1893,10 @@ class ion:
             idx = np.argsort(pop)
             minPop = spop[-top:].min()/2.
             for itop in range(1, top+1):
-                print ' itop, idx = ', itop, idx[-itop]
-#                x = [kdx[idx[-itop]], kdx[idx[-itop]], kdx[idx[-itop]]+1, kdx[idx[-itop]]+1]
                 x = [idx[-itop], idx[-itop], idx[-itop]+1, idx[-itop]+1]
                 y = [minPop, spop[-itop], spop[-itop], minPop]
                 pl.semilogy(x, y, 'k')
             pl.axis([0, max(idx[-top:])+1, minPop, 1.])
-            print ' axis = ', [0, max(idx[-top:])+1, minPop, 1.]
             pl.xlabel('Level', fontsize=fontsize)
             pl.ylabel('Population', fontsize=fontsize)
             return
