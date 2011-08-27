@@ -36,4 +36,4 @@ if chInteractive:
 import version
 __version__ = version.__version__
 __version_info__ = version.__version_info__
-keywordArgs = ['temperature','density','hDensity', 'pDensity','radTemperature', 'rStar', 'distance']
+keywordArgs = ['temperature','dDensity','hDensity', 'pDensity','radTemperature', 'rStar', 'distance']
