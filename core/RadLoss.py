@@ -46,7 +46,8 @@ class radLoss:
     Setting em will multiply the spectrum at each temperature by the value of em.
 
     em [for emission measure], can be a float or an array of the same length as the
-    temperature/density.'''
+    temperature/density.
+    '''
     def __init__(self, temperature, density, ionList = 0, minAbund=0, doContinuum=1, verbose=0, allLines=1):
         t1 = datetime.now()
         masterlist = chdata.MasterList
@@ -74,7 +75,7 @@ class radLoss:
         minAbundAll = abundAll[nonzed].min()
         if minAbund < minAbundAll:
             minAbund = minAbundAll
-        self.minAbund = minAbund
+        self.MinAbund = minAbund
         ionInfo = util.masterListInfo()
         #
         freeFreeLoss = np.zeros((nTempDen), 'float64').squeeze()
@@ -172,3 +173,22 @@ class radLoss:
         if chInteractive:
             print ' elapsed seconds = ', dt.seconds
         self.RadLoss ={'rate':total, 'temperature':self.Temperature, 'density':self.Density, 'minAbund':minAbund, 'abundance':self.AbundanceName}
+    #
+    # -------------------------------------------------------------------
+    #
+    def radLossPlot(self):
+        ''' to plot the radiative losses vs temperature'''
+        if not hasattr(self, 'RadLoss'):
+            print ' must first calculate radiation losses with radLoss'
+            return
+        else:
+            fontsize = 16
+            temp = self.RadLoss['temperature']
+            rate = self.RadLoss['rate']
+            pl.loglog(temp, rate)
+            pl.xlabel('Temperature (K)',fontsize=fontsize)
+            pl.ylabel('Temperature (K)',fontsize=fontsize)
+#            title = 'Radiative loss rate,  minAbund = %6.1e'%(self.MinAbund)
+#            if self.Density.size == 1:
+#                title += ', density = %6.1e'%(self.Density)
+#            pl.title(title, fontsize=fontsize)
