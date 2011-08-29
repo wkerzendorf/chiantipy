@@ -19,7 +19,7 @@ else:
 class spectrum:
     '''Calculate the emission spectrum as a function of temperature and density.
 
-    includes elemental abundances or ionization equilibria
+    includes elemental abundances and ionization equilibria
 
     temperature and density can be arrays but, unless the size of either is one (1),
     the two must have the same size
@@ -36,12 +36,19 @@ class spectrum:
     the desired lines in Chianti notation, i.e. C VI = c_6
 
     a minimum abundance can be specified so that the calculation can be speeded up by excluding
-    elements with a low abundance.  Setting doContinuum =0 will skip the continuum calculation.
+    elements with a low abundance. With solar photospheric abundances -
+
+    setting minAbund = 1.e-4 will include H, He, C, O, Ne
+    setting minAbund = 2.e-5 adds  N, Mg, Si, S, Fe
+    setting minAbund = 1.e-6 adds  Na, Al, Ar, Ca, Ni
+
+    Setting doContinuum =0 will skip the continuum calculation.
 
     Setting em will multiply the spectrum at each temperature by the value of em.
 
     em [for emission measure], can be a float or an array of the same length as the
-    temperature/density.'''
+    temperature/density
+    '''
     def __init__(self, temperature, density, wavelength, filter=(chfilters.gaussianR, 1000.),  ionList = 0, minAbund=0, doContinuum=1, em = None,  verbose=0, allLines=1):
         t1 = datetime.now()
         masterlist = chdata.MasterList

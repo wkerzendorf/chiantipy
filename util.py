@@ -405,7 +405,7 @@ def el2z(els):
     #
 def abundanceRead(abundancename=''):
     """ read an abundanc file and returns the abundance values relative to hydrogen"""
-    abundance=np.zeros((50),'Float32')
+    abundance=np.zeros((50),'Float64')
     xuvtop=os.environ["XUVTOP"]
     if abundancename!='':
         # a specific abundance file name has been specified

@@ -37,7 +37,11 @@ class radLoss:
     the desired lines in Chianti notation, i.e. C VI = c_6
 
     a minimum abundance can be specified so that the calculation can be speeded up by excluding
-    elements with a low abundance.  Setting doContinuum =0 will skip the continuum calculation.
+    elements with a low abundance. With solar photospheric abundances -
+
+    setting minAbund = 1.e-4 will include H, He, C, O, Ne
+    setting minAbund = 2.e-5 adds  N, Mg, Si, S, Fe
+    setting minAbund = 1.e-6 adds  Na, Al, Ar, Ca, Ni
 
     Setting em will multiply the spectrum at each temperature by the value of em.
 
