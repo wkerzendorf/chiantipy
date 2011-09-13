@@ -6,6 +6,15 @@
 :Contact: kdere@gmu.edu
 
 
+Changes from 0.3.1 to 0.4
+=========================
+
+added radLoss class to calculate radiative losses and plot the results.
+
+ion.popPlot now plots a histogram of level populations if only a single value of temperature and density are specified.
+
+Bug fixes.
+
 
 Changes from 0.3 to 0.3.1
 =========================

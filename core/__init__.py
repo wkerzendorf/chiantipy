@@ -67,8 +67,8 @@ from PNe import pne
 from Ion import ion
 from Ion import ionWeb
 from Ion import ioneq
-from Ion import photoioneq
-from Ion import phion
+#from Ion import photoioneq
+#from Ion import phion
 ##from ionweb import ionWeb
 #
 #if chInteractive:

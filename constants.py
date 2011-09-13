@@ -17,6 +17,7 @@ ev2Ang = 12.39841875e+3
 ev2Erg = 1.602176487e-12
 pi = 3.1415926535897931
 boltzmann = 1.3806504e-16  # cgs
+stefanBoltzmann = 5.670373e-5  # cgs - ergs cm^-2 K^-4 s^-1
 boltzmannEv = 8.617343e-5
 invCm2Ev = 1./8.06554465e+3
 invCm2ryd = 1./109737.32
@@ -36,6 +37,7 @@ std2fwhm = 2.*np.sqrt(2.*np.log(2.))
 invCm2Erg = planck*light
 #
 boltzmannRyd = boltzmannEv/ryd2Ev
+#
 # collision produces the 8.63e-6 factor
 collision = planck**2/((2.*pi*emass)**1.5*np.sqrt(boltzmann))
 #
