@@ -2621,7 +2621,7 @@ class ion:
             intensityRatioFileName+= '_%3i'%(wvl[topLines[aline]])
         intensityRatioFileName+='.rat'
         self.IntensityRatio={'ratio':numEmiss/denEmiss,'desc':desc,
-                'temperature':outTemperature,'eDensity':outDensity,'filename':intensityRatioFileName}
+                'temperature':outTemperature,'eDensity':outDensity,'filename':intensityRatioFileName, 'numIdx':num_idx, 'denIdx':den_idx}
         #
         # -------------------------------------------------------------------------------------
         #
