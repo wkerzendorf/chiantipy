@@ -79,7 +79,7 @@ class mspectrum:
                 if masterlist.count(one):
                     alist.append(one)
                 else:
-                    if chInteractive and verbose:
+                    if verbose:
                         pstring = ' %s not in CHIANTI database'%(one)
                         print('')
             masterlist = alist

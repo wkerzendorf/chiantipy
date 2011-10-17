@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-4.6.dtd">
 <!-- eric4 project file for project ChiantiPy -->
-<!-- Saved: 2011-04-29, 15:49:03 -->
+<!-- Saved: 2011-10-17, 16:14:53 -->
 <!-- Copyright (C) 2011 ,  -->
 <Project version="4.6">
   <Language>en</Language>
@@ -45,7 +45,6 @@
   </Interfaces>
   <Others>
     <Other>chiantirc</Other>
-    <Other>eric_doc</Other>
   </Others>
   <Vcs>
     <VcsType>Subversion</VcsType>
