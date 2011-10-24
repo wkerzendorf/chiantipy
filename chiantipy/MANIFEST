@@ -28,3 +28,5 @@ chianti/gui_qt/ui.py
 chianti/gui_wx/__init__.py
 chianti/gui_wx/gui.py
 chianti/gui_wx/ui.py
+images/chianti1.png
+images/chianti2.png

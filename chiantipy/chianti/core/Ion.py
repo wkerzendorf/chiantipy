@@ -636,6 +636,125 @@ class ion:
         #
         # -------------------------------------------------------------------------------------
         #
+    def cireclvlDescale(self, lvlType):
+        '''Interpolate and extrapolate cilvl and reclvl rates.
+        type must be either 'reclvl' or cilvl
+        Used in level population calculations.
+        '''
+        if hasattr(self, 'Temperature'):
+            temperature=self.Temperature
+        else:
+            print ' temperature is not defined'
+            return
+        lvlfile = util.ion2filename(self.IonStr)+'.' + lvlType
+        if lvlType == 'reclvl':
+            if hasattr(self, 'Reclvl'):
+                lvl = self.Reclvl
+            elif os.path.isfile(lvlfile):
+#           print ' reading reclvl file'
+                self.Reclvl = util.cireclvlRead(self.IonStr, '.'+lvlType)
+                lvl = self.Reclvl
+            else:
+                self.ReclvlRate = {'rate':zeros_like(temperature)}
+                return
+        if lvlType == 'cilvl':
+            if hasattr(self, 'Cilvl'):
+                lvl = self.Cilvl
+            elif os.path.isfile(lvlfile):
+#           print ' reading reclvl file'
+                self.Cilvl = util.cireclvlRead(self.IonStr, '.'+lvlType)
+                lvl = self.Reclvl
+            else:
+                self.CilvlRate = {'rate':zeros_like(temperature)}
+                return
+        #
+        #  the rates and temperatures in reclvl are not all the same
+        #
+        ntemp = temperature.size
+        nlvl = len(lvl['lvl1'])
+        if ntemp == 1:
+            rate = np.zeros(( nlvl), 'float64')
+            # previous takes care of temperatures below reclvl['temperature'].min()
+            if temperature > lvl['temperature'].max():
+                # extrapolate as 1/temperature
+                for itrans in range(nlvl):
+#                   lvl2 = self.Reclvl['lvl2'][itrans]
+                    lvlTemp = lvl['ntemp'][itrans]
+                    rate[itrans] = lvl['rate'][itrans,nrecTemp-1]*(lvl['temperature'][itrans, nrecTemp-1]/temperature)
+            else:
+                for itrans in range(nlvl):
+                    lvl2 = lvl['lvl2'][itrans]
+                    nrecTemp = lvl['ntemp'][itrans]
+                    y2 = interpolate.splrep(np.log(lvl['temperature'][itrans, :nrecTemp]), np.log(lvl['rate'][itrans, :nrecTemp]))
+                    cirec = np.exp(interpolate.splev(np.log(temperature),y2))
+                    rate[itrans] = cirec.squeeze()
+        else:
+            # ntemp > 1
+            rate = np.zeros(( nlvl, temperature.size), 'float64')
+            #
+            for itrans in range(nlvl):
+                lvl2 = lvl['lvl2'][itrans]
+                nTemp = lvl['ntemp'][itrans]
+                y2 = interpolate.splrep(np.log(lvl['temperature'][itrans, :nTemp]), np.log(lvl['rate'][itrans, :nTemp]))
+                goodLow = temperature < lvl['temperature'][itrans].min()
+                if goodLow.sum() >0:
+#                   print ' number of low temperatures  = ', goodLow.sum()
+                    lowT = temperature[goodLow]
+                good1 = temperature >= lvl['temperature'][itrans].min()
+                good2 = temperature <= lvl['temperature'][itrans].max()
+                realgood = np.logical_and(good1,good2)
+                if realgood.sum() > 0:
+#                   print ' number of mid temperatures  = ', realgood.sum()
+                    midT = temperature[realgood]
+                goodHigh = temperature > lvl['temperature'][itrans].max()
+                if goodHigh.sum() > 0:
+#                   print ' number of high temperatures  = ', goodHigh.sum()
+                    highT = temperature[goodHigh]
+                lvl2 = lvl['lvl2'][itrans]
+                nTemp = lvl['ntemp'][itrans]
+                newRate = np.zeros(ntemp, 'float64')
+                index = 0
+                if goodLow.sum() == 1:
+#                    lowRec = np.exp(interpolate.splev(np.log(lowT),y2))
+#                    newRec[index] = lowRec
+                    newRate[index] = 0.
+                    index += 1
+                elif goodLow.sum() > 1:
+#                    lowRec = np.exp(interpolate.splev(np.log(lowT),y2))
+                    for idx in range(goodLow.sum()):
+#                        newRec[index] = lowRec[idx]
+                        newRate[index] = 0.
+                        index += 1
+                if realgood.sum() == 1:
+                    midRec = np.exp(interpolate.splev(np.log(midT),y2))
+                    newRAte[index] = midRec
+                    index += 1
+                elif realgood.sum() > 1:
+                    midRec = np.exp(interpolate.splev(np.log(midT),y2))
+                    for idx in range(realgood.sum()):
+                        newRate[index] = midRec[idx]
+                        index += 1
+                if goodHigh.sum() == 1:
+#                    highRec = np.exp(interpolate.splev(np.log(highT),y2))
+#                    newRec[index] = highRec
+                    newRate[index] = 0.
+                    index += 1
+                elif goodHigh.sum() > 1:
+#                    highRec = np.exp(interpolate.splev(np.log(highT),y2))
+                    for idx in range(goodHigh.sum()):
+#                       print ' index, idx = ', index,  idx
+#                        newRec[index] = highRec[idx]
+                        newRate[index] = 0.
+                        index += 1
+                rate[itrans] = newRate
+        if lvlType == 'reclvl':
+            self.ReclvlRate = {'rate':rate, 'lvl1':lvl['lvl1'], 'lvl2':lvl['lvl2'], 'temperature':temperature}
+        elif lvlType == 'cilvl':
+            self.CilvlRate = {'rate':rate, 'lvl1':lvl['lvl1'], 'lvl2':lvl['lvl2'], 'temperature':temperature}
+
+        #
+        # -------------------------------------------------------------------------------------
+        #
     def reclvlDescale(self):
         '''Interpolate and extrapolate reclvl rates.
 
@@ -834,9 +953,9 @@ class ion:
         #
         # -------------------------------------------------------------------------------------
         #
-    def upsilonDescale(self, prot=0, ci=0,  diel=0):
+    def upsilonDescale(self, prot=0, diel=0):
         """Provides the temperatures and effective collision strengths (upsilons)
-        set prot for proton rates, ci for collision ionization rates
+        set prot for proton rates
         otherwise, ce will be set for electron collision rates"""
         #
         #  xt=kt/de
@@ -850,17 +969,6 @@ class ion:
                 self.Psplups=util.splupsRead(self.IonStr,prot=1)
                 if type(self.Psplups) == types.NoneType:
                     self.PUpsilon = None
-                    return
-                else:
-                    nsplups = len(self.Cilvl["lvl1"])
-        elif ci:
-            ce = 0
-            try:
-                nsplups = len(self.Cilvl["lvl1"])
-            except:
-                self.Cilvl = util.splupsRead(self.IonStr,ci=1)
-                if type(self.Cilvl) == types.NoneType:
-                    self.CiUpsilon = None
                     return
                 else:
                     nsplups = len(self.Cilvl["lvl1"])
@@ -929,18 +1037,6 @@ class ion:
                 de=elvlc[l2]-elvlc[l1]
 #                de=self.Psplups['de'][isplups]  # these are generally 0.
                 kte=temp/(de*1.57888e+5)
-            elif ci:
-                #
-                l1 = self.Cilvl["lvl1"][isplups]-1
-                l2 = self.Cilvl["lvl2"][isplups]-1
-                ttype = self.Cilvl["ttype"][isplups]
-                cups = self.Cilvl["cups"][isplups]
-                nspl = self.Cilvl["nspl"][isplups]
-                ttype = self.Cilvl["ttype"][isplups]
-                dx = 1./(float(nspl)-1.)
-                splups = self.Cilvl["splups"][isplups,0:nspl]
-                de=self.Cilvl['de'][isplups]
-                kte = temp/(de*1.57888e+5)
             elif diel:
                 #
                 l1 = self.DielSplups["lvl1"][isplups]-1
@@ -954,6 +1050,7 @@ class ion:
                 de=self.DielSplups['de'][isplups]
                 kte = temp/(de*1.57888e+5)
             else:
+                # electron collisional excitation
                 l1=self.Splups["lvl1"][isplups]-1
                 l2=self.Splups["lvl2"][isplups]-1
                 ttype=self.Splups["ttype"][isplups]
@@ -1041,13 +1138,6 @@ class ion:
                 fmult2 = float(self.Elvlc["mult"][l2])
                 dexRate[isplups] = const.collision*ups[isplups]/(fmult2*np.sqrt(temp))
                 exRate[isplups] = const.collision*ups[isplups]*np.exp(-ekt)/(fmult1*np.sqrt(temp))
-            elif ci:
-        #
-                # the ciRate can be computed for all temperatures
-                #
-                de = self.Cilvl['de'][isplups]
-                ekt = (de*1.57888e+5)/temperature
-                exRate[isplups] = const.collision*ups[isplups]*np.exp(-ekt)/np.sqrt(temperature)
         #
         ups=np.where(ups > 0.,ups,0.)
         #
@@ -1055,8 +1145,6 @@ class ion:
             self.PUpsilon = {'upsilon':ups, 'temperature':temperature, 'exRate':exRate, 'dexRate':dexRate}
         elif diel == 1:
             self.DielUpsilon = {'upsilon':ups, 'temperature':temperature, 'exRate':exRate}
-        elif ci == 1:
-            self.CiUpsilon = {'upsilon':ups,  'temperature':temperature, 'rate':exRate}
         else:
             self.Upsilon = {'upsilon':ups, 'temperature':temperature, 'exRate':exRate, 'dexRate':dexRate}
         #
@@ -1173,12 +1261,16 @@ class ion:
         #
         # the Dielectronic test should eventually go away
         if popCorrect and (not self.Dielectronic):
-            self.upsilonDescale(ci=1)
             if self.Ncilvl:
                 ci = 1
                 cilvl = self.Cilvl
-                ciupsilon = self.CiUpsilon
+                if hasattr(self, 'CilvlRate'):
+                    cilvlRate = self.CilvlRate
+                else:
+                    self.cireclvlDescale('cilvl')
+                    cilvlRate = self.CilvlRate
                 self.recombRate()
+                #
                 lowers = util.zion2name(self.Z, self.Ion-1)
                 # get the lower ionization stage
                 lower = ion(lowers, temperature=self.Temperature, eDensity = self.EDensity)
@@ -1189,15 +1281,14 @@ class ion:
                 ci = 0
 #            try:
             if self.Nreclvl:
+                rec = 1
                 reclvl = self.Reclvl
                 if hasattr(self, 'ReclvlRate'):
                     reclvlRate = self.ReclvlRate
-                    rec = 1
                 else:
 #                    print ' doing reclvlDescale in populate'
                     self.reclvlDescale()
                     reclvlRate = self.ReclvlRate
-                    rec = 1
             elif self.Ndielsplups:
                 self.upsilonDescale(diel=1)
                 dielexRate = self.DielUpsilon['exRate']
@@ -1325,12 +1416,11 @@ class ion:
                     lvl2 = cilvl['lvl2'][itrans]-1
 #                    de = cilvl['de'][itrans]
 #                    ekt = (de*1.57888e+5)/temperature
-                    mult = lowMult[lvl1-1]
-#                    cirate = const.collision*self.CiUpsilon[itrans]*np.exp(-ekt)/(np.sqrt(temperature)*mult)
+#                    mult = lowMult[lvl1-1]
                     # this is kind of double booking the ionization rate components
-                    popmat[lvl2+ci, lvl1] += self.EDensity*self.CiUpsilon['rate'][itrans]/mult
-                    popmat[lvl1, lvl1] -= self.EDensity*self.CiUpsilon['rate'][itrans]/mult
-                    ciTot += self.EDensity*self.CiUpsilon['rate'][itrans]/mult
+                    popmat[lvl2+ci, lvl1] += self.EDensity*self.CilvlRate['rate'][itrans]
+                    popmat[lvl1, lvl1] -= self.EDensity*self.CilvlRate['rate'][itrans]
+                    ciTot += self.EDensity*self.CilvlRate['rate'][itrans]
                 #
                 popmat[1, 0] += (self.EDensity*lower.IonizRate['rate'] - ciTot)
                 popmat[0, 0] -= (self.EDensity*lower.IonizRate['rate'] - ciTot)
@@ -1449,11 +1539,10 @@ class ion:
 #                        de = cilvl['de'][itrans]
 #                        ekt = (de*1.57888e+5)/temperature
                         mult = lowMult[lvl1-1]
-#                        cirate = const.collision*self.CiUpsilon[itrans]*np.exp(-ekt)/(np.sqrt(temp[itemp])*mult)
                         # this is kind of double booking the ionization rate components
-                        popmat[lvl2+ci, lvl1] += self.EDensity*self.CiUpsilon['rate'][itrans, itemp]/mult
-                        popmat[lvl1, lvl1] -= self.EDensity*self.CiUpsilon['rate'][itrans, itemp]/mult
-                        ciTot += self.EDensity*self.CiUpsilon['rate'][itrans, itemp]/mult
+                        popmat[lvl2+ci, lvl1] += self.EDensity*self.CilvlRate['rate'][itrans, itemp]
+                        popmat[lvl1, lvl1] -= self.EDensity*self.CilvlRate['rate'][itrans, itemp]
+                        ciTot += self.EDensity*self.CilvlRate['rate'][itrans, itemp]
 #                        popmat[lvl2, lvl1-1] += self.EDensity*cirate[itemp]
 #                        popmat[lvl1-1, lvl1-1] -= self.EDensity*cirate[itemp]
                     popmat[1, 0] += (self.EDensity*lower.IonizRate['rate'][itemp] - ciTot)
@@ -1576,14 +1665,12 @@ class ion:
                         lvl2 = cilvl['lvl2'][itrans] -1
 #                        de = cilvl['de'][itrans]
 #                        ekt = (de*1.57888e+5)/temperature
-                        mult = lowMult[lvl1-1]
-#                        cirate = const.collision*self.CiUpsilon[itrans]*np.exp(-ekt)/(np.sqrt(temp)*mult)
                         # this is kind of double booking the ionization rate components
 #                        popmat[lvl2, lvl1-1] += self.EDensity[idens]*cirate
 #                        popmat[lvl1-1, lvl1-1] -= self.EDensity[idens]*cirate
-                        popmat[lvl2+ci, lvl1] += self.EDensity[idens]*self.CiUpsilon['rate'][itrans]/mult
-                        popmat[lvl1, lvl1] -= self.EDensity[idens]*self.CiUpsilon['rate'][itrans]/mult
-                        ciTot += self.EDensity[idens]*self.CiUpsilon['rate'][itrans]/mult
+                        popmat[lvl2+ci, lvl1] += self.EDensity[idens]*self.CilvlRate['rate'][itrans]
+                        popmat[lvl1, lvl1] -= self.EDensity[idens]*self.CilvlRate['rate'][itrans]
+                        ciTot += self.EDensity[idens]*self.CilvlRate['rate'][itrans]
                     popmat[1, 0] += (self.EDensity[idens]*lower.IonizRate['rate'] -ciTot)
                     popmat[0, 0] -= (self.EDensity[idens]*lower.IonizRate['rate'] -ciTot)
                     popmat[0, 1] += self.EDensity[idens]*self.RecombRate['rate']
@@ -1711,16 +1798,12 @@ class ion:
                     for itrans in range(len(cilvl['lvl1'])):
                         lvl1 = cilvl['lvl1'][itrans] -1
                         lvl2 = cilvl['lvl2'][itrans] -1
-#                        de = cilvl['de'][itrans]
-#                        ekt = (de*1.57888e+5)/temperature
-                        mult = lowMult[lvl1-1]
-#                        cirate = const.collision*self.CiUpsilon[itrans]*np.exp(-ekt)/(np.sqrt(temp)*mult)
                         # this is kind of double booking the ionization rate components
 #                        popmat[lvl2, lvl1-1] += self.EDensity[itemp]*cirate[itemp]
 #                        popmat[lvl1-1, lvl1-1] -= self.EDensity[itemp]*cirate[itemp]
-                        popmat[lvl2+ci, lvl1] += self.EDensity[itemp]*self.CiUpsilon['rate'][itrans, itemp]/mult
-                        popmat[lvl1, lvl1] -= self.EDensity[itemp]*self.CiUpsilon['rate'][itrans, itemp]/mult
-                        ciTot += self.EDensity[itemp]*self.CiUpsilon['rate'][itrans, itemp]/mult
+                        popmat[lvl2+ci, lvl1] += self.EDensity[itemp]*self.CilvlRate['rate'][itrans, itemp]
+                        popmat[lvl1, lvl1] -= self.EDensity[itemp]*self.CilvlRate['rate'][itrans, itemp]
+                        ciTot += self.EDensity[itemp]*self.CilvlRAte['rate'][itrans, itemp]
                     popmat[1, 0] += (self.EDensity[itemp]*lower.IonizRate['rate'][itemp] - ciTot)
                     popmat[0, 0] -= (self.EDensity[itemp]*lower.IonizRate['rate'][itemp] - ciTot)
                     popmat[0, 1] += self.EDensity[itemp]*self.RecombRate['rate'][itemp]
