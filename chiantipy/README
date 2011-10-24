@@ -1,0 +1,90 @@
+======================
+ Welcome to ChiantiPy
+======================
+
+
+Changes from 0.3.1 to 0.4
+=========================
+
+added radLoss class to calculate radiative losses and plot the results.
+
+ion.popPlot now plots a histogram of level populations if only a single value of temperature and density are specified.
+
+Bug fixes.
+
+
+What is ChiantiPy
+=================
+
+ChiantiPy is the Python interface to the CHIANTI atomic database for astrophysical spectroscopy
+
+Detailed information can be found at http://chiantipy.sourceforge.net
+
+What is CHIANTI
+===============
+
+CHIANTI provides a database of atomic data that can be used to interpret the emission of spectral lines and continuua emitted from high-temperature, optically-thin astrophysical sources.  The CHIANTI project provides a suite of routines written in Interactive Data Language (IDL) to access the database and calculate various quantities for use in interpreting observed spectra or producing synthetic spectra.
+
+==============================                                                                                                                
+Getting started with ChiantiPy                                                                                                                
+==============================                                                                                                                
+
+Prerequisites
+=============
+
+* Python ( latest 2.X version; not compatible with version 3.X )
+
+* Numpy
+
+* Scipy
+
+* Matplotlib
+
+* [Optional] PyQt4 or wxPython
+
+* CHIANTI_, the atomic database for astrophysical spectroscopy
+
+.. _CHIANTI: http://www.chiantidatabase.org
+
+In addition, the FortranFormat module from Scientific Python, developed by Konrad Hinsen of the Centre de Biophysique Moleculaire (http://dirac.cnrs-orleans.fr/ScientificPython/), is included in this distribution for simplicity.
+
+Installing the CHIANTI database
+-------------------------------
+
+The gzipped *data* tar ball can be downloaded from the CHIANTI website_
+
+.. _website: http://www.chiantidatabase.org/download.html
+
+*  put the file in a convenient directory, cd to the directory and untar the file
+
+* ChiantiPy uses the environment variable *XUVTOP* to find the database.  Set XUVTOP to the name of the directory where the CHIANTI data tarball was placed.  For example
+
+> setenv XUVTOP /data1/xuv/directory.where.the.tarball.was.placed
+
+Some sites have the CHIANTI database maintained as part of a SolarSoft distribution.  In that case, simply set XUVTOP to the directory were it exists, usually something like $SSW/packages/chianti/dbase
+
+
+Installing the ChiantiPy package
+--------------------------------
+
+The ChiantiPy package can be downloaded from the ChiantiPy, untar it, cd to the directory where it was unpacked, and then, as root
+
+> python setup.py install
+
+If you do not have root privileges, simply put the ChiantiPy directory (simply called 'chianti') in your PYTHONPATH
+
+
+Running ChiantiPy
+-----------------
+
+The documentation can be found on its web page ChiantiPy_
+
+.. _ChiantiPy:  http://chiantipy.sourceforge.net/
+
+In particular, a quick start guide is included which should get you up and running fairly quickly.
+
+
+Keeping track of ChiantiPy
+--------------------------
+
+There is a mailing list that you can subscribe to at https://lists.sourceforge.net/lists/listinfo/chiantipy-users.  In order to subscribe it is first necessary to obtain a user account from sourceforge.net.  This is a straightforward process.
