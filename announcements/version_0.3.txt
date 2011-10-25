@@ -1,0 +1,43 @@
+
+Dear colleagues,
+
+We are pleased to announce the release of ChiantiPy version
+0.3, a Python package for calculating synthetic spectra from
+the CHIANTI atomic database for astrophysical spectroscopy. 
+ChiantiPy provides the same functionality as the existing
+IDL package.  One benefit of ChiantiPy is that it uses
+Python, a freely available programming language.  ChiantiPy
+is constructed as an object-oriented package that provides a
+good match to the modular construction of the CHIANTI
+database itself. Our intention is to maintain both the IDL
+and Python packages for the indefinite future.
+
+This release features the inclusion of the mspectrum class
+that allows users to use multiple local cpu cores for
+spectral calculations that can be time consuming.  In
+addition, there are numerous bug fixes.
+
+The documentation for ChiantiPy can be found at
+
+http://chiantipy.sourceforge.net/
+
+and the software package can be downloaded from
+
+http://sourceforge.net/projects/chiantipy/
+
+Python is available for Windows, Mac OS, Linux and Unix. 
+ChiantiPy itself has been developed on a Linux platform and
+has received most of its testing on Linux.  In software
+development terminology, it is an 'alpha' release, meaning
+it has not really undergone sufficient testing in a variety
+of environments.  We welcome reports of user's experiences
+on the chiantipy-users email list on Sourceforge:
+chiantipy-users@lists.sourceforge.net
+
+In addition, several discussion forums have been set up at
+   
+http://sourceforge.net/projects/chiantipy/forums
+
+the CHIANTI team
+
+

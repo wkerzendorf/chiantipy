@@ -1,0 +1,6 @@
+This release adds the class radLoss to calculate radiative losses and plot the results.
+
+The method ion.popPlot now plots a histogram of level populations if only a single value of temperature and density are specified.  Previously it expect multiple temperatures or densities.
+
+A number of bug fixes have been made.
+

@@ -1,0 +1,93 @@
+X-Mozilla-Status: 0001
+X-Mozilla-Status2: 00000000
+Return-path: <kdere@gmu.edu>
+Received: from caduceus1.gmu.edu ([129.174.0.40])
+ by mercury1.gmu.edu (Sun Java System Messaging Server 6.2-2.05 (built Apr 28
+ 2005)) with ESMTP id <0L560083IU5YSSF0@mercury1.gmu.edu> for kdere@gmu.edu;
+ Wed, 07 Jul 2010 08:46:46 -0400 (EDT)
+Received: from cronus.gmu.edu ([129.174.0.112])
+ by caduceus1.gmu.edu (Sun Java System Messaging Server 6.2-2.05 (built Apr 28
+ 2005)) with ESMTP id <0L56004HYU538Q10@caduceus1.gmu.edu> for kdere@gmu.edu
+ (ORCPT kdere@mail.gmu.edu); Wed, 07 Jul 2010 08:46:15 -0400 (EDT)
+Received: from ironport1.gmu.edu (ironport1.gmu.edu [129.174.0.102])
+	by cronus.gmu.edu (8.13.4/8.13.4) with ESMTP id o67CkFwk024978	for
+ <kdere@gmu.edu>; Wed, 07 Jul 2010 08:46:15 -0400 (EDT)
+Received: from louis14.nrl.navy.mil ([132.250.160.129])
+ by ironport1.gmu.edu with ESMTP; Wed, 07 Jul 2010 08:46:14 -0400
+Received: from mail5.nrl.navy.mil (smail5.nrl.navy.mil [132.250.1.14])
+	by louis14.nrl.navy.mil (8.14.2/8.14.2/Debian-2build1)
+ with ESMTP id o67ChPVM032029	for <chianti_all@louis14.nrl.navy.mil>; Wed,
+ 07 Jul 2010 08:43:26 -0400
+Received: from caduceus1.gmu.edu (caduceus1.gmu.edu [129.174.0.40])
+	by mail5.nrl.navy.mil (8.14.4/8.14.4) with ESMTP id o67ChLwN025657	for
+ <chianti_all@louis14.nrl.navy.mil>; Wed, 07 Jul 2010 08:43:21 -0400
+Received: from [129.174.114.118] (kestrel.mesa.gmu.edu [129.174.114.118])
+ by caduceus1.gmu.edu
+ (Sun Java System Messaging Server 6.2-2.05 (built Apr 28 2005))
+ with ESMTPA id <0L560042KU088K00@caduceus1.gmu.edu> for
+ chianti_all@louis14.nrl.navy.mil; Wed, 07 Jul 2010 08:43:20 -0400 (EDT)
+Date: Wed, 07 Jul 2010 08:43:20 -0400
+From: Ken Dere <kdere@gmu.edu>
+Subject: ChiantiPy - a Python interface to CHIANTI
+To: chianti_all@louis14.nrl.navy.mil
+Message-id: <4C347668.6090206@gmu.edu>
+MIME-version: 1.0
+Content-type: text/plain; charset=ISO-8859-1
+Content-transfer-encoding: 7BIT
+X-Sender-IP: 132.250.160.129
+X-SENDER-REPUTATION: None
+X-IronPort-Anti-Spam-Filtered: true
+X-IronPort-Anti-Spam-Result: AroGAG8TNEyE+qCB/2dsb2JhbACTVYw4cbgQiGOCd4ItBIQbg0o
+X-IronPort-AV: E=Sophos;i="4.53,552,1272859200";   d="scan'208";a="123949036"
+X-Scanned-By: MIMEDefang 2.67
+User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.1.9)
+ Gecko/20100317 SUSE/3.0.4-1.1.1 Thunderbird/3.0.4
+Original-recipient: rfc822;kdere@mail.gmu.edu
+
+Dear colleagues,
+
+We are pleased to announce the release of ChiantiPy, a Python package
+for calculating synthetic spectra from the CHIANTI atomic database for
+astrophysical spectroscopy.  ChiantiPy provides the same functionality
+as the existing IDL package.  One benefit of ChiantiPy is that it uses
+Python, a freely available programming language.  ChiantiPy is
+constructed as an object-oriented package that provides a good match to
+the modular construction of the CHIANTI database itself.  Our intention
+is to maintain both the IDL and Python packages for the indefinite future.
+
+The documentation for ChiantiPy can be found at
+
+http://chiantipy.sourceforge.net/
+
+and the software package can be downloaded from
+
+http://sourceforge.net/projects/chiantipy/
+
+Python is available for Windows, Mac OS, Linux and Unix.  ChiantiPy
+itself has been developed on a Linux platform and has received most of
+its testing on Linux.  In software development terminology, it is an
+'alpha' release, meaning it has not really undergone sufficient testing
+in a variety of environments.  We welcome reports of user's experiences
+on the chiantipy-users email list on Sourceforge:
+
+chiantipy-users@lists.sourceforge.net
+
+In addition, several discussion forums have been set up at
+   
+http://sourceforge.net/projects/chiantipy/forums
+
+Ken Dere and the CHIANTI team
+
+-- 
+Kenneth P. Dere
+Research Professor of Solar Physics
+Dept. of Computational and Data Sciences
+MS 6A2
+George Mason University
+4400 University Drive
+Fairfax VA 22030
+703-993-4555
+703-993-1992 FAX
+kdere@gmu.edu
+
+
