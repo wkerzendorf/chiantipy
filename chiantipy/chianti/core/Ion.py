@@ -680,12 +680,15 @@ class ion:
                 for itrans in range(nlvl):
 #                   lvl2 = self.Reclvl['lvl2'][itrans]
                     lvlTemp = lvl['ntemp'][itrans]
-                    rate[itrans] = lvl['rate'][itrans,nrecTemp-1]*(lvl['temperature'][itrans, nrecTemp-1]/temperature)
+                    rate[itrans] = lvl['rate'][itrans,-1]*(lvl['temperature'][itrans, -1]/temperature)
+            elif temperature < lvl['temperature'].min():
+                # rate is already set to zero
+                pass
             else:
                 for itrans in range(nlvl):
                     lvl2 = lvl['lvl2'][itrans]
                     nrecTemp = lvl['ntemp'][itrans]
-                    y2 = interpolate.splrep(np.log(lvl['temperature'][itrans, :nrecTemp]), np.log(lvl['rate'][itrans, :nrecTemp]))
+                    y2 = interpolate.splrep(np.log(lvl['temperature'][itrans]), np.log(lvl['rate'][itrans]))
                     cirec = np.exp(interpolate.splev(np.log(temperature),y2))
                     rate[itrans] = cirec.squeeze()
         else:

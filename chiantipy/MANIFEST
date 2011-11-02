@@ -16,7 +16,6 @@ chianti/version.py
 chianti/core/Continuum.py
 chianti/core/Ion.py
 chianti/core/Mspectrum.py
-chianti/core/PNe.py
 chianti/core/RadLoss.py
 chianti/core/Spectrum.py
 chianti/core/__init__.py
@@ -28,5 +27,3 @@ chianti/gui_qt/ui.py
 chianti/gui_wx/__init__.py
 chianti/gui_wx/gui.py
 chianti/gui_wx/ui.py
-images/chianti1.png
-images/chianti2.png
