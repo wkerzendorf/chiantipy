@@ -1,7 +1,7 @@
 '''module for collecting various top-level Chianti data
 for the keyword arguments below
 temperature = temperature in Kelvin
-density is the electron density per cubic cm
+eDensity is the electron density per cubic cm
 hDensity is the hydrogen density per cubic cm
 pDensity is the proton density per cubic cm
 radTemperature is the radiation temperature of central source
@@ -36,4 +36,4 @@ if chInteractive:
 import version
 __version__ = version.__version__
 __version_info__ = version.__version_info__
-keywordArgs = ['temperature','dDensity','hDensity', 'pDensity','radTemperature', 'rStar', 'distance']
+keywordArgs = ['temperature','eDensity','hDensity', 'pDensity','radTemperature', 'rStar', 'distance']

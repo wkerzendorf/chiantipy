@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-4.6.dtd">
 <!-- eric4 project file for project ChiantiPy -->
-<!-- Saved: 2011-10-24, 13:28:48 -->
+<!-- Saved: 2011-11-02, 11:58:31 -->
 <!-- Copyright (C) 2011 Ken Dere, kdere@gmu.edu -->
 <Project version="4.6">
   <Language></Language>
@@ -17,7 +17,6 @@
     <Source>chianti/core/Ion.py</Source>
     <Source>chianti/core/Mspectrum.py</Source>
     <Source>chianti/core/__init__.py</Source>
-    <Source>chianti/core/PNe.py</Source>
     <Source>chianti/core/Continuum.py</Source>
     <Source>chianti/core/RadLoss.py</Source>
     <Source>chianti/core/Spectrum.py</Source>
@@ -50,6 +49,7 @@
   <Interfaces>
   </Interfaces>
   <Others>
+    <Other>/home/dere/python/chianti/trunk/eric_doc</Other>
   </Others>
   <Vcs>
     <VcsType>Subversion</VcsType>
@@ -173,4 +173,51 @@
     <FiletypeAssociation pattern="*.py" type="SOURCES" />
     <FiletypeAssociation pattern="*.ptl" type="SOURCES" />
   </FiletypeAssociations>
+  <Documentation>
+    <DocumentationParams>
+      <dict>
+        <key>
+          <string>ERIC4DOC</string>
+        </key>
+        <value>
+          <dict>
+            <key>
+              <string>ignoreFilePatterns</string>
+            </key>
+            <value>
+              <list>
+                <unicode>setup.py</unicode>
+              </list>
+            </value>
+            <key>
+              <string>outputDirectory</string>
+            </key>
+            <value>
+              <unicode>/home/dere/python/chianti/trunk/eric_doc</unicode>
+            </value>
+            <key>
+              <string>qtHelpEnabled</string>
+            </key>
+            <value>
+              <bool>False</bool>
+            </value>
+            <key>
+              <string>sourceExtensions</string>
+            </key>
+            <value>
+              <list>
+                <unicode></unicode>
+              </list>
+            </value>
+            <key>
+              <string>useRecursion</string>
+            </key>
+            <value>
+              <bool>True</bool>
+            </value>
+          </dict>
+        </value>
+      </dict>
+    </DocumentationParams>
+  </Documentation>
 </Project>
