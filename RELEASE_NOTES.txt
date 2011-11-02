@@ -5,6 +5,13 @@
 :Author: Ken Dere
 :Contact: kdere@gmu.edu
 
+Changes from 0.4 to 0.4.1
+=========================
+
+Modifications have been made to remain compatible with the CHIANTI database Version 7.0.
+
+The structure of the ChiantiPy distribution has changed so that any version of ChiantiPy prior to 0.4.1 must be removed before install the current version, 0.4.1.
+
 
 Changes from 0.3.1 to 0.4
 =========================
