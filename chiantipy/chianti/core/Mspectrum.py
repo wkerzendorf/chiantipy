@@ -36,6 +36,8 @@ Abundanceall = chdata.AbundanceAll
 #
 class mspectrum:
     ''' this is the multiprocessing version of spectrum
+    set proc to the desired number of processors, default=3
+
     Calculate the emission spectrum as a function of temperature and density.
 
     temperature and density can be arrays but, unless the size of either is one (1),
