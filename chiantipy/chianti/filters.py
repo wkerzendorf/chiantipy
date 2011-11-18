@@ -65,9 +65,9 @@ def lorentz(wvl, wvl0, factor=0):
     dwvl = wvl - np.roll(wvl, 1)
     dwvl[0] = dwvl[1]
     ltz = (gamma/(2.*np.pi)**2)/((wvl - wvl0)**2 + (gamma/(4.*np.pi))**2)
-    return ltz/(dwvl*ltz.sum())
+    return np.abs(ltz/(dwvl*ltz.sum()))
     #
-def letg(wvl, wvl0, factor=2.5):
+def moffat(wvl, wvl0, factor=2.5):
     '''the moffat profile with parameters suited to Chandra Letg spectra'''
     if not factor:
         factor = 2.5
