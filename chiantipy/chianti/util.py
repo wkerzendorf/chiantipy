@@ -200,20 +200,20 @@ def photoxRead(ions):
     cross = []
     icounter = 0
     while not dataEnd:
-        lvl11 = int(lines[icounter][11:16])
-        lvl21 = int(lines[icounter][16:21])
-        ener = lines[icounter][21:].split()
+        lvl11 = int(lines[icounter][:8])
+        lvl21 = int(lines[icounter][8:15])
+        ener = lines[icounter][15:].split()
         energy1 = np.asarray(ener, 'float64')
         #
         icounter += 1
-        irsl = int(lines[icounter][11:16])
-        ind0 = int(lines[icounter][16:21])
+        irsl = int(lines[icounter][:8])
+        ind0 = int(lines[icounter][8:15])
         if irsl != lvl11 or ind0 != lvl21:
             # this only happens if the file was written incorrectly
             print ' lvl1, lvl2 = ', lvl11, lvl21
             print ' irsl, indo = ', irsl,  ind0
             return
-        crs = lines[icounter][21:].split()
+        crs = lines[icounter][15:].split()
         cross1 = np.asarray(crs, 'float64')
         lvl1.append(lvl11)
         lvl2.append(lvl21)
