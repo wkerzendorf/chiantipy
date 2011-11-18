@@ -207,10 +207,10 @@ class ion:
                 if os.path.isfile(rrparamsFile):
                     self.RrParams = util.rrRead(self.IonStr)
 
-                #
-                photoxfile = util.ion2filename(self.IonStr)+'.photox'
-                if os.path.isfile(photoxfile):
-                    self.Photox = util.photoxRead(self.IonStr)
+                #  not needed for ion, only phion
+#                photoxfile = util.ion2filename(self.IonStr)+'.photox'
+#                if os.path.isfile(photoxfile):
+#                    self.Photox = util.photoxRead(self.IonStr)
                 #
                 # need to determine the number of levels that can be populated
                 nlvlElvlc = len(self.Elvlc['lvl'])
