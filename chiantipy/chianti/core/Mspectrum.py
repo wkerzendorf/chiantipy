@@ -51,8 +51,13 @@ class mspectrum:
     the width should equal the wavelength interval to keep the units of the continuum and line
     spectrum the same.
 
+    A selection of elements can be make with elementList a list containing the names of elements
+    that are desired to be included, e.g., ['fe','ni']
+
     A selection of ions can be make with ionList containing the names of
     the desired lines in Chianti notation, i.e. C VI = c_6
+
+    Both elementList and ionList can not be specified at the same time
 
     a minimum abundance can be specified so that the calculation can be speeded up by excluding
     elements with a low abundance. With solar photospheric abundances -
@@ -71,11 +76,20 @@ class mspectrum:
     proc = the number of processors to use
     timeout - a small but non-zero value seems to be necessary
     '''
-    def __init__(self, temperature, density, wavelength, filter=(chfilters.gaussianR, 1000.),  ionList = 0, minAbund=0., doContinuum=1, allLines = 1, em = None,  proc=3,  verbose = 0,  timeout=0.1):
+    def __init__(self, temperature, density, wavelength, filter=(chfilters.gaussianR, 1000.), elementList = 0, ionList = 0, minAbund=0., doContinuum=1, allLines = 1, em = None,  proc=3,  verbose = 0,  timeout=0.1):
         t1 = datetime.now()
         masterlist = chdata.MasterList
         # use the ionList but make sure the ions are in the database
-        if ionList:
+        if elementList:
+            for i,  one in enumerate(elementList):
+                elementList[i] = one.lower()
+            alist = []
+            for one in masterlist:
+                stuff = util.convertName(one)
+                if stuff['Element'] in  elementList:
+                    alist.append(one)
+            masterlist = alist
+        elif ionList:
             alist=[]
             for one in ionList:
                 if masterlist.count(one):

@@ -355,7 +355,7 @@ def convertName(name):
         dielectronic=True
         ions=ions.replace('d','')
     else: dielectronic=False
-    return {'Z':int(i1),'Ion':int(ions),'Dielectronic':dielectronic}
+    return {'Z':int(i1),'Ion':int(ions),'Dielectronic':dielectronic, 'Element':els}
     #
     # -------------------------------------------------------------------------------------
     #
