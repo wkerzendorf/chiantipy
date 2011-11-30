@@ -497,7 +497,7 @@ def elvlcRead(ions, filename = None, verbose=0,  useTh=1):
     else:
         elvlname = filename
         bname = os.path.basename(filename)
-        ions = os.path.splitext(bname)[0]
+        ions = bname.split('.')[0]
     if not os.path.isfile(elvlname):
         print ' elvlc file does not exist:  ',elvlname
         return -1
