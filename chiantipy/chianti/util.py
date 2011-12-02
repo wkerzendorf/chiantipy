@@ -481,7 +481,7 @@ def qrp(z,u):
     # -------------------------------------------------------------------------------------
     #
 
-def elvlcRead(ions, filename = None, verbose=0,  useTh=1):
+def elvlcRead(ions, filename = None, verbose=0,  useTh=0):
     """ read a chianti energy level file and returns
     {"lvl":lvl,"conf":conf,"term":term,"spin":spin,"l":l,"spd":spd,"j":j
     ,"mult":mult,"ecm":ecm,"eryd":eryd,"ecmth":ecmth,"erydth":erydth,"ref":ref,"pretty":pretty, 'ionS':ions}
