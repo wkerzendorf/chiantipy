@@ -484,9 +484,10 @@ def qrp(z,u):
 def elvlcRead(ions, filename = None, verbose=0,  useTh=1):
     """ read a chianti energy level file and returns
     {"lvl":lvl,"conf":conf,"term":term,"spin":spin,"l":l,"spd":spd,"j":j
-    ,"mult":mult,"ecm":ecm,"eryd":eryd,"ecmth":ecmth,"erydth":erydth,"ref":ref}
+    ,"mult":mult,"ecm":ecm,"eryd":eryd,"ecmth":ecmth,"erydth":erydth,"ref":ref,"pretty":pretty, 'ionS':ions}
     if a energy value for ecm or eryd is zero(=unknown), the theoretical values
-    (ecmth and erydth) are inserted"""
+    (ecmth and erydth) are inserted
+    """
     #
     fstring='i3,i6,a15,i3,i3,a3,f4.1,i3,4f15.2'
     elvlcFormat=FortranFormat(fstring)
@@ -560,7 +561,7 @@ def elvlcRead(ions, filename = None, verbose=0,  useTh=1):
     #
     # -------------------------------------------------------------------------------------
     #
-def elvlcWrite(info):
+def elvlcWrite(info, outfile=0):
     ''' creates a .elvlc in the current directory
     info is a dictionary that must contain the following keys
     ionS, the Chianti style name of the ion such as c_4
@@ -574,18 +575,22 @@ def elvlcWrite(info):
     eryd, the observed energy in Rydbergs, if unknown, the value is 0.
     ecmth, the calculated energy from the scattering calculation, in inverse cm
     erydth, the calculated energy from the scattering calculation in Rydbergs
-    ref, the references in the literature to the data in the input info'''
+    ref, the references in the literature to the data in the input info
+    '''
     gname = info['ionS']
-    elvlcname = gname + '.elvlc'
-    print ' elvlc file name = ', elvlcname
-    out = open(elvlcname, 'w')
+    if outfile:
+        elvlcName = outfile
+    else:
+        elvlcName = gname + '.elvlc'
+    print ' elvlc file name = ', elvlcName
+    out = open(elvlcName, 'w')
     for i,  conf in enumerate(info['conf']):
         mult = int(2.*info['j'][i]+1.)
         pstring = '%3i%6s%15s%3i%3i%2s%5.1f%3i%15.3f%15.6f%15.3f%15.6f \n'%(i+1, conf, info['term'][i], info['spin'][i], info['l'][i], info['spd'][i], info['j'][i], mult, info['ecm'][i], info['eryd'][i], info['ecmth'][i], info['erydth'][i])
     #i3,a6,a15,2i3,a2,f5.1,i3,f15.3,f15.6,f15.3,f15.6
         out.write(pstring)
     out.write(' -1\n')
-    out.write('%filename:  ' + elvlcname + '\n')
+    out.write('%filename:  ' + elvlcName + '\n')
     info['ref'].append(' produced as a part of the George Mason University, University of Cambridge, University of Michigan \'CHIANTI\' atomic database for astrophysical spectroscopy consortium')
     today = date.today()
     info['ref'].append(' K. Dere (GMU) - ' + today.strftime('%Y %B %d'))
