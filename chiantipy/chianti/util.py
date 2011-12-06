@@ -645,7 +645,7 @@ def wgfaRead(ions, filename = None):
     #
     # --------------------------------------
     #
-def wgfaWrite(info, minAvalue=1.e-29):
+def wgfaWrite(info, minBranch = 0.):
     ''' to write a wgfa file
     info is a dictionary the contains the following elements
     ionS, the Chianti style name of the ion such as c_4 for C IV
@@ -664,12 +664,18 @@ def wgfaWrite(info, minAvalue=1.e-29):
     print ' wgfa file name = ', wgfaname
     out = open(wgfaname, 'w')
     ntrans = len(info['lvl1'])
+    totalAvalue = np.zeros(ntrans, 'float64')
     if info.has_key('lower'):
         pformat = '%5i%5i%15.4f%15.3e%15.3e%20s - %20s'
     else:
         pformat = '%5i%5i%15.4f%15.3e%15.3e'
     for itrans, avalue in enumerate(info['avalue']):
-        if avalue > minAvalue and info['lvl1'][itrans] > 0 and info['lvl2'][itrans] > 0:
+        if info['lvl1'][itrans] > 0 and info['lvl2'][itrans] > 0:
+            totalAvalue[info['lvl2'][itrans] -1] += avalue
+
+    for itrans, avalue in enumerate(info['avalue']):
+        branch = avalue/totalAvalue[info['lvl2'][itrans] -1]
+        if branch > minBranch and info['lvl1'][itrans] > 0 and info['lvl2'][itrans] > 0:
             if info.has_key('lower'):
                 pstring= pformat%(info['lvl1'][itrans], info['lvl2'][itrans], info['wvl'][itrans], info['gf'][itrans], avalue, info['lower'][itrans], info['upper'][itrans])
                 out.write(pstring+'\n')
