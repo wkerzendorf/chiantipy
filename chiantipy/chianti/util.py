@@ -682,7 +682,7 @@ def wgfaWrite(info, outfile = 0, minBranch = 0.):
         branch = avalue/totalAvalue[info['lvl2'][itrans] -1]
         if branch > minBranch and info['lvl1'][itrans] > 0 and info['lvl2'][itrans] > 0:
             if info.has_key('lower'):
-                pstring= pformat%(info['lvl1'][itrans], info['lvl2'][itrans], info['wvl'][itrans], info['gf'][itrans], avalue, info['lower'][itrans], info['upper'][itrans])
+                pstring= pformat%(info['lvl1'][itrans], info['lvl2'][itrans], info['wvl'][itrans], info['gf'][itrans], avalue, info['lower'][itrans].rjust(), info['upper'][itrans].ljust())
                 out.write(pstring+'\n')
             else:
                 pstring= pformat%(info['lvl1'][itrans], info['lvl2'][itrans], info['wvl'][itrans], info['gf'][itrans], avalue)
