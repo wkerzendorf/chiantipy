@@ -670,7 +670,7 @@ def wgfaWrite(info, outfile = 0, minBranch = 0.):
     out = open(wgfaname, 'w')
     ntrans = len(info['lvl1'])
     totalAvalue = np.zeros(ntrans, 'float64')
-    if info.has_key('lower'):
+    if info.has_key('pretty1'):
         pformat = '%5i%5i%15.4f%15.3e%15.3e%20s - %20s'
     else:
         pformat = '%5i%5i%15.4f%15.3e%15.3e'
@@ -682,7 +682,7 @@ def wgfaWrite(info, outfile = 0, minBranch = 0.):
         branch = avalue/totalAvalue[info['lvl2'][itrans] -1]
         if branch > minBranch and info['lvl1'][itrans] > 0 and info['lvl2'][itrans] > 0:
             if info.has_key('lower'):
-                pstring= pformat%(info['lvl1'][itrans], info['lvl2'][itrans], info['wvl'][itrans], info['gf'][itrans], avalue, info['lower'][itrans].rjust(), info['upper'][itrans].ljust())
+                pstring= pformat%(info['lvl1'][itrans], info['lvl2'][itrans], info['wvl'][itrans], info['gf'][itrans], avalue, info['pretty1'][itrans].rjust(), info['pretty2'][itrans].ljust())
                 out.write(pstring+'\n')
             else:
                 pstring= pformat%(info['lvl1'][itrans], info['lvl2'][itrans], info['wvl'][itrans], info['gf'][itrans], avalue)
