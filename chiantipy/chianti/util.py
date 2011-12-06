@@ -645,7 +645,7 @@ def wgfaRead(ions, filename = None):
     #
     # --------------------------------------
     #
-def wgfaWrite(info, minBranch = 0.):
+def wgfaWrite(info, outfile = 0, minBranch = 0.):
     ''' to write a wgfa file
     info is a dictionary the contains the following elements
     ionS, the Chianti style name of the ion such as c_4 for C IV
@@ -660,8 +660,13 @@ def wgfaWrite(info, minBranch = 0.):
     minAvalue:  A value must be greater that this value to enter file - 1.e-29 works for ADAS'''
     #
     gname = info['ionS']
-    wgfaname = gname + '.wgfa'
+    if outfile:
+        wgfaname = outfile
+    else:
+        wgfaname = gname + '.wgfa'
     print ' wgfa file name = ', wgfaname
+    if minBranch > 0.:
+        info['ref'].append(' minimum branching ratio = %10.2e'%(minBranch))
     out = open(wgfaname, 'w')
     ntrans = len(info['lvl1'])
     totalAvalue = np.zeros(ntrans, 'float64')
