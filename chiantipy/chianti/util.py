@@ -561,7 +561,7 @@ def elvlcRead(ions, filename = None, verbose=0,  useTh=0):
     #
     # -------------------------------------------------------------------------------------
     #
-def elvlcWrite(info, outfile=0):
+def elvlcWrite(info, outfile=0, addLvl=0):
     ''' creates a .elvlc in the current directory
     info is a dictionary that must contain the following keys
     ionS, the Chianti style name of the ion such as c_4
@@ -576,6 +576,8 @@ def elvlcWrite(info, outfile=0):
     ecmth, the calculated energy from the scattering calculation, in inverse cm
     erydth, the calculated energy from the scattering calculation in Rydbergs
     ref, the references in the literature to the data in the input info
+    the output filename will be ionS+'.elvlc' unless outfile is specified
+    addLvl is to add a constant value to the index of all levels
     '''
     gname = info['ionS']
     if outfile:
@@ -586,7 +588,7 @@ def elvlcWrite(info, outfile=0):
     out = open(elvlcName, 'w')
     for i,  conf in enumerate(info['conf']):
         mult = int(2.*info['j'][i]+1.)
-        pstring = '%3i%6s%15s%3i%3i%2s%5.1f%3i%15.3f%15.6f%15.3f%15.6f \n'%(i+1, conf, info['term'][i], info['spin'][i], info['l'][i], info['spd'][i], info['j'][i], mult, info['ecm'][i], info['eryd'][i], info['ecmth'][i], info['erydth'][i])
+        pstring = '%3i%6s%15s%3i%3i%2s%5.1f%3i%15.3f%15.6f%15.3f%15.6f \n'%(i+1+addLvl, conf, info['term'][i], info['spin'][i], info['l'][i], info['spd'][i], info['j'][i], mult, info['ecm'][i], info['eryd'][i], info['ecmth'][i], info['erydth'][i])
     #i3,a6,a15,2i3,a2,f5.1,i3,f15.3,f15.6,f15.3,f15.6
         out.write(pstring)
     out.write(' -1\n')
