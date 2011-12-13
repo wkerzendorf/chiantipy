@@ -659,7 +659,7 @@ def wgfaWrite(info, outfile = 0, minBranch = 0.):
     lower - descriptive text of the lower level (optional)
     upper - descriptive text of the upper level (optiona)
     ref - reference text, a list of strings
-    minAvalue:  A value must be greater that this value to enter file - 1.e-29 works for ADAS'''
+    minBranch:  the transition must have a branching ratio than the specified to be written to the file'''
     #
     gname = info['ionS']
     if outfile:
