@@ -678,7 +678,8 @@ def wgfaWrite(info, outfile = 0, minBranch = 0.):
     else:
         pformat = '%5i%5i%15.4f%15.3e%15.3e'
     for itrans, avalue in enumerate(info['avalue']):
-        if info['lvl1'][itrans] > 0 and info['lvl2'][itrans] > 0:
+        # for autoionization transitions, lvl1 can be less than zero
+        if abs(info['lvl1'][itrans]) > 0 and info['lvl2'][itrans] > 0:
             totalAvalue[info['lvl2'][itrans] -1] += avalue
 
     for itrans, avalue in enumerate(info['avalue']):
