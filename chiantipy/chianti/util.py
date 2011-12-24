@@ -671,7 +671,8 @@ def wgfaWrite(info, outfile = 0, minBranch = 0.):
         info['ref'].append(' minimum branching ratio = %10.2e'%(minBranch))
     out = open(wgfaname, 'w')
     ntrans = len(info['lvl1'])
-    totalAvalue = np.zeros(ntrans, 'float64')
+    nlvl = max(len(info['lvl2']))
+    totalAvalue = np.zeros(nlvl, 'float64')
     if info.has_key('pretty1'):
         pformat = '%5i%5i%15.4f%15.3e%15.3e%20s - %20s'
     else:
