@@ -867,7 +867,7 @@ def splupsRead(ions, filename=None, prot=0, ci=0,  diel=0):
             splupsFormat1='(3i3,8e10.3)'
             splupsFormat2='(3i3,12e10.3)'
         else:
-            splupsFormat1='(6x,3i3,8e10.3)'
+#            splupsFormat1='(6x,3i3,8e10.3)'
             splupsFormat2='(6x,3i3,12e10.3)'
         #
         for i in range(0,nsplups):
@@ -889,11 +889,12 @@ def splupsRead(ions, filename=None, prot=0, ci=0,  diel=0):
             de[i]=inpt[4]
             cups[i]=inpt[5]
             spl=np.array(inpt[6:])
-            good = spl != 0.
-            if good[5:].sum():
-                nspl[i] = 9
-            else:
-                nspl[i] = 5
+            good = spl > 0.
+#            if good[5:].sum():
+#                nspl[i] = 9
+#            else:
+#                nspl[i] = 5
+            nspl[i] = good.sum()
             splups[i].put(range(nspl[i]), spl)
         #
         ref=[]
