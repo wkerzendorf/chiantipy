@@ -1199,7 +1199,8 @@ class ion:
         # -------------------------------------------------------------------------------------
         #
     def populate(self, popCorrect=1, verbose=0, **kwargs):
-        """Calculate level populations for specified ion.  This is a new version that will enable the calculation
+        """
+        Calculate level populations for specified ion.  This is a new version that will enable the calculation
         of dielectronic satellite lines without resorting to the dielectronic ions, such as c_5d
         possible keyword arguments include temperature, eDensity, pDensity, radTemperature and rStar
         """
@@ -3903,8 +3904,10 @@ class ionWeb(ion):
         # ------------------------------------------------------------------------
         #
 class ioneq(ion):
-    '''Calculates the ionization equilibrium for an element as a function of temperature.
-    The variable z is the atomic number of the element.  Acceptable values are from 1 to 30.'''
+    '''
+    Calculates the ionization equilibrium for an element as a function of temperature.
+    The variable z is the atomic number of the element.  Acceptable values are from 1 to 30.
+    '''
     def __init__(self,z, temperature, verbose=False):
 #       ionList=[]
         chIons=[]
@@ -3934,7 +3937,7 @@ class ioneq(ion):
             ioneq=np.zeros((z+1), 'float32')
             factor = []
             for anIon in chIons:
-                if type(anIon.IonizRate) != types.NoneType and type(anIon.RecombRate) != types.NoneType:
+                if has_attr(anIon, 'RecombRate') and has_attr(anIon, 'IonizRate'):
                     rat=anIon.IonizRate['rate']/anIon.RecombRate['rate']
                     factor.append(rat**2 + rat**(-2))
                 else:
