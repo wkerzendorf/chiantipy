@@ -6,41 +6,41 @@ import time
 #
 import chianti.data as chdata
 import chianti.sources as sources
-chInteractive = chdata.chInteractive
-if chInteractive:
-    import pylab as pl
-else:
-#    import matplotlib
-#    matplotlib.use('Agg')
-    import matplotlib.pyplot as pl
+#chInteractive = chdata.chInteractive
+#if chInteractive:
+#    import pylab as pl
+#else:
+##    import matplotlib
+##    matplotlib.use('Agg')
+#    import matplotlib.pyplot as pl
     #  backend is set in matplotlibrc
 #    pl.rcParams['backend'] = 'Agg'
 #
-if chInteractive:
-    if pl.rcParams['backend'].lower() == 'qt4agg':
-        import chianti.gui_qt.gui as gui
-    elif pl.rcParams['backend'].lower() == 'wxagg':
-        import chianti.gui_wx.gui as gui
-    elif pl.rcParams['backend'].lower() == 'gtkagg':
-        import chianti.gui_cl.gui as gui
-    elif pl.rcParams['backend'].lower() == 'agg':
-        import chianti.gui_cl.gui as gui
-    elif pl.rcParams['backend'].lower() == 'agg':
-        import chianti.gui_cl.gui as gui
-    elif pl.rcParams['backend'].lower() == 'macosx':
-        import chianti.gui_cl.gui as gui
-    else:
-        print ' - Warning - '
-        print ' - in order to use the various gui dialogs, the matlpotlib/pylab backend needs'
-        print ' - to be either Qt4Agg or WXAgg - '
-        print ' - in order to use the command line dialogs, the matlpotlib/pylab backend needs'
-        print ' - to be GTKAgg or MacOSX - '
-        print ' - current backend is ',pl.rcParams['backend']
-        print ' - the full functionality of the chianti.core.ion class may not be available'
-        print ' - it would probably be better to set your matplotlib backend to either'
-        print ' - Qt4Agg, WXAgg, GTKAgg, or MacOSX'
-        print ' - using the command line dialogs for now but there could be problems -'
-        import chianti.gui_cl.gui as gui
+#if chInteractive:
+if pl.rcParams['backend'].lower() == 'qt4agg':
+    import chianti.gui_qt.gui as gui
+elif pl.rcParams['backend'].lower() == 'wxagg':
+    import chianti.gui_wx.gui as gui
+elif pl.rcParams['backend'].lower() == 'gtkagg':
+    import chianti.gui_cl.gui as gui
+elif pl.rcParams['backend'].lower() == 'agg':
+    import chianti.gui_cl.gui as gui
+elif pl.rcParams['backend'].lower() == 'agg':
+    import chianti.gui_cl.gui as gui
+elif pl.rcParams['backend'].lower() == 'macosx':
+    import chianti.gui_cl.gui as gui
+else:
+    print ' - Warning - '
+    print ' - in order to use the various gui dialogs, the matlpotlib/pylab backend needs'
+    print ' - to be either Qt4Agg or WXAgg - '
+    print ' - in order to use the command line dialogs, the matlpotlib/pylab backend needs'
+    print ' - to be GTKAgg or MacOSX - '
+    print ' - current backend is ',pl.rcParams['backend']
+    print ' - the full functionality of the chianti.core.ion class may not be available'
+    print ' - it would probably be better to set your matplotlib backend to either'
+    print ' - Qt4Agg, WXAgg, GTKAgg, or MacOSX'
+    print ' - using the command line dialogs for now but there could be problems -'
+    import chianti.gui_cl.gui as gui
 #    #
 import chianti.filters as chfilters
 import chianti.util as util
@@ -110,8 +110,8 @@ class ion:
         self.Abundance = self.AbundanceAll['abundance'][self.Z-1]
         #
 #        self.IoneqAll = util.ioneqRead(ioneqname = self.Defaults['ioneqfile'])
-        if chInteractive:
-            self.IoneqAll = chdata.IoneqAll
+#        if chInteractive:
+        self.IoneqAll = chdata.IoneqAll
         self.ioneqOne()
         #
         #  this needs to go after setting temperature and reading ionization equilibria
@@ -132,8 +132,7 @@ class ion:
                     for itemp in range(ntemp):
                         self.PDensity[itemp] = self.ProtonDensityRatio[itemp]*self.EDensity[itemp]
                 elif tst2 and tst3 and not tst1:
-                    if chInteractive:
-                        print ' if both temperature and eDensity are arrays, they must be of the same size'
+                    print ' if both temperature and eDensity are arrays, they must be of the same size'
                     return
                 else:
                     self.PDensity = self.ProtonDensityRatio*self.EDensity
@@ -1945,10 +1944,12 @@ class ion:
         #
         #  first, for ntemp=ndens=1
         if ndens==1 and ntemp==1:
-            if chInteractive:
-                print ' only a single temperature and eDensity'
-            else:
-                self.Message = ' only a single temperature and eDensity'
+            print ' only a single temperature and eDensity'
+            self.Message = ' only a single temperature and eDensity'
+#            if chInteractive:
+#                print ' only a single temperature and eDensity'
+#            else:
+#                self.Message = ' only a single temperature and eDensity'
             return
         elif ndens == 1:
             toppops = np.zeros((top, ntemp), 'float64')
@@ -2240,30 +2241,36 @@ class ion:
         elif ndens == 1 and ntemp > 1:
             if type(index) == types.NoneType:
                 index = ntemp/2
-            if chInteractive:
                 print 'using index = %5i specifying temperature =  %10.2e'%(index, temperature[index])
-            else:
                 self.Message = 'using index = %5i specifying temperature =  %10.2e'%(index, temperature[index])
+#            if chInteractive:
+#                print 'using index = %5i specifying temperature =  %10.2e'%(index, temperature[index])
+#            else:
+#                self.Message = 'using index = %5i specifying temperature =  %10.2e'%(index, temperature[index])
             emiss=emiss[:, index]
             dstr=' -  Density = %10.2e (cm$^{-3}$)' % eDensity
             tstr=' -  T = %10.2e (K)' % temperature[index]
         elif ndens > 1 and ntemp == 1:
             if type(index) == types.NoneType:
                 index = ndens/2
-            if chInteractive:
                 print 'using index =%5i specifying eDensity = %10.2e'%(index, eDensity[index])
-            else:
                 self.Message = 'using index =%5i specifying eDensity = %10.2e'%(index, eDensity[index])
+#            if chInteractive:
+#                print 'using index =%5i specifying eDensity = %10.2e'%(index, eDensity[index])
+#            else:
+#                self.Message = 'using index =%5i specifying eDensity = %10.2e'%(index, eDensity[index])
             emiss=emiss[:, index]
             dstr=' -  Density = %10.2e (cm$^{-3}$)' % eDensity[index]
             tstr=' -  T = %10.2e (K)' % temperature
         elif ndens > 1 and ntemp > 1:
             if type(index) == types.NoneType:
                 index = ntemp/2
-            if chInteractive:
                 print 'using index = %5i specifying temperature = %10.2e, eDensity =  %10.2e'%(index, temperature[index], eDensity[index])
-            else:
                 self.Message = 'using index = %5i specifying temperature = %10.2e, eDensity =  %10.2e'%(index, temperature[index], eDensity[index])
+#             if chInteractive:
+#                print 'using index = %5i specifying temperature = %10.2e, eDensity =  %10.2e'%(index, temperature[index], eDensity[index])
+#            else:
+#                self.Message = 'using index = %5i specifying temperature = %10.2e, eDensity =  %10.2e'%(index, temperature[index], eDensity[index])
             emiss=emiss[:, index]
             dstr=' -  Density = %10.2e (cm$^{-3}$)' % eDensity[index]
             tstr=' -  T = %10.2e (K)' % temperature[index]
@@ -2276,11 +2283,14 @@ class ion:
         #
         self.Error = 0
         if wvl.size == 0:
-            if chInteractive:
-                print 'No lines in this wavelength interval'
-            else:
-                self.Error = 1
-                self.Message = 'No lines in this wavelength interval'
+            print 'No lines in this wavelength interval'
+            self.Error = 1
+            self.Message = 'No lines in this wavelength interval'
+#            if chInteractive:
+#                print 'No lines in this wavelength interval'
+#            else:
+#                self.Error = 1
+#                self.Message = 'No lines in this wavelength interval'
             return
         elif top == 0:
             top = wvl.size
@@ -2302,10 +2312,11 @@ class ion:
         #
         ymin = 10.**(np.log10(emiss.min()).round(0)-0.5 )
         #
-        if chInteractive:
-            pl.ion()
-        else:
-            pl.ioff()
+        pl.ion()
+#        if chInteractive:
+#            pl.ion()
+#        else:
+#            pl.ioff()
         #
         for idx in range(top):
             xx=[wvl[idx], wvl[idx]]
@@ -2532,10 +2543,11 @@ class ion:
         #
         # put all actual plotting here
         #
-        if chInteractive:
-            pl.ion()
-        else:
-            pl.ioff()
+        pl.ion()
+#        if chInteractive:
+#            pl.ion()
+#        else:
+#            pl.ioff()
         #
         #  maxAll is an array
         ymax = np.max(emiss[topLines[0]]/maxAll)
@@ -2650,8 +2662,8 @@ class ion:
         Descriptive information is included at the top of the file.'''
         if outFile == '':
             outfile=self.IntensityRatio['filename']
-            if chInteractive:
-                print ' saving ratio to filename = ',outfile
+#            if chInteractive:
+            print ' saving ratio to filename = ',outfile
         if hasattr(self, 'IntensityRatio'):
             temperature=self.IntensityRatio['temperature']
             eDensity=self.IntensityRatio['eDensity']
@@ -2674,8 +2686,8 @@ class ion:
                 out.write(s+os.linesep)
             out.close()
         else:
-            if chInteractive:
-                print ' in .intensityRatioSave(), no IntensityRatio is found'
+#            if chInteractive:
+            print ' in .intensityRatioSave(), no IntensityRatio is found'
         #
         # -------------------------------------------------------------------------------------
         #
@@ -2692,8 +2704,8 @@ class ion:
             ioneqAll = self.IoneqAll
         else:
             ioneqAll = util.ioneqRead(ioneqname = self.Defaults['ioneqfile'])
-            if chInteractive:
-                self.ioneqAll=self.IoneqAll
+#            if chInteractive:
+            self.ioneqAll=self.IoneqAll
         #
         ioneqTemperature = ioneqAll['ioneqTemperature']
         Z=self.Z
@@ -2839,10 +2851,11 @@ class ion:
         #
         # put all actual plotting here
         #
-        if chInteractive:
-            pl.ion()
-        else:
-            pl.ioff()
+        pl.ion()
+#        if chInteractive:
+#            pl.ion()
+#        else:
+#            pl.ioff()
         #
         pl.figure()
         ax = pl.subplot(111)
@@ -3222,10 +3235,12 @@ class ionWeb(ion):
             igvl=range(len(wvl))
         nlines=len(igvl)
         if nlines ==0:
-            if chInteractive:
-                print ' no lines in selected interval'
-            else:
-                self.message = ' no lines in selected interval'
+            print ' no lines in selected interval'
+            self.message = ' no lines in selected interval'
+#            if chInteractive:
+#                print ' no lines in selected interval'
+#            else:
+#                self.message = ' no lines in selected interval'
             return
         # find the top most intense lines
         #
@@ -3262,10 +3277,11 @@ class ionWeb(ion):
         title = self.Spectroscopic
         #
         #  normally, ionWeb is only using in the non-interactive mode
-        if chInteractive:
-            pl.ion()
-        else:
-            pl.ioff()
+        pl.ioff()
+#        if chInteractive:
+#            pl.ion()
+#        else:
+#            pl.ioff()
         #
         #
         if ndens==1 and ntemp==1:
@@ -3488,10 +3504,11 @@ class ionWeb(ion):
         #
         #
         #  ionWeb is normally only used in the non-interative mode
-        if chInteractive:
-            pl.ion()
-        else:
-            pl.ioff()
+        pl.ioff()
+#        if chInteractive:
+#            pl.ion()
+#        else:
+#            pl.ioff()
         #
         #
         # plot the desired ratio
@@ -3569,11 +3586,14 @@ class ionWeb(ion):
             igvl=range(len(wvl))
         nlines=len(igvl)
         if nlines < 2:
-            if chInteractive:
-                print ' less than 2 lines in selected interval'
-            else:
-                self.message = ' less than 2 lines in selected interval'
-                self.Error = 1
+            print ' less than 2 lines in selected interval'
+            self.message = ' less than 2 lines in selected interval'
+            self.Error = 1
+#            if chInteractive:
+#                print ' less than 2 lines in selected interval'
+#            else:
+#                self.message = ' less than 2 lines in selected interval'
+#                self.Error = 1
             return
         self.Error = 0
         # find the top most intense lines
@@ -3813,10 +3833,12 @@ class ionWeb(ion):
         else:
             num_idx = [numIdx]
         if len(num_idx) == 0:
-            if chInteractive:
-                print ' no numerator lines were selected'
-            else:
-                self.Message = ' no numerator lines were selected'
+            print ' no numerator lines were selected'
+            self.Message = ' no numerator lines were selected'
+#            if chInteractive:
+#                print ' no numerator lines were selected'
+#            else:
+#                self.Message = ' no numerator lines were selected'
             return
         #
         if np.iterable(denIdx):
@@ -3909,7 +3931,7 @@ class ioneq(ion):
     The variable z is the atomic number of the element.  Acceptable values are from 1 to 30.
     '''
     def __init__(self,z, temperature, verbose=False):
-#       ionList=[]
+        ionList=[]
         chIons=[]
         self.Z=z
         self.Temperature = np.array(temperature, 'float64')
@@ -4038,24 +4060,24 @@ class ioneq(ion):
                 pl.annotate(ann, [self.Temperature[idx], 0.7*self.Ioneq[iz-1, idx]], ha='center')
         pl.xlabel('Temperature (K)')
         pl.ylabel('Ion Fraction')
-        atitle='Chianti Ionization Equilibrium for '+El[self.Z-1].capitalize()
+        atitle='Chianti Ionization Equilibrium for '+const.El[self.Z-1].capitalize()
         #
-        if oplot != False:
-            if type(oplot) == BooleanType:
+        if oplot:
+            if type(oplot) == types.BooleanType:
                 result=self.ioneqRead(ioneqname='',default=False)
                 if result != False:
                     atitle+='  & '+result['ioneqname'].replace('.ioneq', '')
                     atitle+=' '+linestyle[0]
                     for iz in ions:
                         pl.plot(self.IoneqTemperature, self.IoneqAll[self.Z-1, iz-1],linestyle[0], linestyle[1])
-            elif type(oplot) == StringType:
+            elif type(oplot) == types.StringType:
                 atitle+='  & '+oplot+' '+linestyle[0]
                 atitle+=' '+linestyle[0]
                 result=self.ioneqRead(ioneqname=oplot,default=False)
                 if result != False:
                     for iz in ions:
                         pl.plot(self.IoneqTemperature, self.IoneqAll[self.Z-1, iz-1],linestyle[0], linestyle[1])
-            elif type(oplot) == ListType:
+            elif type(oplot) == types.ListType:
                 for iplot in range(len(oplot)):
                     result=self.ioneqRead(ioneqname=oplot[iplot],default=False)
                     if result != False:
