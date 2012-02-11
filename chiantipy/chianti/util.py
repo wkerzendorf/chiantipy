@@ -15,7 +15,9 @@ from datetime import date
 import numpy as np
 from FortranFormat import *
 import chianti.constants as const
-#import chianti.util as util
+import chianti
+#import chianti.gui as gui
+#
 #
 def between(array,limits):
     '''returns an index array of elements of array where the values lie
@@ -415,7 +417,7 @@ def abundanceRead(abundancename=''):
         # the user will select an abundance file
         abundir=os.path.join(xuvtop,'abundance')
         abundlabel = 'ChiantiPy - Select an abundance file'
-        fname = chpicker(abundir, filter='*.abund', label=abundlabel)
+        fname = chianti.gui.chpicker(abundir, filter='*.abund', label=abundlabel)
         if fname == None:
             print' no abundance file selected'
             return 0
@@ -1190,16 +1192,16 @@ def drRead(ions):
     #
     # -------------------------------------------------------------------------------------
     #
-def ioneqRead(ioneqname=''):
+def ioneqRead(ioneqname='', verbose=0):
     """ reads an ioneq file and stores temperatures and ionization
     equilibrium values in self.IoneqTemperature and self.Ioneq and returns
     a dictionary containing these value and the reference to the literature"""
     dir=os.environ["XUVTOP"]
     if ioneqname == '':
         # the user will select an ioneq file
-        ioneqdir=os.path.join(dir,'ioneq')
-        fname=chpicker(ioneqdir,filter='*.ioneq',label = 'Select an Ionization Equilibrium file')
-        if fname ==None:
+        ioneqdir = os.path.join(dir,'ioneq')
+        fname = chianti.gui.chpicker(ioneqdir,filter='*.ioneq',label = 'Select an Ionization Equilibrium file')
+        if fname == None:
             print' no ioneq file selected'
             return False
         else:
@@ -1222,20 +1224,24 @@ def ioneqRead(ioneqname=''):
     input=open(fname,'r')
     s1=input.readlines()
     input.close()
-    ntemp,nele=s1[0].replace('  ',' ').strip().split(' ')
+    ntemp,nele=s1[0].split()
+    if verbose:
+        print ' ntemp, nele = ', ntemp, nele
     nTemperature=int(ntemp)
     nElement=int(nele)
+    #
     tformat=FortranFormat(str(nTemperature)+'f6.2')
     ioneqTemperature=FortranLine(s1[1],tformat)
     ioneqTemperature=np.asarray(ioneqTemperature[:],'Float32')
     ioneqTemperature=10.**ioneqTemperature
     nlines=0
     idx=-1
-    while idx <= 0:
+    while idx < 0:
         aline=s1[nlines][0:5]
         idx=aline.find('-1')
         nlines+=1
-    nlines-=1
+    nlines -= 1
+    #
     #
     ioneqformat=FortranFormat('2i3,'+str(nTemperature)+'e10.2')
     #
@@ -1245,7 +1251,9 @@ def ioneqRead(ioneqname=''):
         iz=out[0]
         ion=out[1]
         ioneqAll[iz-1,ion-1].put(range(nTemperature),np.asarray(out[2:],'Float32'))
-    ioneqRef=s1[nlines+1:-2]
+    ioneqRef = []
+    for one in s1[nlines+1:-1]:
+        ioneqRef.append(one[:-1])  # gets rif of the \n
     del s1
     return {'ioneqname':ioneqname,'ioneqAll':ioneqAll,'ioneqTemperature':ioneqTemperature,'ioneqRef':ioneqRef}
     #

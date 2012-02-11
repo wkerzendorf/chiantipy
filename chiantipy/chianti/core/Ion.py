@@ -7,6 +7,7 @@ import time
 import chianti.data as chdata
 import chianti.sources as sources
 #chInteractive = chdata.chInteractive
+import pylab as pl
 #if chInteractive:
 #    import pylab as pl
 #else:
@@ -3954,7 +3955,6 @@ class ioneq(ion):
 #                pl.loglog(anIon.RecombRate['temperature'], anIon.RecombRate['rate'])
         #
         ntemp=chIons[0].IonizRate['temperature'].size
-        print ' ntemp = ',ntemp
         if ntemp == 1:
             ioneq=np.zeros((z+1), 'float32')
             factor = []
@@ -4064,26 +4064,29 @@ class ioneq(ion):
         #
         if oplot:
             if type(oplot) == types.BooleanType:
-                result=self.ioneqRead(ioneqname='',default=False)
+                result=util.ioneqRead(ioneqname='')
+                print 'keys = ', result.keys()
                 if result != False:
                     atitle+='  & '+result['ioneqname'].replace('.ioneq', '')
                     atitle+=' '+linestyle[0]
-                    for iz in ions:
-                        pl.plot(self.IoneqTemperature, self.IoneqAll[self.Z-1, iz-1],linestyle[0], linestyle[1])
+                    for iz in stages:
+                        pl.plot(result['ioneqTemperature'], result['ioneqAll'][self.Z-1, iz-1],linestyle[1])
             elif type(oplot) == types.StringType:
-                atitle+='  & '+oplot+' '+linestyle[0]
-                atitle+=' '+linestyle[0]
-                result=self.ioneqRead(ioneqname=oplot,default=False)
+                atitle+='  & ' + oplot
+                result = util.ioneqRead(ioneqname=oplot)
+                print 'keys = ', result.keys()
+#                print result
                 if result != False:
-                    for iz in ions:
-                        pl.plot(self.IoneqTemperature, self.IoneqAll[self.Z-1, iz-1],linestyle[0], linestyle[1])
+                    for iz in stages:
+                        pl.plot(result['ioneqTemperature'], result['ioneqAll'][self.Z-1, iz-1],linestyle[1])
             elif type(oplot) == types.ListType:
                 for iplot in range(len(oplot)):
-                    result=self.ioneqRead(ioneqname=oplot[iplot],default=False)
+                    result = util.ioneqRead(ioneqname=oplot[iplot])
+                    print 'keys = ', result.keys()
                     if result != False:
                         atitle+='  & '+oplot[iplot]+' '+linestyle[iplot%3]
-                        for iz in ions:
-                            pl.plot(self.IoneqTemperature, self.IoneqAll[self.Z-1, iz-1], linestyle[iplot%4])
+                        for iz in stages:
+                            pl.plot(result['ioneqTemperature'], result['ioneqAll'][self.Z-1, iz-1],linestyle[1])
             else:
                 print ' oplot not understood ', oplot
         if title:
