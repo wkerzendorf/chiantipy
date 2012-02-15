@@ -1173,7 +1173,7 @@ class ion:
         if hasattr(self, 'Intensity'):
             intensity = self.Intensity
         else:
-            self.intensity(wvlRange=[wavelength.min(), wavelength.max()])
+            self.intensity()
             intensity = self.Intensity
         #
         if (nTemp == 1) and (nDens == 1):
@@ -2088,7 +2088,7 @@ class ion:
         #
         # -------------------------------------------------------------------------------------
         #
-    def emiss(self, wvlRange = None,  allLines=1):
+    def emiss(self, wvlRange = 0,  allLines=1):
         """Calculate the emissivities for lines of the specified ion.
 
         wvlRange can be set to limit the calculation to a particular wavelength range
@@ -2122,7 +2122,7 @@ class ion:
         #
         # make sure there are lines in the wavelength range, if specified
 
-        if type(wvlRange) != types.NoneType:
+        if wvlRange:
             realgood = util.between(wvl, wvlRange)
             l1 = l1[realgood]
             l2 = l2[realgood]
