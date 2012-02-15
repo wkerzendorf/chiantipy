@@ -590,7 +590,8 @@ def elvlcWrite(info, outfile=0, addLvl=0):
     out = open(elvlcName, 'w')
     for i,  conf in enumerate(info['conf']):
         mult = int(2.*info['j'][i]+1.)
-        pstring = '%3i%6s%15s%3i%3i%2s%5.1f%3i%15.3f%15.6f%15.3f%15.6f \n'%(i+1+addLvl, conf, info['term'][i], info['spin'][i], info['l'][i], info['spd'][i], info['j'][i], mult, info['ecm'][i], info['eryd'][i], info['ecmth'][i], info['erydth'][i])
+        thisTerm = info['term'][i].ljust(14)
+        pstring = '%3i%6s%15s%3i%3i%2s%5.1f%3i%15.3f%15.6f%15.3f%15.6f \n'%(i+1+addLvl, conf, thisTerm, info['spin'][i], info['l'][i], info['spd'][i], info['j'][i], mult, info['ecm'][i], info['eryd'][i], info['ecmth'][i], info['erydth'][i])
     #i3,a6,a15,2i3,a2,f5.1,i3,f15.3,f15.6,f15.3,f15.6
         out.write(pstring)
     out.write(' -1\n')
