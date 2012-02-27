@@ -1512,6 +1512,49 @@ def twophotonHeRead():
     #
     #-----------------------------------------------------------
     #
+def upsdatRead(upsdatFileName):
+    '''
+    to read the standard Chianti upsdat file
+    '''
+    inpt = open(upsdatFileName)
+    lines = inpt.readlines()
+    inpt.close()
+    nTemp = int(lines[0].strip('\n'))
+    minusOne = 0
+    counter = 1
+    ll = lines[1].split()
+    temp = np.asarray(ll[3:], 'float64')
+    while not minusOne:
+        if '-1' in lines[counter][:4]:
+            minusOne = 1
+        else:
+            counter += 1
+    ntrans = (counter)/2
+    lvl1 = []
+    lvl2 = []
+    de = []
+    gf = []
+    upsilon = []
+    counter = 1
+    for itrans in range(ntrans):
+        ll1 = lines[counter].split()
+        lvl1.append(int(ll1[0]))
+        lvl2.append(int(ll1[1]))
+        de.append(float(ll1[2]))
+        ll2 = lines[counter+1].split()
+#        print ' ll2 = ', ll2
+#        print ' gf = ', ll2[2]
+        gf.append(float(ll2[2]))
+        upsilon.append(np.asarray(ll2[3:], 'float64'))
+        counter += 2
+    counter += 1
+    ref = []
+    for aline in lines[counter:-1]:
+        ref.append(aline.strip('\n'))
+    return {'lvl1':lvl1, 'lvl2':lvl2, 'de':de, 'gf':gf, 'upsilon':upsilon, 'temperature':temp, 'ref':ref}
+    #
+    # -----------------------------------------------------
+    #
 def versionRead():
     """ read the version number of the CHIANTI database"""
     xuvtop = os.environ['XUVTOP']
