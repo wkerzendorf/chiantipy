@@ -604,15 +604,20 @@ def elvlcWrite(info, outfile=0, addLvl=0):
     #
     # -------------------------------------------------------------------------------------
     #
-def wgfaRead(ions, filename = None):
-    """ reads chianti wgfa file and returns
-    {"lvl1":lvl1,"lvl2":lvl2,"wvl":wvl,"gf":gf,"avalue":avalue,"ref":ref}"""
+def wgfaRead(ions, filename=0, elvlcname=0):
+    """
+    reads chianti wgfa file and returns
+    {"lvl1":lvl1,"lvl2":lvl2,"wvl":wvl,"gf":gf,"avalue":avalue,"ref":ref}
+    if elvlcname is specified, the lsj term labels are returned as 'pretty1' and 'pretty2'
+    """
     #
-    if type(filename) == NoneType:
+    if filename:
+        wgfaname = filename
+    else:
         fname=ion2filename(ions)
         wgfaname=fname+'.wgfa'
-    else:
-        wgfaname = filename
+    if elvlcname:
+        elvlc=elvlcRead('', filename=elvlcname)
     input=open(wgfaname,'r')
     s1=input.readlines()
     dum=input.close()
@@ -629,6 +634,9 @@ def wgfaRead(ions, filename = None):
     wvl=[0.]*nwvl
     gf=[0.]*nwvl
     avalue=[0.]*nwvl
+    if elvlcname:
+        pretty1 = ['']*nwvl
+        pretty2 = ['']*nwvl
     #
     wgfaFormat='(2i5,f15.3,2e15.3)'
     for i in range(0,nwvl):
@@ -638,11 +646,18 @@ def wgfaRead(ions, filename = None):
         wvl[i]=inpt[2]
         gf[i]=inpt[3]
         avalue[i]=inpt[4]
+        if elvlcname:
+            pretty1[i] = elvlc['pretty'][inpt[0] - 1]
+            pretty2[i] = elvlc['pretty'][inpt[1] - 1]
+
     ref=[]
     for i in range(nwvl,len(s1)-1):
         s1a=s1[i][:-1]
         ref.append(s1a.strip())
     Wgfa={"lvl1":lvl1,"lvl2":lvl2,"wvl":wvl,"gf":gf,"avalue":avalue,"ref":ref, 'ionS':ions}
+    if elvlcname:
+        Wgfa['pretty1'] = pretty1
+        Wgfa['pretty2'] = pretty2
     return Wgfa
     #
     # --------------------------------------
