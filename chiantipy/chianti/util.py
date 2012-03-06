@@ -596,9 +596,6 @@ def elvlcWrite(info, outfile=0, addLvl=0):
         out.write(pstring)
     out.write(' -1\n')
     out.write('%filename:  ' + elvlcName + '\n')
-    info['ref'].append(' produced as a part of the George Mason University, University of Cambridge, University of Michigan \'CHIANTI\' atomic database for astrophysical spectroscopy consortium')
-    today = date.today()
-    info['ref'].append(' K. Dere (GMU) - ' + today.strftime('%Y %B %d'))
     for one in info['ref']:
         out.write(one+'\n')
     out.write(' -1\n')
