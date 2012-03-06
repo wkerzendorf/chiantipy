@@ -663,7 +663,8 @@ def wgfaRead(ions, filename=0, elvlcname=0):
     # --------------------------------------
     #
 def wgfaWrite(info, outfile = 0, minBranch = 0.):
-    ''' to write a wgfa file
+    '''
+    to write a wgfa file
     info is a dictionary the contains the following elements
     ionS, the Chianti style name of the ion such as c_4 for C IV
     lvl1 - the lower level, the ground level is 1
@@ -674,7 +675,8 @@ def wgfaWrite(info, outfile = 0, minBranch = 0.):
     lower - descriptive text of the lower level (optional)
     upper - descriptive text of the upper level (optiona)
     ref - reference text, a list of strings
-    minBranch:  the transition must have a branching ratio than the specified to be written to the file'''
+    minBranch:  the transition must have a branching ratio than the specified to be written to the file
+    '''
     #
     gname = info['ionS']
     if outfile:
