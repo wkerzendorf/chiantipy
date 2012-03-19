@@ -706,7 +706,13 @@ def wgfaWrite(info, outfile = 0, minBranch = 0.):
             branch = 0.
         if branch > minBranch and abs(info['lvl1'][itrans]) > 0 and info['lvl2'][itrans] > 0:
             if info.has_key('pretty1'):
-                pstring= pformat%(info['lvl1'][itrans], info['lvl2'][itrans], info['wvl'][itrans], info['gf'][itrans], avalue, info['pretty1'][itrans].rjust(30), info['pretty2'][itrans].ljust(30))
+                # generally only useful with NIST data
+                if info.has_key('transType'):
+                    if info['transType'][itrans] != '':
+                        lbl2 = info['pretty2']+'  ' + info['transType'][itrans]
+                else:
+                    lbl2= info['pretty2'][itrans]
+                pstring= pformat%(info['lvl1'][itrans], info['lvl2'][itrans], info['wvl'][itrans], info['gf'][itrans], avalue, info['pretty1'][itrans].rjust(30), lbl2.ljust(30))
                 out.write(pstring+'\n')
             else:
                 pstring= pformat%(info['lvl1'][itrans], info['lvl2'][itrans], info['wvl'][itrans], info['gf'][itrans], avalue)
