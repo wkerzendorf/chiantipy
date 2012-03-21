@@ -2083,7 +2083,6 @@ class ion:
 #            pl.ylim(yl[0],1.2)
         if plotFile:
             pl.savefig(plotFile)
-        print ' in popPlot, toplvl = ', toplvl
         self.Population['toplvl'] = toplvl
         return
         #
@@ -3540,7 +3539,7 @@ class ionWeb(ion):
         #pl.ioff()
         #pl.show()
 #        return
-    def intensityRatioSelectLines(self,wvlRange=0,top=10,  saveFile=0):
+    def intensityRatioSelectLines(self, wvlRange=0, top=10,  saveFile=0):
         """Provide a selection of lines for calculating the 'so-called' G(T) function.
 
         Given as a function of both temperature and eDensity.
