@@ -69,7 +69,6 @@ from Ion import ionWeb
 from Ion import ioneq
 #from Ion import photoioneq
 #from Ion import phion
-##from ionweb import ionWeb
 #
 #if chInteractive:
 #    import matplotlib as pl
