@@ -31,8 +31,7 @@ Defaults = util.defaultsRead()
 Ip = util.ipRead()
 MasterList = util.masterListRead()
 AbundanceAll = util.abundanceRead(abundancename = Defaults['abundfile'])
-if chInteractive:
-    IoneqAll = util.ioneqRead(ioneqname = Defaults['ioneqfile'])
+IoneqAll = util.ioneqRead(ioneqname = Defaults['ioneqfile'])
 import version
 __version__ = version.__version__
 __version_info__ = version.__version_info__
