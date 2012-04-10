@@ -61,7 +61,7 @@ def ipRead(verbose=False):
     #
     # -------------------------------------------------------------------------------------
     #
-def masterListInfo():
+def masterListInfo(force=0):
     """ returns information about ions in masterlist
     the reason for this file is to speed up multi-ion spectral calculations
     the information is stored in a pickled file 'masterlist_ions.pkl'
@@ -73,7 +73,10 @@ def masterListInfo():
     infoPath = os.path.join(dir, 'masterlist')
     infoName=os.path.join(dir,'masterlist','masterlist_ions.pkl')
     masterName=os.path.join(dir,'masterlist','masterlist.ions')
-    if os.path.isfile(infoName):
+    #
+    makeNew = force == 1 or not os.path.isfile(infoName)
+#    if os.path.isfile(infoName):
+    if not makeNew:
 #       print ' file exists - ',  infoName
         pfile = open(infoName, 'r')
         masterListInfo = cPickle.load(pfile)
@@ -885,13 +888,14 @@ def splupsRead(ions, filename=None, prot=0, ci=0,  diel=0):
         de= np.zeros(nsplups, 'float64')
         cups= np.zeros(nsplups, 'float64')
         nspl=[0]*nsplups
-        splups=np.zeros((nsplups,9),'Float64')
+#        splups=np.zeros((nsplups,9),'Float64')
+        splups = [0.]*nsplups
         if prot:
             splupsFormat1='(3i3,8e10.3)'
-            splupsFormat2='(3i3,12e10.3)'
+            splupsFormat2='(3i3,3e10.3)'
         else:
 #            splupsFormat1='(6x,3i3,8e10.3)'
-            splupsFormat2='(6x,3i3,12e10.3)'
+            splupsFormat2='(6x,3i3,3e10.3)'
         #
         for i in range(0,nsplups):
             inpt=FortranLine(s1[i],splupsFormat2)
@@ -901,11 +905,29 @@ def splupsRead(ions, filename=None, prot=0, ci=0,  diel=0):
             gf[i]=inpt[3]
             de[i]=inpt[4]
             cups[i]=inpt[5]
-            as1 = s1[i][13:].split()
-            nspl[i] = len(s1[i][13:].split()) - 4
-            spl = np.asarray(as1[4:])
-            print ' spl = ', spl
-            splups[i].put(range(nspl[i]), spl)
+            if prot:
+                as1 = s1[i][39:].rstrip()
+            else:
+                as1 = s1[i][45:].rstrip()
+#            print ' len of as1 = ', len(as1)
+#            print ' as1 = ', as1
+            as2 = []
+            while len(as1) > 0:
+                stuff = as1[:10]
+                try:
+                    as2.append(float(stuff))
+                except:
+                    as2.append(0.)
+#                    print ' s1 = ', s1[i]
+#                    print ' error in as2 = ', as2
+#                    print ' stuff = ', stuff
+#                    print ' as1 = ', len(as1), as1
+                as1 = as1[10:]
+            nspl[i] = len(as2)
+            spl = np.asarray(as2, 'float64')
+#            print ' nspl, spl = ', nspl[i], spl
+#            splups[i].put(range(nspl[i]), spl)
+            splups[i] = spl
         #
         ref=[]
         for i in range(nsplups+1,len(s1)-1):

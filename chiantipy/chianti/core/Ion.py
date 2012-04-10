@@ -1036,7 +1036,8 @@ class ion:
                 cups=self.Psplups["cups"][isplups]
                 nspl=self.Psplups["nspl"][isplups]
                 dx=1./(float(nspl)-1.)
-                splups=self.Psplups["splups"][isplups,0:nspl]
+#                splups=self.Psplups["splups"][isplups,0:nspl]
+                splups=self.Psplups["splups"][isplups]
                 de=elvlc[l2]-elvlc[l1]
 #                de=self.Psplups['de'][isplups]  # these are generally 0.
                 kte = const.boltzmann*temp/(de*const.ryd2erg)
@@ -1049,7 +1050,8 @@ class ion:
                 nspl = self.DielSplups["nspl"][isplups]
                 ttype = self.DielSplups["ttype"][isplups]
                 dx = 1./(float(nspl)-1.)
-                splups = self.DielSplups["splups"][isplups,0:nspl]
+#                splups = self.DielSplups["splups"][isplups,0:nspl]
+                splups = self.DielSplups["splups"][isplups]
                 de=self.DielSplups['de'][isplups]
                 kte = const.boltzmann*temp/(de*const.ryd2erg)
             else:
@@ -1061,7 +1063,8 @@ class ion:
                 nspl=self.Splups["nspl"][isplups]
                 dx=1./(float(nspl)-1.)
 ##                print self.Splups["splups"][l1,l2]
-                splups=self.Splups["splups"][isplups,0:nspl]
+#                splups=self.Splups["splups"][isplups,0:nspl]
+                splups=self.Splups["splups"][isplups]
 #                de=elvlc[l2]-elvlc[l1]
                 de=self.Splups['de'][isplups]
                 kte = const.boltzmann*temp/(de*const.ryd2erg)
