@@ -894,16 +894,6 @@ def splupsRead(ions, filename=None, prot=0, ci=0,  diel=0):
             splupsFormat2='(6x,3i3,12e10.3)'
         #
         for i in range(0,nsplups):
-            # checking for 5 or 9 point splines, need to check for 9 first!
-#            try:
-#                inpt=FortranLine(s1[i],splupsFormat2)
-#                nspl[i] = 9
-#                print ' 9 = ', inpt[6:]
-#            except:
-#                inpt=FortranLine(s1[i],splupsFormat1)
-#                nspl[i] = 5
-#                print ' 5 = ', inpt[6:]
-#
             inpt=FortranLine(s1[i],splupsFormat2)
             lvl1[i]=inpt[0]
             lvl2[i]=inpt[1]
@@ -911,13 +901,10 @@ def splupsRead(ions, filename=None, prot=0, ci=0,  diel=0):
             gf[i]=inpt[3]
             de[i]=inpt[4]
             cups[i]=inpt[5]
-            spl=np.array(inpt[6:])
-            good = spl > 0.
-#            if good[5:].sum():
-#                nspl[i] = 9
-#            else:
-#                nspl[i] = 5
-            nspl[i] = good.sum()
+            as1 = s1[i][13:].split()
+            nspl[i] = len(s1[i][13:].split()) - 4
+            spl = np.asarray(as1[4:])
+            print ' spl = ', spl
             splups[i].put(range(nspl[i]), spl)
         #
         ref=[]
