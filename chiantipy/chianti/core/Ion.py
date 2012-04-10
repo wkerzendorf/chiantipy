@@ -1039,7 +1039,7 @@ class ion:
                 splups=self.Psplups["splups"][isplups,0:nspl]
                 de=elvlc[l2]-elvlc[l1]
 #                de=self.Psplups['de'][isplups]  # these are generally 0.
-                kte=temp/(de*1.57888e+5)
+                kte = const.boltzmann*temp/(de*const.ryd2erg)
             elif diel:
                 #
                 l1 = self.DielSplups["lvl1"][isplups]-1
@@ -1051,7 +1051,7 @@ class ion:
                 dx = 1./(float(nspl)-1.)
                 splups = self.DielSplups["splups"][isplups,0:nspl]
                 de=self.DielSplups['de'][isplups]
-                kte = temp/(de*1.57888e+5)
+                kte = const.boltzmann*temp/(de*const.ryd2erg)
             else:
                 # electron collisional excitation
                 l1=self.Splups["lvl1"][isplups]-1
@@ -1064,7 +1064,7 @@ class ion:
                 splups=self.Splups["splups"][isplups,0:nspl]
 #                de=elvlc[l2]-elvlc[l1]
                 de=self.Splups['de'][isplups]
-                kte=temp/(de*1.57888e+5)
+                kte = const.boltzmann*temp/(de*const.ryd2erg)
             #
             der=0
             if ttype == 1:
