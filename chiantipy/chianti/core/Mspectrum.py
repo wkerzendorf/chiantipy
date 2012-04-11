@@ -154,6 +154,7 @@ class mspectrum:
         ionWorkerQ = mp.Queue()
         ionDoneQ = mp.Queue()
         #
+        ionsCalculated = []
         #
         self.Todo = []
         for iz in range(31):
@@ -192,6 +193,7 @@ class mspectrum:
                             print ' setting up spectrum calculation for  :  ', ionS
                         ionWorkerQ.put((ionS, temperature, density, wavelength, filter, allLines))
                         self.Todo.append(ionS)
+                        ionsCalculated.append(ionS)
                     # get dielectronic lines
                     if masterListTestD and wvlTestMinD and wvlTestMaxD and ioneqTestD:
                         if chInteractive and verbose:
@@ -200,6 +202,7 @@ class mspectrum:
                         # set allLines fo dielectronic
                         ionWorkerQ.put((ionSd, temperature, density, wavelength, filter, 1))
                         self.Todo.append(ionSd)
+                        ionsCalculated.append(ionS)
         #
         ffWorkerQSize = ffWorkerQ.qsize()
         fbWorkerQSize = fbWorkerQ.qsize()
@@ -315,9 +318,9 @@ class mspectrum:
                 integrated = np.zeros_like(wavelength)
                 for iTempDen in range(nTempDen):
                     integrated += total[iTempDen]*em[iTempDen]
-            self.Spectrum ={'temperature':temperature, 'density':density, 'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1], 'integrated':integrated, 'em':em, 'minAbund':minAbund, 'masterlist':masterlist}
+            self.Spectrum ={'temperature':temperature, 'density':density, 'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1], 'integrated':integrated, 'em':em, 'minAbund':minAbund, 'masterlist':masterlist, 'ions':ionsCalculated}
         else:
-            self.Spectrum ={'temperature':temperature, 'density':density, 'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1], 'minAbund':minAbund, 'masterlist':masterlist}
+            self.Spectrum ={'temperature':temperature, 'density':density, 'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1], 'minAbund':minAbund, 'masterlist':masterlist, 'ions':ionsCalculated}
     #
     # -------------------------------------------------------------------------
     #

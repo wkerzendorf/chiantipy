@@ -115,6 +115,7 @@ class spectrum:
         twoPhoton = np.zeros((nTempDen, nWvl), 'float64').squeeze()
         lineSpectrum = np.zeros((nTempDen, nWvl), 'float64').squeeze()
         #
+        ionsCalculated = []
         #
         for iz in range(31):
             abundance = self.AbundanceAll['abundance'][iz-1]
@@ -166,6 +167,7 @@ class spectrum:
                         if chInteractive:
                             print ' calculating spectrum for  :  ', ionS
                         thisIon = chianti.core.ion(ionS, temperature, density)
+                        ionsCalculated.append(ionS)
 #                       print ' dir = ', dir(thisIon)
 #                        thisIon.emiss(wvlRange = wvlRange, allLines=allLines)
                         thisIon.intensity(wvlRange = wvlRange, allLines=allLines)
@@ -186,6 +188,7 @@ class spectrum:
                     if masterListTestD and wvlTestMinD and wvlTestMaxD and ioneqTestD:
                         print ' calculating spectrum for  :  ', ionSd
                         thisIon = chianti.core.ion(ionSd, temperature, density)
+                        ionsCalculated.append(ionSd)
 #                       print ' dir = ', dir(thisIon)
 #                       have to do all lines for the dielectronic satellites
 #                        thisIon.emiss(allLines=1)
@@ -215,9 +218,9 @@ class spectrum:
                 integrated = np.zeros_like(wavelength)
                 for iTempDen in range(nTempDen):
                     integrated += total[iTempDen]*em[iTempDen]
-            self.Spectrum ={'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1], 'integrated':integrated, 'em':em}
+            self.Spectrum ={'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1], 'integrated':integrated, 'em':em, 'ions':ionsCalculated}
         else:
-            self.Spectrum ={'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1]}
+            self.Spectrum ={'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1], 'ions':ionsCalculatedpw}
     #
     # -------------------------------------------------------------------------
     #
