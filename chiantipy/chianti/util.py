@@ -891,11 +891,11 @@ def splupsRead(ions, filename=None, prot=0, ci=0,  diel=0):
 #        splups=np.zeros((nsplups,9),'Float64')
         splups = [0.]*nsplups
         if prot:
-            splupsFormat1='(3i3,8e10.3)'
-            splupsFormat2='(3i3,3e10.3)'
+#            splupsFormat1 = FortranFormat('3i3,8e10.3')
+            splupsFormat2 = FortranFormat('3i3,3e10.3')
         else:
 #            splupsFormat1='(6x,3i3,8e10.3)'
-            splupsFormat2='(6x,3i3,3e10.3)'
+            splupsFormat2 = FortranFormat('6x,3i3,3e10.3')
         #
         for i in range(0,nsplups):
             inpt=FortranLine(s1[i],splupsFormat2)
@@ -909,25 +909,12 @@ def splupsRead(ions, filename=None, prot=0, ci=0,  diel=0):
                 as1 = s1[i][39:].rstrip()
             else:
                 as1 = s1[i][45:].rstrip()
-#            print ' len of as1 = ', len(as1)
-#            print ' as1 = ', as1
-            as2 = []
-            while len(as1) > 0:
-                stuff = as1[:10]
-                try:
-                    as2.append(float(stuff))
-                except:
-                    as2.append(0.)
-#                    print ' s1 = ', s1[i]
-#                    print ' error in as2 = ', as2
-#                    print ' stuff = ', stuff
-#                    print ' as1 = ', len(as1), as1
-                as1 = as1[10:]
-            nspl[i] = len(as2)
-            spl = np.asarray(as2, 'float64')
-#            print ' nspl, spl = ', nspl[i], spl
-#            splups[i].put(range(nspl[i]), spl)
-            splups[i] = spl
+            nspl[i] = len(as1)/10
+            splupsFormat3 = FortranFormat(str(nspl[i])+'E10.2')
+#            splupsFormat3 = '(' + str(nspl[i]) + 'e10.3' + ')'
+            inpt = FortranLine(as1, splupsFormat3)
+            spl1 = np.asarray(inpt[:], 'float64')
+            splups[i] = spl1
         #
         ref=[]
         for i in range(nsplups+1,len(s1)-1):
