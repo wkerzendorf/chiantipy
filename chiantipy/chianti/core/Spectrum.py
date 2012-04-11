@@ -220,7 +220,7 @@ class spectrum:
                     integrated += total[iTempDen]*em[iTempDen]
             self.Spectrum ={'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1], 'integrated':integrated, 'em':em, 'ions':ionsCalculated}
         else:
-            self.Spectrum ={'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1], 'ions':ionsCalculatedpw}
+            self.Spectrum ={'wavelength':wavelength, 'intensity':total.squeeze(), 'filter':filter[0].__name__,   'width':filter[1], 'ions':ionsCalculated}
     #
     # -------------------------------------------------------------------------
     #
