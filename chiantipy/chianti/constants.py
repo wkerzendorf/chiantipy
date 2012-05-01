@@ -22,10 +22,12 @@ boltzmannEv = 8.617343e-5
 invCm2Ev = 1./8.06554465e+3
 invCm2ryd = 1./109737.32
 ryd2Ev = 13.6056923
-ryd2erg = 2.17987197e-11  #ergs
+ryd2erg = 2.17987197e-11  #erg
 fine = 7.2973525376e-3  # fine structure constant ~ 1./137
 emass = 9.10938215e-28  #  electron mass in gram
 bohr = 0.52917720859e-8  # bohr radius in cm
+hartree = 4.35974434e-11 #  erg
+hartreeEv = 27.21138505
 #
 # derived constants
 hc = planck*light

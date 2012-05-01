@@ -607,7 +607,7 @@ def elvlcWrite(info, outfile=0, addLvl=0):
     #
     # -------------------------------------------------------------------------------------
     #
-def wgfaRead(ions, filename=0, elvlcname=0):
+def wgfaRead(ions, filename=0, elvlcname=0, total=0):
     """
     reads chianti wgfa file and returns
     {"lvl1":lvl1,"lvl2":lvl2,"wvl":wvl,"gf":gf,"avalue":avalue,"ref":ref}
@@ -642,7 +642,7 @@ def wgfaRead(ions, filename=0, elvlcname=0):
         pretty2 = ['']*nwvl
     #
     wgfaFormat='(2i5,f15.3,2e15.3)'
-    for i in range(0,nwvl):
+    for i in range(nwvl):
         inpt=FortranLine(s1[i],wgfaFormat)
         lvl1[i]=inpt[0]
         lvl2[i]=inpt[1]
@@ -658,6 +658,12 @@ def wgfaRead(ions, filename=0, elvlcname=0):
         s1a=s1[i][:-1]
         ref.append(s1a.strip())
     Wgfa={"lvl1":lvl1,"lvl2":lvl2,"wvl":wvl,"gf":gf,"avalue":avalue,"ref":ref, 'ionS':ions}
+    if total:
+        avalueLvl = [0.]*max(lvl2)
+        for iwvl in range(nwvl):
+            avalueLvl[lvl2[iwvl] -1] += avalue[iwvl]
+        Wgfa['avalueLvl'] = avalueLvl
+
     if elvlcname:
         Wgfa['pretty1'] = pretty1
         Wgfa['pretty2'] = pretty2
@@ -675,8 +681,8 @@ def wgfaWrite(info, outfile = 0, minBranch = 0.):
     wvl - the wavelength in Angstroms
     gf - the weighted oscillator strength
     avalue - the A value
-    lower - descriptive text of the lower level (optional)
-    upper - descriptive text of the upper level (optiona)
+    pretty1 - descriptive text of the lower level (optional)
+    pretty2 - descriptive text of the upper level (optiona)
     ref - reference text, a list of strings
     minBranch:  the transition must have a branching ratio than the specified to be written to the file
     '''
@@ -934,25 +940,35 @@ def splupsRead(ions, filename=None, prot=0, ci=0,  diel=0):
     #
     # -------------------------------------------------------------------------------------
     #
-def cireclvlRead(ions, type):
-    ''' to read Chianti cilvl and reclvl files and return data
-    must specify type as either cilvl or reclvl'''
-    fname=ion2filename(ions)
-    if type in ['cilvl', 'reclvl']:
-        paramname=fname+'.' + type
+def cireclvlRead(ions, filename=0, cilvl=0, reclvl=0, rrlvl=0):
+    '''
+    to read Chianti cilvl and reclvl files and return data
+    must specify type as either cilvl, reclvl or rrlvl
+    '''
+    if filename:
+        fname = filename
     else:
-        print('type must be one of "cilvl" or "reclvl" ')
+        fname = ion2filename(ions)
+    if cilvl:
+        paramname=fname+'.cilvl'
+    elif reclvl:
+        paramname = fname + '.reclvl'
+    elif rrlvl:
+        paramname = fname + '.rrlvl'
+    else:
+        print('either "cilvl", "reclvl" ir "rrlvl" must be specified')
         return {}
     if os.path.exists(paramname):
         input=open(paramname,'r')
         lines = input.readlines()
         input.close()
     else:
-        return None
+        print 'file does not exist:  ', paramname
+        return {'error':'file does not exist: ' + paramname}
     #
     iline = 0
     idx = -1
-    while idx <= 0:
+    while idx < 0:
         aline=lines[iline][0:5]
         idx=aline.find('-1')
         iline += 1
@@ -961,7 +977,7 @@ def cireclvlRead(ions, type):
     #
     nref = 0
     idx = -1
-    while idx <= 0:
+    while idx < 0:
         aline=lines[iline][0:5]
         idx=aline.find('-1')
         iline += 1
@@ -985,7 +1001,10 @@ def cireclvlRead(ions, type):
         shortT = np.asarray(recdat[4:], 'float64')
         # the result of the next statement is to continue to replicate t
         t = np.resize(shortT, maxNtemp)
-        temp[iline] = 10.**t
+        if rrlvl:
+            temp[iline] = t
+        else:
+            temp[iline] = 10.**t
         iline += 1
     #
     lvl1 = np.zeros(ntrans, 'int64')
