@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-4.6.dtd">
 <!-- eric4 project file for project ChiantiPy -->
-<!-- Saved: 2011-11-17, 17:24:58 -->
-<!-- Copyright (C) 2011 Ken Dere, kdere@gmu.edu -->
+<!-- Saved: 2012-05-30, 15:22:18 -->
+<!-- Copyright (C) 2012 Ken Dere, kdere@gmu.edu -->
 <Project version="4.6">
   <Language></Language>
   <ProgLanguage mixed="0">Python</ProgLanguage>
@@ -49,6 +49,7 @@
   <Interfaces>
   </Interfaces>
   <Others>
+    <Other>/home/dere/python/chianti/trunk/eric_doc</Other>
   </Others>
   <Vcs>
     <VcsType>Subversion</VcsType>
@@ -172,4 +173,51 @@
     <FiletypeAssociation pattern="*.py" type="SOURCES" />
     <FiletypeAssociation pattern="*.ptl" type="SOURCES" />
   </FiletypeAssociations>
+  <Documentation>
+    <DocumentationParams>
+      <dict>
+        <key>
+          <string>ERIC4DOC</string>
+        </key>
+        <value>
+          <dict>
+            <key>
+              <string>ignoreFilePatterns</string>
+            </key>
+            <value>
+              <list>
+                <unicode></unicode>
+              </list>
+            </value>
+            <key>
+              <string>outputDirectory</string>
+            </key>
+            <value>
+              <unicode>/home/dere/python/chianti/trunk/eric_doc</unicode>
+            </value>
+            <key>
+              <string>qtHelpEnabled</string>
+            </key>
+            <value>
+              <bool>False</bool>
+            </value>
+            <key>
+              <string>sourceExtensions</string>
+            </key>
+            <value>
+              <list>
+                <unicode></unicode>
+              </list>
+            </value>
+            <key>
+              <string>useRecursion</string>
+            </key>
+            <value>
+              <bool>True</bool>
+            </value>
+          </dict>
+        </value>
+      </dict>
+    </DocumentationParams>
+  </Documentation>
 </Project>
