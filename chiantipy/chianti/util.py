@@ -539,7 +539,7 @@ def elvlcRead(ions, filename = None, verbose=0,  useTh=0):
         inpt=FortranLine(s1[i][0:115],elvlcFormat)
         lvl[i]=inpt[0]
         conf[i]=inpt[1]
-        term[i]=inpt[2]
+        term[i]=inpt[2].strip()
         spin[i]=inpt[3]
         l[i]=inpt[4]
         spd[i]=inpt[5].strip()

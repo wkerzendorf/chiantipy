@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-4.6.dtd">
 <!-- eric4 project file for project ChiantiPy -->
-<!-- Saved: 2012-05-30, 15:22:18 -->
+<!-- Saved: 2012-05-31, 15:28:30 -->
 <!-- Copyright (C) 2012 Ken Dere, kdere@gmu.edu -->
 <Project version="4.6">
   <Language></Language>
@@ -49,7 +49,6 @@
   <Interfaces>
   </Interfaces>
   <Others>
-    <Other>/home/dere/python/chianti/trunk/eric_doc</Other>
   </Others>
   <Vcs>
     <VcsType>Subversion</VcsType>
