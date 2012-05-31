@@ -2409,11 +2409,11 @@ class ion:
                 #
                 for itrans in range(self.Nrrlvl):
 #                    lvl1 = reclvl['lvl1'][itrans]-1
-                    lvl2 = reclvl['lvl2'][itrans]-1
+                    lvl2 = rrlvl['lvl2'][itrans]-1
                     popmat[lvl2+ci, -1] += self.EDensity*rrlvlRate['rate'][itrans]
                     popmat[-1, -1] -= self.EDensity*rrlvlRate['rate'][itrans]
                 if self.Nrrlvl:
-                    reclvlRateTot = rrlvlRate['rate'].sum(axis=0)
+                    rrlvlRateTot = rrlvlRate['rate'].sum(axis=0)
                 else:
                     rrlvlRateTot = 0.
 
