@@ -7,7 +7,7 @@ that is found in the LICENSE file
 
 
 '''
-import os
+import os, fnmatch
 from types import *
 from ConfigParser import *
 import cPickle
@@ -1229,13 +1229,15 @@ def drRead(ions):
     # -------------------------------------------------------------------------------------
     #
 def ioneqRead(ioneqname='', verbose=0):
-    """ reads an ioneq file and stores temperatures and ionization
+    """
+    reads an ioneq file and stores temperatures and ionization
     equilibrium values in self.IoneqTemperature and self.Ioneq and returns
-    a dictionary containing these value and the reference to the literature"""
+    a dictionary containing these value and the reference to the literature
+    """
     dir=os.environ["XUVTOP"]
+    ioneqdir = os.path.join(dir,'ioneq')
     if ioneqname == '':
         # the user will select an ioneq file
-        ioneqdir = os.path.join(dir,'ioneq')
         fname = chianti.gui.chpicker(ioneqdir,filter='*.ioneq',label = 'Select an Ionization Equilibrium file')
         if fname == None:
             print' no ioneq file selected'
@@ -1244,18 +1246,37 @@ def ioneqRead(ioneqname='', verbose=0):
             ioneqfilename=os.path.basename(fname)
             ioneqname,ext=os.path.splitext(ioneqfilename)
     else:
+        filelist = listFiles(ioneqdir)
         fname=os.path.join(dir,'ioneq',ioneqname+'.ioneq')
-        if not os.path.isfile(fname):
-            print ' file does not exist:  ', fname
-            path=os.path.join(dir,'ioneq')
-            filelist=os.listdir(path)
-            ioneqlist=[]
-            for aname in fnmatch.filter(filelist,'*.ioneq'):
-                ioneqlist.append(aname)
-            print ' the following files do exist:'
-            for one in ioneqlist:
-                print ' - ', one.replace('.ioneq', '')
-            return False
+        newlist = fnmatch.filter(filelist, '*.ioneq')
+#        if not os.path.isfile(fname):
+#            print ' file does not exist:  ', fname
+#            path=os.path.join(dir,'ioneq')
+#            filelist=os.listdir(path)
+#            ioneqlist=[]
+#            for aname in fnmatch.filter(filelist,'*.ioneq'):
+#                ioneqlist.append(aname)
+#            print ' the following files do exist:'
+#            for one in ioneqlist:
+#                print ' - ', one.replace('.ioneq', '')
+#            return False
+        baselist = []
+        for one in newlist:
+            baselist.append(os.path.basename(one))
+        cnt = baselist.count(ioneqname+'.ioneq')
+        if cnt == 0:
+            print ' ioneq file not found:  ', fname
+            print ' the following files do exist: '
+            for one in newlist:
+                print os.path.basename(one)
+            return
+        elif cnt ==1:
+            idx = baselist.index(ioneqname+'.ioneq')
+            print ' file exists:  ', newlist[idx]
+            fname = newlist[idx]
+        elif cnt > 1:
+            print ' found more than one file', fname
+            return
     #
     input=open(fname,'r')
     s1=input.readlines()
@@ -1400,6 +1421,31 @@ def klgfbRead():
         l = int(data[1])
         gfb[n-1, l] = np.array(data[2:], 'float64')
     return {'pe':pe, 'klgfb':gfb}
+#
+#  ---------------------------------------------------------
+#
+def listFiles(path):
+    '''
+    walks the path and subdirectories to return a list of files
+    '''
+    if len(path)==0:
+        print ' path not specified'
+        return {'nfiles':0}
+    alist=os.walk(path)
+    print ' getting file list'
+    listname=[]
+    for (dirpath,dirnames,filenames) in alist:
+        if len(dirnames) == 0:
+            for f in filenames:
+                file=os.path.join(dirpath,f)
+                if os.path.isfile(file):
+                    listname.append(file)
+        else:
+            for f in filenames:
+                file=os.path.join(dirpath,f)
+                if os.path.isfile(file):
+                    listname.append(file)
+    return listname
     #
     # ----------------------------------------------------------------------------------------
     #

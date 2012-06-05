@@ -4793,11 +4793,30 @@ class ioneq(ion):
     Calculates the ionization equilibrium for an element as a function of temperature.
     The variable z is the atomic number of the element.  Acceptable values are from 1 to 30.
     '''
-    def __init__(self,z, temperature, verbose=False):
+    def __init__(self,z,  verbose=False):
+        '''
+        a class to calculate and plot ionization equilibria
+        '''
+        self.Z=z
+        #
+        # ---------------------------------------------------
+        #
+    def load(self, ioneqName):
+        '''
+        read in an existing file ionization equilibrium file
+        ioneqName should be something like 'chianti', or 'chianti_version6'
+        '''
+        ioneqAll = util.ioneqRead(ioneqName)
+        self.Temperature = ioneqAll['ioneqTemperature']
+        self.Ioneq = ioneqAll['ioneqAll'][self.Z - 1]
+        #
+        # ---------------------------------------------------
+        #
+    def calculate(self, temperature):
+        self.Temperature = np.array(temperature, 'float64')
         ionList=[]
         chIons=[]
-        self.Z=z
-        self.Temperature = np.array(temperature, 'float64')
+        z = self.Z
         for stage in range(1, z+2):
             ionStr=util.zion2name(z, stage)
             ionList.append(ionStr)
@@ -4876,8 +4895,9 @@ class ioneq(ion):
                 ioneq[:, it]=ioneq[:, it]/ionsum
             self.Ioneq=ioneq
 #
-    def plot(self, stages=None, xr=None, yr=None, oplot=False, label=True, title=True,  bw=False):
-        '''Plots the ionization equilibria.
+    def plot(self, stages=0, xr=0, yr=0, oplot=0, label=1, title=1,  bw=0):
+        '''
+        Plots the ionization equilibria.
 
         self.plot(xr=None, yr=None, oplot=False)
         stages = sequence of ions to be plotted, neutral == 1, fully stripped == Z+1
@@ -4885,19 +4905,20 @@ class ioneq(ion):
 
         for overplotting:
         oplot="ioneqfilename" such as 'mazzotta'
-        or if oplot=True or oplot=1 and a widget will come up so that a file can be selected.'''
+        or if oplot=True or oplot=1 and a widget will come up so that a file can be selected.
+        '''
         if bw:
             linestyle=['k-','k--', 'k-.', 'k:']
         else:
             linestyle=['b-','r--', 'g-.', 'm:']
         #
-        if type(stages) == types.NoneType:
+        if not stages:
             stages=range(1, self.Z+2)
         elif min(stages) < 1 or max(stages) > self.Z+1:
             stages=range(1, self.Z+2)  #  spectroscopic notation
-        if type(xr) == types.NoneType:
+        if not xr:
             xr=[self.Temperature.min(), self.Temperature.max()]
-        if type(yr) == types.NoneType:
+        if not yr:
             yr=[0.01, 1.1]
         xyr=list(xr)
         xyr.extend(list(yr))
