@@ -4790,7 +4790,7 @@ class ionWeb(ion):
         #
 class ioneq(ion):
     '''
-    Calculates the ionization equilibrium for an element as a function of temperature.
+    Reads, calculates, and/or plots the ionization equilibrium for an element as a function of temperature.
     The variable z is the atomic number of the element.  Acceptable values are from 1 to 30.
     '''
     def __init__(self,z,  verbose=False):
