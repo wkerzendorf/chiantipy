@@ -2764,6 +2764,8 @@ class ion:
             spop = np.sort(pop)
             idx = np.argsort(pop)
             minPop = spop[-top:].min()/2.
+            if top > pop.size:
+                top = pop.size
             for itop in range(1, top+1):
                 x = [idx[-itop], idx[-itop], idx[-itop]+1, idx[-itop]+1]
                 y = [minPop, spop[-itop], spop[-itop], minPop]
@@ -2778,6 +2780,8 @@ class ion:
         lvl=self.Elvlc["lvl"]
 #        nlvls=len(lvl)
         nlvls = self.Nlvls
+        if top > nlvls:
+            top = nlvls
         maxpop=np.zeros(nlvls,'Float32')
         for ilvl in range(nlvls):
             maxpop[ilvl]=pop[:,ilvl].max()

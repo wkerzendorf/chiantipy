@@ -849,11 +849,13 @@ def splomRead(ions, filename=None):
     # --------------------------------------------------
     #
 def splupsRead(ions, filename=None, prot=0, ci=0,  diel=0):
-    """read a chianti splups file and return
+    """
+    read a chianti splups file and return
     {"lvl1":lvl1,"lvl2":lvl2,"ttype":ttype,"gf":gf,"de":de,"cups":cups,"bsplups":bsplups,"ref":ref}
     if prot >0, then reads the psplups file
     if ci > 0, then reads cisplups file
-    if diel > 0, then reads dielsplups file"""
+    if diel > 0, then reads dielsplups file
+    """
     #
     if type(filename) == NoneType:
         fname=ion2filename(ions)
