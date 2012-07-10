@@ -27,7 +27,8 @@ pstring += '   \n'
 out.write(pstring)
 #
 for iz in range(nz):
-    ion = ch.ioneq(iz+1, t)
+    ion = ch.ioneq(iz+1)
+    ion.calculate(t)
 #    print ' ioneq.shape = ', ion.Ioneq.shape
     for stage in range(iz+2):
         pstring = '%3i%3i'%(iz+1, stage+1)

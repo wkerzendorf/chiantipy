@@ -3,6 +3,12 @@
 ======================
 
 
+Changes from 0.4.1 to 0.4.2
+===========================
+
+This is a bug fix release.
+
+
 Changes from 0.4 to 0.4.1
 =========================
 
@@ -24,7 +30,7 @@ Bug fixes.
 What is ChiantiPy
 =================
 
-ChiantiPy is the Python interface to the CHIANTI atomic database for astrophysical spectroscopy
+ChiantiPy is the Python interface to the CHIANTI atomic database for astrophysical spectroscopy.  It provides the capability to calculate the emission line and continuum spectrum of an optically thin plasma based on the data in the CHIANTI database.
 
 Detailed information can be found at http://chiantipy.sourceforge.net
 

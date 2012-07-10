@@ -1,0 +1,10 @@
+ChiantiPy is a Python package which provides the ability to calculate the line and continuum spectrum of a hot plasma.  It makes use of the atomic data in the CHIANTI atomic database for astrophysical spectroscopy.
+
+
+Release notes:  
+
+This is a bug fix release.
+
+Tags:
+
+Science, Astronomy, Physics, Python
