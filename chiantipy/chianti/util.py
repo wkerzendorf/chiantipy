@@ -1093,9 +1093,11 @@ def diRead(ions):
     # -------------------------------------------------------------------------------------
     #
 def eaRead(ions):
-    '''read a chianti excitation-autoionization file  return ionization rate
+    '''
+    read a chianti excitation-autoionization file and return the EA ionization rate data
     derived from splupsRead
-    {"lvl1":lvl1,"lvl2":lvl2,"ttype":ttype,"gf":gf,"de":de,"cups":cups,"bsplups":bsplups,"ref":ref}'''
+    {"lvl1":lvl1,"lvl2":lvl2,"ttype":ttype,"gf":gf,"de":de,"cups":cups,"bsplups":bsplups,"ref":ref}
+    '''
     fname=ion2filename(ions)
     splupsname=fname+'.easplups'
     if not os.path.exists(splupsname):
@@ -1272,12 +1274,12 @@ def ioneqRead(ioneqname='', verbose=0):
             for one in newlist:
                 print os.path.basename(one)
             return
-        elif cnt ==1:
+        elif cnt == 1 and verbose:
             idx = baselist.index(ioneqname+'.ioneq')
             print ' file exists:  ', newlist[idx]
             fname = newlist[idx]
         elif cnt > 1:
-            print ' found more than one file', fname
+            print ' found more than one ioneq file', fname
             return
     #
     input=open(fname,'r')

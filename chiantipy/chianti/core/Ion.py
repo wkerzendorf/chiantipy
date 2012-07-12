@@ -619,9 +619,9 @@ class ion:
             gcoef = drenergy > 0.
             ncoef=gcoef.sum()
 #            print ' ncoef = ', gcoef.sum()
-            rate=np.zeros(temperature.size, 'float32')
+            rate=np.zeros(temperature.size, 'float64')
             for icoef in range(ncoef):
-                rate+=drcoef[icoef]*np.exp(-drenergy[icoef]/temperature)
+                rate += drcoef[icoef]*np.exp(-drenergy[icoef]/temperature)
             rate=rate/temperature**1.5
             self.DrRate={'temperature':temperature, 'rate':rate}
         elif drparams['drtype'] == 2:
