@@ -51,7 +51,7 @@ def ipRead(verbose=False):
     if verbose:
         print ' maxz = ', maxz
     nip=nip-1
-    ip=np.zeros((maxz, maxz), 'float32')
+    ip=np.zeros((maxz, maxz), 'Float64')
     for aline in data[0:nip]:
         s2=aline.split()
         iz=int(s2[0])
@@ -250,9 +250,9 @@ def ionrecdatRead(filename):
         iline=iline+1
     nline=iline-1
     #
-    x=np.zeros(nline,'Float32')
-    y=np.zeros(nline,'Float32')
-    yerr=np.zeros(nline,'Float32')
+    x=np.zeros(nline,'Float64')
+    y=np.zeros(nline,'Float64')
+    yerr=np.zeros(nline,'Float64')
 #
     for iline in range(0,nline):
         ndata=len
@@ -475,7 +475,7 @@ def qrp(z,u):
         cc+=((z-20.)/50.5)**1.11
     #
     bu=u <= 1.
-    q=np.ma.array(u, 'float32', mask=bu, fill_value=0.)
+    q=np.ma.array(u, 'Float64', mask=bu, fill_value=0.)
     #
     #
     q=(aa*np.ma.log(u) + dd*(1.-1./u)**2 + cc*u*(1.-1./u)**4 + (c/u+d/u**2)*(1.-1/u))/u
@@ -775,7 +775,7 @@ def easplomRead(ions, extension='.splom'):
             de.append(de1)
             om.append(om1)
         iline=iline+1
-    omout=np.asarray(om,'Float32')
+    omout=np.asarray(om,'Float64')
     ref=lines[iline:-1]
 #        omout=np.transpose(omout)
     if extension == '.omdat':
@@ -837,8 +837,8 @@ def splomRead(ions, filename=None):
         iline=iline+1
         data=len(lines[iline].split(' ',2))
     hdr=lines[iline+1:-1]
-    de=np.asarray(de,'Float32')
-    splomout=np.asarray(splom,'Float32')
+    de=np.asarray(de,'Float64')
+    splomout=np.asarray(splom,'Float64')
     splomout=np.transpose(splomout)
     input.close()
     # note:  de is in Rydbergs
@@ -1056,10 +1056,10 @@ def diRead(ions):
     nspl=int(nspl)
     format=FortranFormat(str(nspl+1)+'E10.2')
     #
-    ev1=np.zeros(nfac,'Float32')
-    btf=np.zeros(nfac,'Float32')
-    xsplom=np.zeros([nfac, nspl],'Float32')
-    ysplom=np.zeros([nfac, nspl],'Float32')
+    ev1=np.zeros(nfac,'Float64')
+    btf=np.zeros(nfac,'Float64')
+    xsplom=np.zeros([nfac, nspl],'Float64')
+    ysplom=np.zeros([nfac, nspl],'Float64')
     #
     for ifac in range(nfac):
         line=input.readline()
@@ -1124,7 +1124,7 @@ def eaRead(ions):
         de=[0.]*nsplups
         cups=[0.]*nsplups
         nspl=[0]*nsplups
-        splups=np.zeros((nsplups,9),'Float32')
+        splups=np.zeros((nsplups,9),'Float64')
         splupsFormat1='(6x,3i3,8e10.0)'
         splupsFormat2='(6x,3i3,12e10.0)'
         #
@@ -1293,7 +1293,7 @@ def ioneqRead(ioneqname='', verbose=0):
     #
     tformat=FortranFormat(str(nTemperature)+'f6.2')
     ioneqTemperature=FortranLine(s1[1],tformat)
-    ioneqTemperature=np.asarray(ioneqTemperature[:],'Float32')
+    ioneqTemperature=np.asarray(ioneqTemperature[:],'Float64')
     ioneqTemperature=10.**ioneqTemperature
     nlines=0
     idx=-1
@@ -1306,12 +1306,12 @@ def ioneqRead(ioneqname='', verbose=0):
     #
     ioneqformat=FortranFormat('2i3,'+str(nTemperature)+'e10.2')
     #
-    ioneqAll=np.zeros((nElement,nElement+1,nTemperature),'Float32')
+    ioneqAll=np.zeros((nElement,nElement+1,nTemperature),'Float64')
     for iline in range(2,nlines):
         out=FortranLine(s1[iline],ioneqformat)
         iz=out[0]
         ion=out[1]
-        ioneqAll[iz-1,ion-1].put(range(nTemperature),np.asarray(out[2:],'Float32'))
+        ioneqAll[iz-1,ion-1].put(range(nTemperature),np.asarray(out[2:],'Float64'))
     ioneqRef = []
     for one in s1[nlines+1:-1]:
         ioneqRef.append(one[:-1])  # gets rif of the \n

@@ -270,7 +270,7 @@ class ion:
             except:
                 self.DiParams = util.diRead(self.IonStr)
                 diparmas = self.DiParams
-            cross=np.zeros(len(energy), 'float32')
+            cross=np.zeros(len(energy), 'Float64')
 
             for ifac in range(self.DiParams['info']['nfac']):
                 # prob. better to do this with masked arrays
@@ -287,7 +287,7 @@ class ion:
                         pl.plot(self.DiParams['xsplom'][ifac], self.DiParams['ysplom'][ifac])
                         pl.plot(btenergy, btcross)
                     if offset > 0:
-                        seq=[np.zeros(offset, 'float32'), cross1]
+                        seq=[np.zeros(offset, 'Float64'), cross1]
                         cross1=np.hstack(seq)
                     cross+=cross1*1.e-14
             self.DiCross={'energy':energy, 'cross':cross}
@@ -372,9 +372,9 @@ class ion:
         ntemp=temperature.size
         nsplups=len(eaparams['de'])
         if ntemp > 1:
-            ups=np.zeros((nsplups,ntemp),"Float32")
+            ups=np.zeros((nsplups,ntemp),"Float64")
         else:
-            ups=np.zeros(nsplups,"Float32")
+            ups=np.zeros(nsplups,"Float64")
         #
         for isplups in range(0,nsplups):
             l1=self.EaParams["lvl1"][isplups]-1
@@ -471,7 +471,7 @@ class ion:
                 x0=const.ev*eaparams['de'][itrans]
                 good = energy > x0
 
-                thisenergy=np.ma.array(energy, 'float32', mask=good, fill_value=0.)
+                thisenergy=np.ma.array(energy, 'Float64', mask=good, fill_value=0.)
 
                 earate+=eaev[iups]*8.63e-6*eaparams['ups'][iups]*np.exp(-x0)/(np.sqrt(temperature))
             self.EaRate={'rate':earate, 'temperature':temperature}
@@ -497,7 +497,7 @@ class ion:
             else:
                 bte=0.1*np.arange(10)
                 bte[0]=0.01
-                dum=np.ones(10, 'float32')
+                dum=np.ones(10, 'Float64')
                 [temperature, dum]=util.descale_bt(bte, dum, self.EaParams['cups'][0], self.DiParams['de'][0])
                 self.Temperature=temperature
             if hasattr(self, 'EaParams'):
@@ -510,7 +510,7 @@ class ion:
             #  need to replicate neaev
             nups=len(eaparams['de'])
             tev=const.boltzmannEv*temperature
-            earate=np.zeros(temperature.size, 'float32')
+            earate=np.zeros(temperature.size, 'Float64')
             eaev=self.DiParams['eaev']
             if len(eaev) ==1:
                 for iups in range(nups):
@@ -995,8 +995,8 @@ class ion:
         nTemp=temperature.size
         nEl=len(self.AbundanceAll['abundance'])
         #
-        eDensity=np.zeros(nTemp,'float32')
-        pDensity=np.zeros(nTemp,'float32')
+        eDensity=np.zeros(nTemp,'Float64')
+        pDensity=np.zeros(nTemp,'Float64')
         ionDensity=0.
 #        zDensity=np.zeros(nTemp, 'float32')
         #
@@ -2782,7 +2782,7 @@ class ion:
         nlvls = self.Nlvls
         if top > nlvls:
             top = nlvls
-        maxpop=np.zeros(nlvls,'Float32')
+        maxpop=np.zeros(nlvls,'Float64')
         for ilvl in range(nlvls):
             maxpop[ilvl]=pop[:,ilvl].max()
         #
@@ -3016,7 +3016,7 @@ class ion:
         except:
             nlvls=len(pop)
             ntempden=1
-            em=np.zeros(nwvl,'Float32')
+            em=np.zeros(nwvl,'Float64')
             eDensity = self.EDensity
             temperature = self.Temperature
         #
@@ -3033,7 +3033,7 @@ class ion:
             factor=const.planck*const.light/(4.*const.pi*1.e-8*wvl)
             plotLabels["yLabel"]="ergs cm^-3 s^-1"
         elif self.Defaults['flux'] == 'photon':
-            factor=np.ones((nwvl),'Float32')/(4.*const.pi)
+            factor=np.ones((nwvl),'Float64')/(4.*const.pi)
             plotLabels["yLabel"]="photons cm^-3 s^-1"
         #
         if ntempden > 1:
@@ -3352,7 +3352,7 @@ class ion:
         # find the top most intense lines
         #
         if top > nlines:  top=nlines
-        maxEmiss=np.zeros(nlines,'Float32')
+        maxEmiss=np.zeros(nlines,'Float64')
         for iline in range(nlines):
             maxEmiss[iline]=emiss[igvl[iline]].max()
         for iline in range(nlines):
@@ -3391,12 +3391,12 @@ class ion:
             xlabel='Temperature (K)'
             xvalues=self.Temperature
             outTemperature=self.Temperature
-            outDensity=np.zeros(ntemp,'Float32')
+            outDensity=np.zeros(ntemp,'Float64')
             outDensity.fill(self.EDensity)
             desc_str=' at  Density = %10.2e (cm)$^{-3}$' % self.EDensity
         elif ntemp == 1:
             xvalues=self.EDensity
-            outTemperature=np.zeros(ndens,'Float32')
+            outTemperature=np.zeros(ndens,'Float64')
             outTemperature.fill(self.Temperature)
             outDensity=self.EDensity
             xlabel=r'$\rm{Electron Density (cm)^{-3}}$'
@@ -3469,11 +3469,11 @@ class ion:
             print ' no denominator lines were selected'
             return
         #
-        numEmiss=np.zeros(len(xvalues),'float32')
+        numEmiss=np.zeros(len(xvalues),'Float64')
         for aline in num_idx:
             numEmiss+=emiss[topLines[aline]]
         #
-        denEmiss=np.zeros(len(xvalues),'float32')
+        denEmiss=np.zeros(len(xvalues),'Float64')
         for aline in den_idx:
             denEmiss+=emiss[topLines[aline]]
         #
@@ -3657,7 +3657,7 @@ class ion:
         #
         if top > nlines:
             top=nlines
-        maxEmiss=np.zeros(nlines,'Float32')
+        maxEmiss=np.zeros(nlines,'Float64')
         for iline in range(nlines):
             maxEmiss[iline]=emiss[igvl[iline]].max()
         for iline in range(nlines):
@@ -3696,13 +3696,13 @@ class ion:
             ngofnt = temperature.size
             xvalues=temperature
             outTemperature=temperature
-            outDensity=np.zeros(ntemp,'Float32')
+            outDensity=np.zeros(ntemp,'Float64')
             outDensity.fill(eDensity)
             desc_str=' at Density = %10.2e' % eDensity
         elif ntemp == 1:
             xvalues=eDensity
             ngofnt = eDensity.size
-            outTemperature=np.zeros(ndens,'Float32')
+            outTemperature=np.zeros(ndens,'Float64')
             outTemperature.fill(temperature)
             outDensity=eDensity
             xlabel=r'$\rm{Electron Density (cm}^{-3}\rm{)}$'
@@ -4113,7 +4113,7 @@ class ionWeb(ion):
         #
         if (top > nlines) or (top == 0):
             top=nlines
-        maxEmiss=np.zeros(nlines,'Float32')
+        maxEmiss=np.zeros(nlines,'Float64')
         for iline in range(nlines):
             maxEmiss[iline]=emiss[igvl[iline]].max()
         for iline in range(nlines):
@@ -4159,13 +4159,13 @@ class ionWeb(ion):
             ngofnt = temperature.size
             xvalues=temperature
             outTemperature=temperature
-            outDensity=np.zeros(ntemp,'Float32')
+            outDensity=np.zeros(ntemp,'Float64')
             outDensity.fill(eDensity)
             desc_str=' at Density = %10.2e' % eDensity
         elif ntemp == 1:
             xvalues=eDensity
             ngofnt = eDensity.size
-            outTemperature=np.zeros(ndens,'Float32')
+            outTemperature=np.zeros(ndens,'Float64')
             outTemperature.fill(temperature)
             outDensity=eDensity
             xlabel=r'$\rm{Electron Density (cm}^{-3}\rm{)}$'
@@ -4269,7 +4269,7 @@ class ionWeb(ion):
         #
         if top > nlines:
             top=nlines
-        maxEmiss=np.zeros(nlines,'Float32')
+        maxEmiss=np.zeros(nlines,'Float64')
         for iline in range(nlines):
             maxEmiss[iline]=emiss[igvl[iline]].max()
         for iline in range(nlines):
@@ -4308,13 +4308,13 @@ class ionWeb(ion):
             ngofnt = temperature.size
             xvalues=temperature
             outTemperature=temperature
-            outDensity=np.zeros(ntemp,'Float32')
+            outDensity=np.zeros(ntemp,'Float64')
             outDensity.fill(eDensity)
             desc_str=' at Density = %10.2e' % eDensity
         elif ntemp == 1:
             xvalues=eDensity
             ngofnt = eDensity.size
-            outTemperature=np.zeros(ndens,'Float32')
+            outTemperature=np.zeros(ndens,'Float64')
             outTemperature.fill(temperature)
             outDensity=eDensity
             xlabel=r'$\rm{Electron Density (cm}^{-3}\rm{)}$'
@@ -4467,7 +4467,7 @@ class ionWeb(ion):
         #
         if (top > nlines) or (top == 0):
             top=nlines
-        maxEmiss=np.zeros(nlines,'Float32')
+        maxEmiss=np.zeros(nlines,'Float64')
         for iline in range(nlines):
             maxEmiss[iline]=emiss[igvl[iline]].max()
         for iline in range(nlines):
@@ -4506,13 +4506,13 @@ class ionWeb(ion):
             ngofnt = temperature.size
             xvalues=temperature
             outTemperature=temperature
-            outDensity=np.zeros(ntemp,'Float32')
+            outDensity=np.zeros(ntemp,'Float64')
             outDensity.fill(eDensity)
             desc_str=' at Density = %10.2e' % eDensity
         elif ntemp == 1:
             xvalues=eDensity
             ngofnt = eDensity.size
-            outTemperature=np.zeros(ndens,'Float32')
+            outTemperature=np.zeros(ndens,'Float64')
             outTemperature.fill(temperature)
             outDensity=eDensity
             xlabel=r'$\rm{Electron Density (cm}^{-3}\rm{)}$'
@@ -4672,12 +4672,12 @@ class ionWeb(ion):
             xlabel='Temperature (K)'
             xvalues=self.Temperature
             outTemperature=self.Temperature
-            outDensity=np.zeros(ntemp,'Float32')
+            outDensity=np.zeros(ntemp,'Float64')
             outDensity.fill(self.EDensity)
             desc_str=' at  Density = %10.2e (cm)$^{-3}$' % self.EDensity
         elif ntemp == 1:
             xvalues=self.EDensity
-            outTemperature=np.zeros(ndens,'Float32')
+            outTemperature=np.zeros(ndens,'Float64')
             outTemperature.fill(self.Temperature)
             outDensity=self.EDensity
             xlabel=r'$\rm{Electron Density (cm)^{-3}}$'
@@ -4726,11 +4726,11 @@ class ionWeb(ion):
 #       den_line= topLines[den_idx]
 #       #
 #       print ' num_line = ', num_line
-        numEmiss=np.zeros(len(xvalues),'float32')
+        numEmiss=np.zeros(len(xvalues),'Float64')
         for aline in num_idx:
             numEmiss+=emiss[topLines[aline]]
         #
-        denEmiss=np.zeros(len(xvalues),'float32')
+        denEmiss=np.zeros(len(xvalues),'Float64')
         for aline in den_idx:
             denEmiss+=emiss[topLines[aline]]
         #
@@ -4841,7 +4841,7 @@ class ioneq(ion):
         #
         ntemp=chIons[0].IonizRate['temperature'].size
         if ntemp == 1:
-            ioneq=np.zeros((z+1), 'float32')
+            ioneq=np.zeros((z+1), 'Float64')
             factor = []
             for anIon in chIons:
                 if hasattr(anIon, 'RecombRate') and hasattr(anIon, 'IonizRate'):
@@ -4870,7 +4870,7 @@ class ioneq(ion):
             self.Ioneq=ioneq
         #  ntemp >1
         else:
-            ioneq=np.zeros((z+1,ntemp ), 'float32')
+            ioneq=np.zeros((z+1,ntemp ), 'Float64')
             for it in range(ntemp):
                 factor=[]
                 for anIon in chIons:
