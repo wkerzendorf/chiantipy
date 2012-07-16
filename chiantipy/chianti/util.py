@@ -1432,9 +1432,6 @@ def listFiles(path):
     '''
     walks the path and subdirectories to return a list of files
     '''
-    if len(path)==0:
-        print ' path not specified'
-        return {'nfiles':0}
     alist=os.walk(path)
     print ' getting file list'
     listname=[]
