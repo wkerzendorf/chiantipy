@@ -2315,11 +2315,14 @@ class ion:
                     rad[l1+ci,l2+ci] += self.Wgfa["avalue"][iwgfa]*stemFactor
                     rad[l2+ci,l2+ci] -= self.Wgfa["avalue"][iwgfa]*stemFactor
         if hasattr(self, 'Auto'):
+            # as of 7/2012, we only consider the ground level in the next higher ionization stage
+            # hence, requiring lvl1 = 1 or, l1 = 0
             for iauto, avalue in enumerate(self.Auto['avalue']):
                 l1 = self.Auto["lvl1"][iauto] -1
                 l2 = self.Auto["lvl2"][iauto] -1
-                rad[l1 + ci + nlvls, l2 + ci] += avalue
-                rad[l2 + ci,  l2 + ci] -= avalue
+                if l1 == 0:
+                    rad[l1 + ci + nlvls, l2 + ci] += avalue
+                    rad[l2 + ci,  l2 + ci] -= avalue
 
         #
         self.rad=rad
@@ -2948,7 +2951,8 @@ class ion:
         # -------------------------------------------------------------------------------------
         #
     def emiss(self, wvlRange = 0,  allLines=1):
-        """Calculate the emissivities for lines of the specified ion.
+        """
+        Calculate the emissivities for lines of the specified ion.
 
         wvlRange can be set to limit the calculation to a particular wavelength range
 
@@ -2973,11 +2977,12 @@ class ion:
 ##        good=self.Wgfa['avalue'] > 0.
         # using [:] to make a copy things don't change elsewhere
         wvl = np.asarray(self.Wgfa["wvl"][:], 'float64')
+        obs = np.where(wvl > 0., 'Y', 'N')
         if allLines:
             wvl=np.abs(wvl)
-        l1 = np.asarray(self.Wgfa['lvl1'][:], 'int64')
-        l2 = np.asarray(self.Wgfa["lvl2"][:], 'int64')
-        avalue = np.asarray(self.Wgfa["avalue"][:], 'float64')
+        l1 = np.asarray(self.Wgfa['lvl1'], 'int64')
+        l2 = np.asarray(self.Wgfa["lvl2"], 'int64')
+        avalue = np.asarray(self.Wgfa["avalue"], 'float64')
         #
         # make sure there are lines in the wavelength range, if specified
 
@@ -3045,11 +3050,11 @@ class ion:
                 wvl = const.ev2Ang/np.asarray(wvl)
             elif self.Defaults['wavelength'] == 'nm':
                 wvl = wvl/10.
-            em = em.take(wvl.argsort(),axis=0)
-            wvl.sort()
-            idx = np.argsort(wvl)
-            l1 = l1[idx]
-            l2 = l2[idx]
+#            em = em.take(wvl.argsort(),axis=0)
+#            wvl.sort()
+#            idx = np.argsort(wvl)
+#            l1 = l1[idx]
+#            l2 = l2[idx]
         else:
             for iwvl in range(0,nwvl):
                 p=pop[l2[iwvl]-1]
@@ -3058,15 +3063,198 @@ class ion:
                 wvlE=const.ev2Ang/np.asarray(wvl)
             elif self.Defaults['wavelength'] == 'nm':
                 wvl=wvl/10.
-            idx = np.argsort(wvl)
-            wvl = wvl[idx]
-            em = em[idx]
-            l1 = l1[idx]
-            l2 = l2[idx]
+#            idx = np.argsort(wvl)
+#            wvl = wvl[idx]
+#            em = em[idx]
+#            l1 = l1[idx]
+#            l2 = l2[idx]
         lvl1 = l1.tolist()
         lvl2 = l2.tolist()
-        self.Emiss = {"wvl":wvl, "emiss":em, "plotLabels":plotLabels, 'lvl1':lvl1, 'lvl2':lvl2}
+        self.Emiss = {"wvl":wvl, "emiss":em, "plotLabels":plotLabels, 'lvl1':lvl1, 'lvl2':lvl2, 'avalue':avalue, 'obs':obs}
         return
+        #
+        # ---------------------------------------------------------------------------
+        #
+    def emissList(self, index=None,  wvlRange=0,  top=10, linLog='lin', relative=0,  verbose=0, saveFile=0 ):
+        '''
+        List the emissivities.
+
+        wvlRange, a 2 element tuple, list or array determines the wavelength range
+
+        Top specifies to plot only the top strongest lines, default = 10
+
+        normalize = 1 specifies whether to normalize to strongest line, default = 0
+        '''
+        #
+        title=self.Spectroscopic
+        #
+        doEmiss=False
+        if hasattr(self, 'Emiss'):
+            em = self.Emiss
+        else:
+            try:
+                self.emiss()
+                em = self.Emiss
+            except:
+                print ' emissivities not calculated and emiss() is unable to calculate them'
+                print ' perhaps the temperature and/or eDensity are not set'
+                return
+        emiss = em['emiss']
+        wvl = em['wvl']
+        lvl1 = np.asarray(em['lvl1'])
+        lvl2 = np.asarray(em['lvl2'])
+        obs = em['obs']
+        temperature = self.Temperature
+        eDensity = self.EDensity
+        #
+        ndens = eDensity.size
+        ntemp = temperature.size
+        #
+        if ndens == 1 and ntemp == 1:
+            dstr = ' -  Density = %10.2e (cm$^{-3}$)' %(eDensity)
+            tstr = ' -  T = %10.2e (K)' %(temperature)
+        elif ndens == 1 and ntemp > 1:
+            if type(index) == types.NoneType:
+                index = ntemp/2
+                print 'using index = %5i specifying temperature =  %10.2e'%(index, temperature[index])
+                self.Message = 'using index = %5i specifying temperature =  %10.2e'%(index, temperature[index])
+#            if chInteractive:
+#                print 'using index = %5i specifying temperature =  %10.2e'%(index, temperature[index])
+#            else:
+#                self.Message = 'using index = %5i specifying temperature =  %10.2e'%(index, temperature[index])
+            emiss=emiss[:, index]
+            dstr=' -  Density = %10.2e (cm$^{-3}$)' % eDensity
+            tstr=' -  T = %10.2e (K)' % temperature[index]
+        elif ndens > 1 and ntemp == 1:
+            if type(index) == types.NoneType:
+                index = ndens/2
+                print 'using index =%5i specifying eDensity = %10.2e'%(index, eDensity[index])
+                self.Message = 'using index =%5i specifying eDensity = %10.2e'%(index, eDensity[index])
+#            if chInteractive:
+#                print 'using index =%5i specifying eDensity = %10.2e'%(index, eDensity[index])
+#            else:
+#                self.Message = 'using index =%5i specifying eDensity = %10.2e'%(index, eDensity[index])
+            emiss=emiss[:, index]
+            dstr=' -  Density = %10.2e (cm$^{-3}$)' % eDensity[index]
+            tstr=' -  T = %10.2e (K)' % temperature
+        elif ndens > 1 and ntemp > 1:
+            if type(index) == types.NoneType:
+                index = ntemp/2
+                print 'using index = %5i specifying temperature = %10.2e, eDensity =  %10.2e'%(index, temperature[index], eDensity[index])
+                self.Message = 'using index = %5i specifying temperature = %10.2e, eDensity =  %10.2e'%(index, temperature[index], eDensity[index])
+#             if chInteractive:
+#                print 'using index = %5i specifying temperature = %10.2e, eDensity =  %10.2e'%(index, temperature[index], eDensity[index])
+#            else:
+#                self.Message = 'using index = %5i specifying temperature = %10.2e, eDensity =  %10.2e'%(index, temperature[index], eDensity[index])
+            emiss=emiss[:, index]
+            dstr=' -  Density = %10.2e (cm$^{-3}$)' % eDensity[index]
+            tstr=' -  T = %10.2e (K)' % temperature[index]
+        if wvlRange:
+            wvlIndex = util.between(wvl, wvlRange)
+        else:
+            wvlIndex = range(wvl.size)
+            #
+        avalue = np.asarray(self.Wgfa['avalue'])
+        if verbose:
+            print ' ------------before wvlRange----------------------'
+            print ' len of emiss = ', len(emiss)
+            for i, awvl in enumerate(wvl[:top]):
+                print lvl1[i], lvl2[i], awvl, avalue[i], obs[i]
+        #
+        emiss = emiss[wvlIndex]
+        wvl = wvl[wvlIndex]
+        lvl1 = lvl1[wvlIndex]
+        lvl2 = lvl2[wvlIndex]
+        avalue = avalue[wvlIndex]
+        obs = obs[wvlIndex]
+        if verbose:
+            print ' ------------after wvlRange----------------------'
+            print ' emiss = ', len(emiss), emiss[:top]
+            for i, awvl in enumerate(wvl[:top]):
+                print lvl1[i], lvl2[i], awvl, avalue[i], obs[i]
+#        pretty1 = np.asarray(self.Wgfa['pretty1'])[wvlIndex]
+#        pretty2 = np.asarray(self.Wgfa['pretty2'])[wvlIndex]
+        #
+        self.Error = 0
+        if wvl.size == 0:
+            print 'No lines in this wavelength interval'
+            self.Error = 1
+            self.Message = 'No lines in this wavelength interval'
+            return
+        #
+        elif top == 0:
+            top = wvl.size
+        elif top > wvl.size:
+            top = wvl.size
+#
+        isrt = np.argsort(emiss)
+        wvl = wvl[isrt[-top:]]
+        lvl1 = lvl1[isrt[-top:]]
+        lvl2 = lvl2[isrt[-top:]]
+        obs = obs[isrt[-top:]]
+#            pretty1 = pretty1[isrt[-top:]]
+#            pretty2 = pretty2[isrt[-top:]]
+        emiss = emiss[isrt[-top:]]
+        avalue = avalue[isrt[-top:]]
+        #
+    # must follow setting top
+    #        pl.figure()
+        ylabel = 'Emissivity'
+        #
+        if relative:
+            emiss = emiss/emiss[:top].max()
+            ylabel += ' (Relative)'
+        #
+        if verbose:
+            print ' ---------after sorting by emiss-------------------------'
+            for i, awvl in enumerate(wvl):
+                print lvl1[i], lvl2[i], awvl, emiss[i], avalue[i], obs[i]
+            print ' emiss = ', emiss
+            print ' isrt = ', isrt[-top:]
+            print ' lvl1 = ', lvl1
+            print ' ----------------------------------'
+        #
+        xlabel = 'Wavelength ('+self.Defaults['wavelength'] +')'
+        #
+#        ymin = 10.**(np.log10(emiss.min()).round(0)-0.5 )
+        #
+#        pl.ion()
+#        if chInteractive:
+#            pl.ion()
+#        else:
+#            pl.ioff()
+        #
+        listWvl = wvl[:top]
+        listEmiss = emiss[:top]
+        listAvalue = avalue[:top]
+        listLvl1 = lvl1[:top]
+        listLvl2 = lvl2[:top]
+        listObs = obs[:top]
+#        listPretty1 = pretty1[:top]
+#        listPretty2 = pretty2[:top]
+        idx = np.argsort(listWvl)
+        fmt = '%5i %5i %25s - %25s %12.3f %12.3e %12.2e %1s'
+        print '   '
+        print ' ------------------------------------------'
+        print '   '
+        print ' lvl1  lvl2         lower                       upper                   Wvl(A)   Emissivity      A value Obs'
+        for kdx in idx:
+#        for kdx, awvl in enumerate(listWvl):
+#            p2 = listPretty2[kdx].tostring()
+#            print format%(listLvl1[kdx], listLvl2[kdx], listWvl[kdx], listEmiss[kdx], listAvalue[kdx], listPretty1[kdx], p2.ljust(30)
+            l1 = listLvl1[kdx] - 1
+            l2 = listLvl2[kdx] - 1
+            pretty1 = self.Elvlc['pretty'][l1]
+            pretty2 = self.Elvlc['pretty'][l2].ljust(25)
+            print fmt%(listLvl1[kdx], listLvl2[kdx], pretty1, pretty2, listWvl[kdx], listEmiss[kdx], listAvalue[kdx], listObs[kdx])
+        print '   '
+        print ' ------------------------------------------'
+        print '   '
+        #
+        idx = np.argsort(wvl)
+        self.Emiss['wvlTop'] = wvl[idx]
+        self.Emiss['emissTop'] = emiss[idx]
+#        self.Emiss['pretty1Top'] = pretty1[idx]
         #
         # ---------------------------------------------------------------------------
         #
