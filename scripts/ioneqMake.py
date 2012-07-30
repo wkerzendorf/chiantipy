@@ -9,9 +9,9 @@ chRef = ['produced as a part of the George Mason University, University of Cambr
 today = date.today()
 chRef.append(' K. Dere (GMU) - ' + today.strftime('%Y %B %d'))
 #
-nt = 107
+nt = 101
 nz = 30
-tlog = 3.7 + 0.05*np.arange(nt)
+tlog = 4.0 + 0.05*np.arange(nt)
 t=10.**tlog
 print ' tmin, tmax = ', t.min(), t.max()
 #
