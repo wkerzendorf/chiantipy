@@ -368,7 +368,11 @@ def defaultsRead(verbose=0):
     #
     #possibleDefaults = {'wavelength':['angstrom', 'kev', 'nm']}
     #symbolDefaults = {'wavelength':['A', 'keV', 'nm']}
+<<<<<<< .mine
+    initDefaults={'abundfile': 'sun_photospheric_1998_grevesse','ioneqfile': 'chianti', 'wavelength': 'angstrom', 'flux': 'energy','gui':False}
+=======
     initDefaults={'abundfile': 'sun_coronal_1992_feldman_ext','ioneqfile': 'chianti', 'wavelength': 'angstrom', 'flux': 'energy','gui':False}
+>>>>>>> .r506
     rcfile=os.path.join(os.environ['HOME'],'.chianti/chiantirc')
     if os.path.isfile(rcfile):
         print ' reading chiantirc file'
@@ -620,7 +624,7 @@ def wgfaRead(ions, filename=0, elvlcname=0, total=0):
         fname=ion2filename(ions)
         wgfaname=fname+'.wgfa'
     if elvlcname:
-        elvlc=elvlcRead('', filename=elvlcname)
+        elvlc=elvlcRead(elvlcname)
     input=open(wgfaname,'r')
     s1=input.readlines()
     dum=input.close()
