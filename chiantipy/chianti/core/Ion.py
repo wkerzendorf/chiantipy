@@ -979,10 +979,8 @@ class ion:
         else:
             abundName = self.Defaults['abundfile']
             util.abundanceRead(abundancename = abundName)
-        if hasattr(self, 'Ioneq'):
-            ioneq=self.Ioneq
-        else:
-            ioneqname = self.Defaults['ioneqfile']
+        #
+        if not hasattr(self, 'IoneqAll'):
             self.IoneqAll = util.ioneqRead(ioneqname = ioneqname)
         #
         if hasattr(self, 'Temperature'):

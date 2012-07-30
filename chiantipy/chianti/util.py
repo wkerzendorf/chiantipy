@@ -1274,9 +1274,10 @@ def ioneqRead(ioneqname='', verbose=0):
             for one in newlist:
                 print os.path.basename(one)
             return
-        elif cnt == 1 and verbose:
+        elif cnt == 1:
             idx = baselist.index(ioneqname+'.ioneq')
-            print ' file exists:  ', newlist[idx]
+            if verbose:
+                print ' file exists:  ', newlist[idx]
             fname = newlist[idx]
         elif cnt > 1:
             print ' found more than one ioneq file', fname

@@ -13,7 +13,6 @@ from Mspectrum import mspectrum
 from Continuum import continuum
 from RadLoss import radLoss
 #from PNe import pne
-from Ion import ioneq
 from Ion import ion
 from Ion import ionWeb
 from Ion import ioneq
