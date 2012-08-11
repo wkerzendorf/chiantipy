@@ -3073,7 +3073,7 @@ class ion:
         #
         # ---------------------------------------------------------------------------
         #
-    def emissList(self, index=None,  wvlRange=0,  top=10, linLog='lin', relative=0,  verbose=0, saveFile=0 ):
+    def emissList(self, index=None,  wvlRange=None, wvlRanges=None,   top=10, relative=0, saveFile=0 ):
         '''
         List the emissivities.
 
@@ -3084,7 +3084,6 @@ class ion:
         normalize = 1 specifies whether to normalize to strongest line, default = 0
         '''
         #
-        title=self.Spectroscopic
         #
         doEmiss=False
         if hasattr(self, 'Emiss'):
@@ -3112,52 +3111,35 @@ class ion:
             dstr = ' -  Density = %10.2e (cm$^{-3}$)' %(eDensity)
             tstr = ' -  T = %10.2e (K)' %(temperature)
         elif ndens == 1 and ntemp > 1:
-            if type(index) == types.NoneType:
+            if not index:
                 index = ntemp/2
-                print 'using index = %5i specifying temperature =  %10.2e'%(index, temperature[index])
-                self.Message = 'using index = %5i specifying temperature =  %10.2e'%(index, temperature[index])
-#            if chInteractive:
-#                print 'using index = %5i specifying temperature =  %10.2e'%(index, temperature[index])
-#            else:
-#                self.Message = 'using index = %5i specifying temperature =  %10.2e'%(index, temperature[index])
+            print 'using index = %5i specifying temperature =  %10.2e'%(index, temperature[index])
+            self.Message = 'using index = %5i specifying temperature =  %10.2e'%(index, temperature[index])
+
             emiss=emiss[:, index]
-            dstr=' -  Density = %10.2e (cm$^{-3}$)' % eDensity
-            tstr=' -  T = %10.2e (K)' % temperature[index]
         elif ndens > 1 and ntemp == 1:
-            if type(index) == types.NoneType:
+            if not index:
                 index = ndens/2
-                print 'using index =%5i specifying eDensity = %10.2e'%(index, eDensity[index])
-                self.Message = 'using index =%5i specifying eDensity = %10.2e'%(index, eDensity[index])
-#            if chInteractive:
-#                print 'using index =%5i specifying eDensity = %10.2e'%(index, eDensity[index])
-#            else:
-#                self.Message = 'using index =%5i specifying eDensity = %10.2e'%(index, eDensity[index])
+            print 'using index =%5i specifying eDensity = %10.2e'%(index, eDensity[index])
+            self.Message = 'using index =%5i specifying eDensity = %10.2e'%(index, eDensity[index])
             emiss=emiss[:, index]
-            dstr=' -  Density = %10.2e (cm$^{-3}$)' % eDensity[index]
-            tstr=' -  T = %10.2e (K)' % temperature
         elif ndens > 1 and ntemp > 1:
-            if type(index) == types.NoneType:
+            if not index:
                 index = ntemp/2
-                print 'using index = %5i specifying temperature = %10.2e, eDensity =  %10.2e'%(index, temperature[index], eDensity[index])
-                self.Message = 'using index = %5i specifying temperature = %10.2e, eDensity =  %10.2e'%(index, temperature[index], eDensity[index])
-#             if chInteractive:
-#                print 'using index = %5i specifying temperature = %10.2e, eDensity =  %10.2e'%(index, temperature[index], eDensity[index])
-#            else:
-#                self.Message = 'using index = %5i specifying temperature = %10.2e, eDensity =  %10.2e'%(index, temperature[index], eDensity[index])
+            print 'using index = %5i specifying temperature = %10.2e, eDensity =  %10.2e'%(index, temperature[index], eDensity[index])
+            self.Message = 'using index = %5i specifying temperature = %10.2e, eDensity =  %10.2e'%(index, temperature[index], eDensity[index])
             emiss=emiss[:, index]
-            dstr=' -  Density = %10.2e (cm$^{-3}$)' % eDensity[index]
-            tstr=' -  T = %10.2e (K)' % temperature[index]
+        #
         if wvlRange:
-            wvlIndex = util.between(wvl, wvlRange)
+            wvlIndex=util.between(wvl,wvlRange)
+        elif wvlRanges:
+            wvlIndex = []
+            for awvlRange in wvlRanges:
+                wvlIndex.extend(util.between(wvl,awvlRange))
         else:
             wvlIndex = range(wvl.size)
-            #
+        #
         avalue = np.asarray(self.Wgfa['avalue'])
-        if verbose:
-            print ' ------------before wvlRange----------------------'
-            print ' len of emiss = ', len(emiss)
-            for i, awvl in enumerate(wvl[:top]):
-                print lvl1[i], lvl2[i], awvl, avalue[i], obs[i]
         #
         emiss = emiss[wvlIndex]
         wvl = wvl[wvlIndex]
@@ -3165,13 +3147,6 @@ class ion:
         lvl2 = lvl2[wvlIndex]
         avalue = avalue[wvlIndex]
         obs = obs[wvlIndex]
-        if verbose:
-            print ' ------------after wvlRange----------------------'
-            print ' emiss = ', len(emiss), emiss[:top]
-            for i, awvl in enumerate(wvl[:top]):
-                print lvl1[i], lvl2[i], awvl, avalue[i], obs[i]
-#        pretty1 = np.asarray(self.Wgfa['pretty1'])[wvlIndex]
-#        pretty2 = np.asarray(self.Wgfa['pretty2'])[wvlIndex]
         #
         self.Error = 0
         if wvl.size == 0:
@@ -3190,37 +3165,14 @@ class ion:
         lvl1 = lvl1[isrt[-top:]]
         lvl2 = lvl2[isrt[-top:]]
         obs = obs[isrt[-top:]]
-#            pretty1 = pretty1[isrt[-top:]]
-#            pretty2 = pretty2[isrt[-top:]]
         emiss = emiss[isrt[-top:]]
         avalue = avalue[isrt[-top:]]
         #
     # must follow setting top
-    #        pl.figure()
-        ylabel = 'Emissivity'
         #
         if relative:
             emiss = emiss/emiss[:top].max()
-            ylabel += ' (Relative)'
         #
-        if verbose:
-            print ' ---------after sorting by emiss-------------------------'
-            for i, awvl in enumerate(wvl):
-                print lvl1[i], lvl2[i], awvl, emiss[i], avalue[i], obs[i]
-            print ' emiss = ', emiss
-            print ' isrt = ', isrt[-top:]
-            print ' lvl1 = ', lvl1
-            print ' ----------------------------------'
-        #
-        xlabel = 'Wavelength ('+self.Defaults['wavelength'] +')'
-        #
-#        ymin = 10.**(np.log10(emiss.min()).round(0)-0.5 )
-        #
-#        pl.ion()
-#        if chInteractive:
-#            pl.ion()
-#        else:
-#            pl.ioff()
         #
         listWvl = wvl[:top]
         listEmiss = emiss[:top]
@@ -3237,9 +3189,6 @@ class ion:
         print '   '
         print ' lvl1  lvl2         lower                       upper                   Wvl(A)   Emissivity      A value Obs'
         for kdx in idx:
-#        for kdx, awvl in enumerate(listWvl):
-#            p2 = listPretty2[kdx].tostring()
-#            print format%(listLvl1[kdx], listLvl2[kdx], listWvl[kdx], listEmiss[kdx], listAvalue[kdx], listPretty1[kdx], p2.ljust(30)
             l1 = listLvl1[kdx] - 1
             l2 = listLvl2[kdx] - 1
             pretty1 = self.Elvlc['pretty'][l1]
@@ -3252,7 +3201,6 @@ class ion:
         idx = np.argsort(wvl)
         self.Emiss['wvlTop'] = wvl[idx]
         self.Emiss['emissTop'] = emiss[idx]
-#        self.Emiss['pretty1Top'] = pretty1[idx]
         #
         # ---------------------------------------------------------------------------
         #
@@ -3488,14 +3436,15 @@ class ion:
         #
         # -------------------------------------------------------------------------------------
         #
-    def intensityRatio(self,wvlRange=None,top=10):
-        """Plot the ratio of 2 lines or sums of lines.
-
+    def intensityRatio(self,wvlRange=None, wvlRanges=None,top=10):
+        """
+        Plot the ratio of 2 lines or sums of lines.
         Shown as a function of density and/or temperature.
-
+        For a single wavelength range, set wvlRange = [wMin, wMax]
+        For multiple wavelength ranges, set wvlRanges = [[wMin1,wMax1],[wMin2,wMax2], ...]
         A plot of relative emissivities is shown and then a dialog appears for the user to
-
-        choose a set of lines."""
+        choose a set of lines.
+        """
         #
         #        self.Emiss={"temperature":temperature,"density":density,"wvl":wvl,"emiss":em,
         #        "plotLabels":plotLabels}
@@ -3526,10 +3475,15 @@ class ion:
         # find which lines are in the wavelength range if it is set
         #
         #
-        if not wvlRange:
-            igvl=range(len(wvl))
-        else:
+        if wvlRange:
             igvl=util.between(wvl,wvlRange)
+        elif wvlRanges:
+            igvl = []
+            for awvlRange in wvlRanges:
+                igvl.extend(util.between(wvl,awvlRange))
+        else:
+            igvl=range(len(wvl))
+        #
         nlines=len(igvl)
         #
 #        print ' nlines = ',nlines
@@ -3537,7 +3491,9 @@ class ion:
         igvl=np.take(igvl,wvl[igvl].argsort())
         # find the top most intense lines
         #
-        if top > nlines:  top=nlines
+        if top > nlines:
+            top=nlines
+            #
         maxEmiss=np.zeros(nlines,'Float64')
         for iline in range(nlines):
             maxEmiss[iline]=emiss[igvl[iline]].max()
