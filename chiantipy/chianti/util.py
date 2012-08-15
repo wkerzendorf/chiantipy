@@ -620,7 +620,7 @@ def wgfaRead(ions, filename=0, elvlcname=0, total=0):
         fname=ion2filename(ions)
         wgfaname=fname+'.wgfa'
     if elvlcname:
-        elvlc=elvlcRead(elvlcname)
+        elvlc=elvlcRead('', filename=elvlcname)
     input=open(wgfaname,'r')
     s1=input.readlines()
     dum=input.close()
@@ -687,7 +687,7 @@ def wgfaWrite(info, outfile = 0, minBranch = 0.):
     minBranch:  the transition must have a branching ratio than the specified to be written to the file
     '''
     #
-    gname = info['ionS']
+#    gname = info['ionS']
     if outfile:
         wgfaname = outfile
     else:
