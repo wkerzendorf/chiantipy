@@ -3201,6 +3201,17 @@ class ion:
         idx = np.argsort(wvl)
         self.Emiss['wvlTop'] = wvl[idx]
         self.Emiss['emissTop'] = emiss[idx]
+        if saveFile:
+            fmt = '%5i %5i %25s - %25s %12.3f %12.3e %12.2e %1s \n'
+            outpt = open(saveFile, 'w')
+            outpt.write(' lvl1  lvl2         lower                       upper                   Wvl(A)   Emissivity      A value Obs \n')
+            for kdx in idx:
+                l1 = listLvl1[kdx] - 1
+                l2 = listLvl2[kdx] - 1
+                pretty1 = self.Elvlc['pretty'][l1]
+                pretty2 = self.Elvlc['pretty'][l2].ljust(25)
+                outpt.write(fmt%(listLvl1[kdx], listLvl2[kdx], pretty1, pretty2, listWvl[kdx], listEmiss[kdx], listAvalue[kdx], listObs[kdx]))
+            outpt.close()
         #
         # ---------------------------------------------------------------------------
         #
