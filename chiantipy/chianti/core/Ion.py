@@ -2743,7 +2743,7 @@ class ion:
         #
         # -------------------------------------------------------------------------------------
         #
-    def popPlot(self,top=10, plotFile=0, saveFile=0):
+    def popPlot(self,top=10, plotFile=0, outFile=0):
         """Plots populations vs temperature or eDensity.
 
         top specifies the number of the most highly populated levels to plot."""
@@ -2941,8 +2941,8 @@ class ion:
 #            pl.xlim(eDensity.min(),eDensity.max())
 #            yl=pl.ylim()
 #            pl.ylim(yl[0],1.2)
-        if plotFile:
-            pl.savefig(plotFile)
+        if outFile:
+            pl.savefig(outFile)
         self.Population['toplvl'] = toplvl
         return
         #
@@ -3073,7 +3073,7 @@ class ion:
         #
         # ---------------------------------------------------------------------------
         #
-    def emissList(self, index=None,  wvlRange=None, wvlRanges=None,   top=10, relative=0, saveFile=0 ):
+    def emissList(self, index=None,  wvlRange=None, wvlRanges=None,   top=10, relative=0, outFile=0 ):
         '''
         List the emissivities.
 
@@ -3201,9 +3201,9 @@ class ion:
         idx = np.argsort(wvl)
         self.Emiss['wvlTop'] = wvl[idx]
         self.Emiss['emissTop'] = emiss[idx]
-        if saveFile:
+        if outFile:
             fmt = '%5i %5i %25s - %25s %12.3f %12.3e %12.2e %1s \n'
-            outpt = open(saveFile, 'w')
+            outpt = open(outFile, 'w')
             outpt.write(' lvl1  lvl2         lower                       upper                   Wvl(A)   Emissivity      A value Obs \n')
             for kdx in idx:
                 l1 = listLvl1[kdx] - 1
