@@ -219,6 +219,8 @@ class ion:
 #                nlvlWgfa = max(self.Wgfa['lvl2'])
                 #  elvlc file can have more levels than the rate level files
                 self.Nlvls = min([nlvlElvlc, max(nlvlList)])
+            else:
+                print ' the ion ' + self.IonStr + ' is not in the CHIANTI masterlist '
         #
         # ------------------------------------------------------------------------------
         #
