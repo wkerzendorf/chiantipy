@@ -221,6 +221,12 @@ class ion:
                 self.Nlvls = min([nlvlElvlc, max(nlvlList)])
             else:
                 print ' the ion ' + self.IonStr + ' is not in the CHIANTI masterlist '
+                try:
+                    self.Elvlc = util.elvlcRead(self.IonStr, verbose=verbose)
+                    print ' elvlc file available '
+                except:
+                    print ' elvlc file NOT available '
+
         #
         # ------------------------------------------------------------------------------
         #
@@ -1332,6 +1338,13 @@ class ion:
 #                nlvlWgfa = max(self.Wgfa['lvl2'])
             #  elvlc file can have more levels than the rate level files
             self.Nlvls = min([nlvlElvlc, max(nlvlList)])
+        else:
+            print ' the ion ' + self.IonStr + ' is not in the CHIANTI masterlist '
+            try:
+                self.Elvlc = util.elvlcRead(self.IonStr, verbose=verbose)
+                print ' elvlc file available '
+            except:
+                print ' elvlc file NOT available '
         #
         # -------------------------------------------------------------------------
         #
@@ -1763,8 +1776,8 @@ class ion:
                 popmat[-1,  ci] += self.EDensity*self.IonizRate['rate']
                 popmat[ci, ci] -= self.EDensity*self.IonizRate['rate']
                 # next 2 line take care of overbooking
-                popmat[ci, -1] += self.EDensity*(higher.RecombRate['rate']- reclvlRateTot) - dielTot
-                popmat[-1, -1] -= self.EDensity*(higher.RecombRate['rate']- reclvlRateTot) - dielTot
+                popmat[ci, -1] += self.EDensity*(higher.RecombRate['rate']- reclvlRateTot - dielTot)
+                popmat[-1, -1] -= self.EDensity*(higher.RecombRate['rate']- reclvlRateTot - dielTot)
 #                print ' higher, rec , dieltot = ',  self.EDensity*higher.RecombRate['rate'], self.EDensity*reclvlRate['rate'].sum(axis=0),  dielTot
             # normalize to unity
             norm=np.ones(nlvls+ci+rec,'float64')
@@ -1875,8 +1888,8 @@ class ion:
                 #
                     popmat[-1,  ci] += self.EDensity*self.IonizRate['rate'][itemp]
                     popmat[ci, ci] -= self.EDensity*self.IonizRate['rate'][itemp]
-                    popmat[ci, -1] += self.EDensity*(higher.RecombRate['rate'][itemp]- recTot) - dielTot
-                    popmat[-1, -1] -= self.EDensity*(higher.RecombRate['rate'][itemp]- recTot) + dielTot
+                    popmat[ci, -1] += self.EDensity*(higher.RecombRate['rate'][itemp]- recTot - dielTot)
+                    popmat[-1, -1] -= self.EDensity*(higher.RecombRate['rate'][itemp]- recTot - dielTot)
 #                    popmat[ci, -1] += self.EDensity*(higher.RecombRate['rate'][itemp]- self.ReclvlRate['rate'][:, itemp].sum()) - dielTot
 #                    popmat[-1, -1] -= self.EDensity*(higher.RecombRate['rate'][itemp]- self.ReclvlRate['rate'][:, itemp].sum()) + dielTot
 #                    popmat[ci, -1] += self.EDensity*higher.RecombRate['rate'][itemp]
@@ -2003,9 +2016,9 @@ class ion:
                     popmat[-1,  ci] += self.EDensity[idens]*self.IonizRate['rate']
                     popmat[ci, ci] -= self.EDensity[idens]*self.IonizRate['rate']
                     popmat[ci, -1] += self.EDensity[idens]*(higher.RecombRate['rate']
-                        - recTot) - dielTot
+                        - recTot - dielTot)
                     popmat[-1, -1] -= self.EDensity[idens]*(higher.RecombRate['rate']
-                        - recTot) + dielTot
+                        - recTot - dielTot)
 #                    popmat[ci, -1] += self.EDensity[idens]*higher.RecombRate['rate']
 #                    popmat[-1, -1] -= self.EDensity[idens]*higher.RecombRate['rate']
                     #
@@ -2135,9 +2148,9 @@ class ion:
                     popmat[-1,  ci] += self.EDensity[itemp]*self.IonizRate['rate'][itemp]
                     popmat[ci, ci] -= self.EDensity[itemp]*self.IonizRate['rate'][itemp]
                     popmat[ci, -1] += self.EDensity[itemp]*(higher.RecombRate['rate'][itemp]
-                        - recTot) - dielTot
+                        - recTot - dielTot)
                     popmat[-1, -1] -= self.EDensity[itemp]*(higher.RecombRate['rate'][itemp]
-                        - recTot) + dielTot
+                        - recTot - dielTot)
 #                    popmat[ci, -1] += self.EDensity[itemp]*higher.RecombRate['rate'][itemp]
 #                    popmat[-1, -1] -= self.EDensity[itemp]*higher.RecombRate['rate'][itemp]
                     #
@@ -2357,6 +2370,7 @@ class ion:
         #
         #  first, for ntemp=ndens=1
         if ndens==1 and ntemp==1:
+            print ' ndens = ntemp = 1'
             popmat=np.copy(rad)
             for isplups in range(0,nsplups):
                 l1=self.Splups["lvl1"][isplups]-1
@@ -2395,14 +2409,16 @@ class ion:
                 popmat[0, 1] += self.EDensity*self.RecombRate['rate']
                 popmat[1, 1] -= self.EDensity*self.RecombRate['rate']
             if rec:
-                #
+                # ntemp=ndens=1
                 if hasattr(self, 'DrRateLvl'):
 #                    branch = np.zeros(self.Ndielsplups, 'float64')
                     for idr, rate in enumerate(self.DrRateLvl['rate']):
                         l1 = self.Auto["lvl1"][idr] - 1
                         l2 = self.Auto["lvl2"][idr] - 1
-                        popmat[l2+ci,l1+ci+nlvls] += self.EDensity*self.DrRateLvl['rate'][idr]
-                        popmat[l1+ci,l1+ci] -= self.EDensity*self.DrRateLvl['rate'][idr]
+#                        popmat[l2+ci,-1] += self.EDensity*self.DrRateLvl['rate'][idr]
+#                        popmat[-1, -1] -= self.EDensity*self.DrRateLvl['rate'][idr]
+                        popmat[l2+ci,-1] += self.EDensity*rate
+                        popmat[-1, -1] -= self.EDensity*rate
                         #
                     dielTot = self.EDensity*self.DrRateLvl['totalRate']
                 else:
@@ -2424,7 +2440,7 @@ class ion:
                 popmat[-1,  ci] += self.EDensity*self.IonizRate['rate']
                 popmat[ci, ci] -= self.EDensity*self.IonizRate['rate']
                 # next 2 line take care of overbooking
-                netRecomb = self.EDensity*(self.Higher.RecombRate['rate']- rrlvlRateTot) - dielTot
+                netRecomb = self.EDensity*(self.Higher.RecombRate['rate']- rrlvlRateTot - dielTot)
                 if netRecomb > 0.:
                     popmat[ci, -1] += netRecomb
                     popmat[-1, -1] -= netRecomb
@@ -2462,7 +2478,10 @@ class ion:
 #            pop = np.linalg.solve(popmat,b)
         #
         # ------------------------------------------------------------------------
+        #
         elif ndens == 1:
+            print ' ndens = 1'
+            print ' ntemp, nlvls  = ', ntemp, nlvls
             pop=np.zeros((ntemp, nlvls),"float64")
 #            pop=np.zeros((ntemp,ci + nlvls + rec),"float64")
             for itemp in range(ntemp):
@@ -2485,7 +2504,7 @@ class ion:
                     popmat[l2+ci,l2+ci] -= self.PDensity[itemp]*pdexRate[isplups, itemp]
                 # now include ionization rate from
                 if ci:
-#                    print ' ci = ', ci
+                    print ' ci = ', ci
                     #
                     # the ciRate can be computed for all temperatures
                     #
@@ -2504,14 +2523,15 @@ class ion:
                     popmat[1, 1] -= self.EDensity*self.RecombRate['rate'][itemp]
                 if rec:
                 #
-                #
+                # ndens=1
                     if hasattr(self, 'DrRateLvl'):
+                        print ' doing DrRateLvl, ndens=1'
     #                    branch = np.zeros(self.Ndielsplups, 'float64')
                         for idr, rate in enumerate(self.DrRateLvl['rate']):
                             l1 = self.Auto["lvl1"][idr] - 1
                             l2 = self.Auto["lvl2"][idr] - 1
-                            popmat[l2+ci,l1+ci+nlvls] += self.EDensity*self.DrRateLvl['rate'][idr][itemp]
-                            popmat[l1+ci,l1+ci] -= self.EDensity*self.DrRateLvl['rate'][idr][itemp]
+                            popmat[l2+ci,-1] += self.EDensity*rate[itemp]
+                            popmat[-1,-1] -= self.EDensity*rate[itemp]
                             #
                         dielTot = self.EDensity*self.DrRateLvl['totalRate'][itemp]
                     else:
@@ -2524,7 +2544,7 @@ class ion:
                 #
                     popmat[-1,  ci] += self.EDensity*self.IonizRate['rate'][itemp]
                     popmat[ci, ci] -= self.EDensity*self.IonizRate['rate'][itemp]
-                    netRecomb = self.EDensity*(self.Higher.RecombRate['rate'][itemp]- recTot) - dielTot
+                    netRecomb = self.EDensity*(self.Higher.RecombRate['rate'][itemp]- recTot - dielTot)
                     if netRecomb < 0.:
                         popmat[ci, -1] += netRecomb
                         popmat[-1, -1] -= netRecomb
@@ -2536,6 +2556,8 @@ class ion:
                         popmat[lvl2+ci, -1] += self.EDensity*self.RrlvlRate['rate'][itrans, itemp]
                         popmat[-1, -1] -= self.EDensity*self.RrlvlRate['rate'][itrans, itemp]
                 # normalize to unity
+                # ndens = 1
+                print ' popmat [125:135] = ', popmat[125:135, -1]
                 norm=np.ones(nlvls+ci+rec,'float64')
                 if ci:
                     norm[0] = 0.
@@ -2543,16 +2565,18 @@ class ion:
                     norm[-1] = 0.
                 popmat[nlvls+ci+rec-1]=norm
                 b=np.zeros(nlvls+ci+rec,'float64')
-                b[nlvls+ci+rec-1]=1.
+#                b[nlvls+ci+rec-1] = 1.
+                b[-1] = 1.
                 try:
                     thispop=np.linalg.solve(popmat,b)
                     pop[itemp] = thispop[ci:ci+nlvls]
+                    print ' thispop 125:135 = ', itemp, thispop[125:135]
                 except np.linalg.LinAlgError:
                     pop[itemp] = np.zeros(nlvls, 'float64')
 #                    print ' error in matrix inversion, setting populations to zero at T = ', ('%8.2e')%(temperature[itemp])
             #
         elif ntemp == 1:
-#            pop=np.zeros((ndens,nlvls),"float64")
+            print ' ntemp = 1'
             pop=np.zeros((ndens,nlvls),"float64")
             for idens in range(0,ndens):
                 popmat=np.copy(rad)
@@ -2591,13 +2615,15 @@ class ion:
                     popmat[1, 1] -= self.EDensity[idens]*self.RecombRate['rate']
                 if rec:
 #                    print ' rec = ', rec
+                    #ntemp = 1
                     if hasattr(self, 'DrRateLvl'):
-    #                    branch = np.zeros(self.Ndielsplups, 'float64')
                         for idr, rate in enumerate(self.DrRateLvl['rate']):
                             l1 = self.Auto["lvl1"][idr] - 1
                             l2 = self.Auto["lvl2"][idr] - 1
-                            popmat[l2+ci,l1+ci+nlvls] += self.EDensity[idens]*self.DrRateLvl['rate'][idr]
-                            popmat[l1+ci,l1+ci] -= self.EDensity[idens]*self.DrRateLvl['rate'][idr]
+#                            popmat[l2+ci,l1+ci+nlvls] += self.EDensity[idens]*self.DrRateLvl['rate'][idr]
+#                            popmat[l1+ci,l1+ci] -= self.EDensity[idens]*self.DrRateLvl['rate'][idr]
+                            popmat[l2+ci,-1] += self.EDensity[idens]*rate
+                            popmat[-1, -1] -= self.EDensity[idens]*rate
                             #
                         dielTot = self.EDensity[idens]*self.DrRateLvl['totalRate']
                     else:
@@ -2610,7 +2636,7 @@ class ion:
                     #
                     popmat[-1,  ci] += self.EDensity[idens]*self.IonizRate['rate']
                     popmat[ci, ci] -= self.EDensity[idens]*self.IonizRate['rate']
-                    netRec = self.EDensity[idens]*(self.Higher.RecombRate['rate'] - recTot) - dielTot
+                    netRec = self.EDensity[idens]*(self.Higher.RecombRate['rate'] - recTot - dielTot)
                     if netRec > 0.:
                         popmat[ci, -1] += netRec
                         popmat[-1, -1] -= netRec
@@ -2627,9 +2653,9 @@ class ion:
                     norm[0] = 0.
                 if rec:
                     norm[-1] = 0.
-                popmat[nlvls+ci+rec-1]=norm
-                b=np.zeros(nlvls+ci+rec,'float64')
-                b[nlvls+ci+rec-1]=1.
+                popmat[nlvls+ci+rec-1] = norm
+                b = np.zeros(nlvls+ci+rec,'float64')
+                b[nlvls+ci+rec-1] = 1.
                 try:
                     thispop=np.linalg.solve(popmat,b)
                     pop[idens] = thispop[ci:ci+nlvls]
@@ -2644,6 +2670,7 @@ class ion:
 #                pop[idens] = thispop[ci:ci+nlvls]
                 #
         elif ntemp>1  and ntemp==ndens:
+            print ' ntemp=ndens > 1'
             pop=np.zeros((ntemp,nlvls),"float64")
 #            pop=np.zeros((ntemp,ci+nlvls+rec),"float64")
             for itemp in range(0,ntemp):
@@ -2691,8 +2718,8 @@ class ion:
                         for idr, rate in enumerate(self.DrRateLvl['rate']):
                             l1 = self.Auto["lvl1"][idr] - 1
                             l2 = self.Auto["lvl2"][idr] - 1
-                            popmat[l2+ci,l1+ci+nlvls] += self.EDensity[itemp]*self.DrRateLvl['rate'][idr][itemp]
-                            popmat[l1+ci,l1+ci] -= self.EDensity[itemp]*self.DrRateLvl['rate'][idr][itemp]
+                            popmat[l2+ci,l1+ci+nlvls] += self.EDensity[itemp]*rate[itemp]
+                            popmat[-1, -1] -= self.EDensity[itemp]*rate[itemp]
                             #
                         dielTot = self.EDensity[itemp]*self.DrRateLvl['totalRate'][itemp]
                     else:
@@ -2706,7 +2733,7 @@ class ion:
 #                   print ' rec = ', rec
                     popmat[-1,  ci] += self.EDensity[itemp]*self.IonizRate['rate'][itemp]
                     popmat[ci, ci] -= self.EDensity[itemp]*self.IonizRate['rate'][itemp]
-                    netRec = self.EDensity[itemp]*(self.Higher.RecombRate['rate'][itemp] - recTot) - dielTot
+                    netRec = self.EDensity[itemp]*(self.Higher.RecombRate['rate'][itemp] - recTot - dielTot)
                     if netRec > 0.:
                         popmat[ci, -1] += netRec
                         popmat[-1, -1] -= netRec
@@ -3045,6 +3072,7 @@ class ion:
             for itempden in range(ntempden):
                 for iwvl in range(nwvl):
                     p = pop[itempden,l2[iwvl]-1]
+#                    p = pop[l2[iwvl]-1, itempden]
                     em[iwvl, itempden] = factor[iwvl]*p*avalue[iwvl]/eDensity[itempden]
             if self.Defaults['wavelength'] == 'kev':
                 wvl = const.ev2Ang/np.asarray(wvl)
