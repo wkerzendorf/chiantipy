@@ -5072,7 +5072,7 @@ class ioneq(ion):
         xyr.extend(list(yr))
         #
         iz=stages[0]
-        pl.loglog(self.Temperature, self.Ioneq[iz-1])
+        pl.loglog(self.Temperature, self.Ioneq[iz-1], linestyle[0])
         if label:
             idx=self.Ioneq[iz-1] == self.Ioneq[iz-1].max()
             if idx.sum() > 1:
