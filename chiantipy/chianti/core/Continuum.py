@@ -31,8 +31,7 @@ class continuum:
         if self.Ion > 1:
             self.Ip=ip[self.Z-1, self.Ion-2]
         else:
-            if chdata.chInteractive:
-                print ' in continuum, trying to use the neutral ion'
+            print ' in continuum, trying to use the neutral ion'
             return
         #
         if type(temperature) != types.NoneType:

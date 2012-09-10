@@ -4858,10 +4858,8 @@ class ionWeb(ion):
             den_idx = [denIdx]
         #
         if len(den_idx) == 0:
-            if chInteractive:
-                print ' no denominator lines were selected'
-            else:
-                self.Message = ' no denominator lines were selected'
+            print ' no denominator lines were selected'
+            self.Message = ' no denominator lines were selected'
             return
         #
 #       print ' num_idx = ', num_idx

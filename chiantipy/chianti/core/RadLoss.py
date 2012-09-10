@@ -9,13 +9,13 @@ import chianti.filters as chfilters
 import chianti.util as util
 #
 defaults = chdata.Defaults
-chInteractive = chdata.chInteractive
-if chInteractive:
-    import pylab as pl
-else:
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as pl
+#chInteractive = chdata.chInteractive
+#if chInteractive:
+#    import pylab as pl
+#else:
+#    import matplotlib
+#    matplotlib.use('Agg')
+#    import matplotlib.pyplot as pl
 
 class radLoss:
     '''Calculate the emission spectrum as a function of temperature and density.
@@ -58,7 +58,7 @@ class radLoss:
                 if masterlist.count(one):
                     alist.append(one)
                 else:
-                    if chInteractive and verbose:
+                    if verbose:
                         pstring = ' %s not in CHIANTI database'%(one)
                         print('')
             masterlist = alist
@@ -88,8 +88,7 @@ class radLoss:
         for iz in range(31):
             abundance = self.AbundanceAll['abundance'][iz-1]
             if abundance >= minAbund:
-                if chInteractive:
-                    print ' %5i %5s abundance = %10.2e '%(iz, const.El[iz-1],  abundance)
+                print ' %5i %5s abundance = %10.2e '%(iz, const.El[iz-1],  abundance)
                 #
                 for ionstage in range(1, iz+2):
                     ionS = util.zion2name(iz, ionstage)
@@ -107,8 +106,7 @@ class radLoss:
                     ionstageTest = ionstage > 1
                     if ionstageTest and ioneqTest and doContinuum:
                         # ionS is the target ion, cannot be the neutral for the continuum
-                        if chInteractive:
-                            print ' calculating continuum for :  ',  ionS
+                        print ' calculating continuum for :  ',  ionS
                         cont = chianti.core.continuum(ionS, temperature)
                         cont.freeFreeLoss()
     #                   print dir(thisIon)
@@ -127,8 +125,7 @@ class radLoss:
 #                            else:
 #                                freeBound[iTempDen] += cont.FreeBound['rate'][iTempDen]
                     if masterListTest and ioneqTest:
-                        if chInteractive:
-                            print ' calculating spectrum for  :  ', ionS
+                        print ' calculating spectrum for  :  ', ionS
                         thisIon = chianti.core.ion(ionS, temperature, density)
 #                       print ' dir = ', dir(thisIon)
 #                        thisIon.emiss(wvlRange = wvlRange, allLines=allLines)
@@ -170,8 +167,7 @@ class radLoss:
         total = freeFreeLoss + freeBoundLoss + boundBoundLoss + twoPhotonLoss
         t2 = datetime.now()
         dt=t2-t1
-        if chInteractive:
-            print ' elapsed seconds = ', dt.seconds
+        print ' elapsed seconds = ', dt.seconds
         self.RadLoss ={'rate':total, 'temperature':self.Temperature, 'density':self.Density, 'minAbund':minAbund, 'abundance':self.AbundanceName}
     #
     # -------------------------------------------------------------------

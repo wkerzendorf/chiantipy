@@ -8,13 +8,6 @@ import chianti.filters as chfilters
 import chianti.util as util
 #
 defaults = chdata.Defaults
-chInteractive = chdata.chInteractive
-if chInteractive:
-    import pylab as pl
-else:
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as pl
 
 class spectrum:
     '''Calculate the emission spectrum as a function of temperature and density.
@@ -120,8 +113,7 @@ class spectrum:
         for iz in range(31):
             abundance = self.AbundanceAll['abundance'][iz-1]
             if abundance >= minAbund:
-                if chInteractive:
-                    print ' %5i %5s abundance = %10.2e '%(iz, const.El[iz-1],  abundance)
+                print ' %5i %5s abundance = %10.2e '%(iz, const.El[iz-1],  abundance)
                 #
                 for ionstage in range(1, iz+2):
                     ionS = util.zion2name(iz, ionstage)
@@ -143,8 +135,7 @@ class spectrum:
                     ionstageTest = ionstage > 1
                     if ionstageTest and ioneqTest and doContinuum:
                         # ionS is the target ion, cannot be the neutral for the continuum
-                        if chInteractive:
-                            print ' calculating continuum for :  ',  ionS
+                        print ' calculating continuum for :  ',  ionS
                         cont = chianti.core.continuum(ionS, temperature)
                         cont.freeFree(wavelength)
     #                   print dir(thisIon)
@@ -164,8 +155,7 @@ class spectrum:
                                 for iTempDen in range(nTempDen):
                                     freeBound[iTempDen] += cont.FreeBound['rate'][iTempDen]
                     if masterListTest and wvlTestMin and wvlTestMax and ioneqTest:
-                        if chInteractive:
-                            print ' calculating spectrum for  :  ', ionS
+                        print ' calculating spectrum for  :  ', ionS
                         thisIon = chianti.core.ion(ionS, temperature, density)
                         ionsCalculated.append(ionS)
 #                       print ' dir = ', dir(thisIon)
@@ -209,8 +199,7 @@ class spectrum:
         total = freeFree + freeBound + lineSpectrum + twoPhoton
         t2 = datetime.now()
         dt=t2-t1
-        if chInteractive:
-            print ' elapsed seconds = ', dt.seconds
+        print ' elapsed seconds = ', dt.seconds
         if type(em) != types.NoneType:
             if nEm == 1:
                 integrated = total*em
@@ -235,10 +224,7 @@ class spectrum:
         #
 #        ymin = 10.**(np.log10(emiss.min()).round(0))
         #
-        if chInteractive:
-            pl.ion()
-        else:
-            pl.ioff()
+        pl.ion()
         #
         pl.plot(self.LineSpectrum['wavelength'], self.LineSpectrum['intensity'])
         pl.xlabel(xlabel)

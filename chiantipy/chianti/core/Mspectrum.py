@@ -9,21 +9,20 @@ import chianti.constants as const
 import chianti.filters as chfilters
 import chianti.util as util
 #
-chInteractive = chdata.chInteractive
-if chInteractive:
-    import pylab as pl
-else:
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as pl
+#chInteractive = chdata.chInteractive
+#if chInteractive:
+#    import pylab as pl
+#else:
+#    import matplotlib
+#    matplotlib.use('Agg')
+#    import matplotlib.pyplot as pl
 
 try:
     import multiprocessing as mp
     from chianti import mputil
     import chianti.mputil as mputil
 except:
-    if chInteractive:
-        print ' your version of Python does not support multiprocessing \n you will not be able to use mspectrum'
+    print ' your version of Python does not support multiprocessing \n you will not be able to use mspectrum'
 #
 defaults = chdata.Defaults
 Abundanceall = chdata.AbundanceAll
@@ -160,7 +159,7 @@ class mspectrum:
         for iz in range(31):
             abundance = self.AbundanceAll['abundance'][iz-1]
             if abundance >= minAbund:
-                if chInteractive and verbose:
+                if verbose:
                     print ' %5i %5s abundance = %10.2e '%(iz, const.El[iz-1],  abundance)
                 #
                 for ionstage in range(1, iz+2):
@@ -182,21 +181,21 @@ class mspectrum:
                     ionstageTest = ionstage > 1
                     if ionstageTest and ioneqTest and doContinuum:
                         # ionS is the target ion, cannot be the neutral for the continuum
-                        if chInteractive and verbose:
+                        if verbose:
                             print ' setting up continuum calculation for :  ',  ionS
                         ffWorkerQ.put((ionS, temperature, wavelength))
                         fbWorkerQ.put((ionS, temperature, wavelength))
 #                        fbInputs.append([ionS, temperature, wavelength])
                         #
                     if masterListTest and wvlTestMin and wvlTestMax and ioneqTest:
-                        if chInteractive and verbose:
+                        if verbose:
                             print ' setting up spectrum calculation for  :  ', ionS
                         ionWorkerQ.put((ionS, temperature, density, wavelength, filter, allLines))
                         self.Todo.append(ionS)
                         ionsCalculated.append(ionS)
                     # get dielectronic lines
                     if masterListTestD and wvlTestMinD and wvlTestMaxD and ioneqTestD:
-                        if chInteractive and verbose:
+                        if verbose:
                             print ' setting up  spectrum calculation for  :  ', ionSd
 #                        dielWorkerQ.put((ionSd, temperature, density, wavelength, filter))
                         # set allLines fo dielectronic
@@ -309,7 +308,7 @@ class mspectrum:
         total = freeFree + freeBound + lineSpectrum + twoPhoton
         t2 = datetime.now()
         dt=t2-t1
-        if chInteractive and verbose:
+        if verbose:
             print ' elapsed seconds = ', dt.seconds
         if type(em) != types.NoneType:
             if nEm == 1:
@@ -335,10 +334,7 @@ class mspectrum:
         #
 #        ymin = 10.**(np.log10(emiss.min()).round(0))
         #
-        if chInteractive:
-            pl.ion()
-        else:
-            pl.ioff()
+        pl.ion()
         #
         pl.plot(self.LineSpectrum['wavelength'], self.LineSpectrum['intensity'])
         pl.xlabel(xlabel)
