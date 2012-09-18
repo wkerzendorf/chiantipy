@@ -654,7 +654,7 @@ def wgfaRead(ions, filename=0, elvlcname=0, total=0):
             pretty2[i] = elvlc['pretty'][inpt[1] - 1]
 
     ref=[]
-    for i in range(nwvl,len(s1)-1):
+    for i in range(nwvl+1,len(s1)-1):
         s1a=s1[i][:-1]
         ref.append(s1a.strip())
     Wgfa={"lvl1":lvl1,"lvl2":lvl2,"wvl":wvl,"gf":gf,"avalue":avalue,"ref":ref, 'ionS':ions}
