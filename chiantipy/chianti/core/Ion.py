@@ -706,7 +706,7 @@ class ion:
                 for itrans in range(nlvl):
                     lvl2 = lvl['lvl2'][itrans]
                     nrecTemp = lvl['ntemp'][itrans]
-                    y2 = interpolate.splrep(np.log(lvl['temperature'][itrans]), np.log(lvl['rate'][itrans]))
+                    y2 = interpolate.splrep(np.log(lvl['temperature'][itrans][:nrecTemp]), np.log(lvl['rate'][itrans][:nrecTemp]))
                     cirec = np.exp(interpolate.splev(np.log(temperature),y2))
                     rate[itrans] = cirec.squeeze()
         else:
