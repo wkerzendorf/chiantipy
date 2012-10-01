@@ -221,11 +221,11 @@ class ion:
                 self.Nlvls = min([nlvlElvlc, max(nlvlList)])
             else:
                 print ' the ion ' + self.IonStr + ' is not in the CHIANTI masterlist '
-                try:
-                    self.Elvlc = util.elvlcRead(self.IonStr, verbose=verbose)
+                self.Elvlc = util.elvlcRead(self.IonStr, verbose=verbose)
+                if self.Elvlc['status'] == 0:
+                    print ' elvlc file NOT available - this is OK '
+                else:
                     print ' elvlc file available '
-                except:
-                    print ' elvlc file NOT available '
 
         #
         # ------------------------------------------------------------------------------

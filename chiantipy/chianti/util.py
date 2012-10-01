@@ -506,7 +506,8 @@ def elvlcRead(ions, filename = None, verbose=0,  useTh=0):
         ions = bname.split('.')[0]
     if not os.path.isfile(elvlname):
         print ' elvlc file does not exist:  ',elvlname
-        return -1
+        return {'status':0}
+    status = 1
     input=open(elvlname,'r')
     s1=input.readlines()
     input.close()
@@ -562,7 +563,7 @@ def elvlcRead(ions, filename = None, verbose=0,  useTh=0):
 #    self.const.Elvlc={"lvl":lvl,"conf":conf,"term":term,"spin":spin,"l":l,"spd":spd,"j":j
 #            ,"mult":mult,"ecm":ecm,"eryd":eryd,"ecmth":ecmth,"erydth":erydth,"ref":ref}
     return {"lvl":lvl,"conf":conf,"term":term,"spin":spin,"l":l,"spd":spd,"j":j
-            ,"mult":mult,"ecm":ecm,"eryd":eryd,"ecmth":ecmth,"erydth":erydth,"ref":ref,"pretty":pretty, 'ionS':ions}
+            ,"mult":mult,"ecm":ecm,"eryd":eryd,"ecmth":ecmth,"erydth":erydth,"ref":ref,"pretty":pretty, 'ionS':ions, 'status':status}
     #
     # -------------------------------------------------------------------------------------
     #
