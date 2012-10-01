@@ -66,7 +66,8 @@ Ionstage = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII'
     'XIV','XV','XVI','XVII','XVIII','XIX','XX','XXI',' XXII','XXIII','XXIV', \
     'XXV','XXVI','XXVII','XXVIII','XXIX','XXX','XXXI','XXXII','XXXIII','XXXIV', \
     'XXXV','XXXVI','XXXVII']
-Spd = ['S', 'P', 'D', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'O', 'Q', 'R', 'T', 'U']
+Spd = ['S', 'P', 'D', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'O', 'Q', 'R', 'T', 'U', 'V', 'W',
+       'X','Y']
 #
 #  data for Gauss-Laguerre integration
 ngl =  12
