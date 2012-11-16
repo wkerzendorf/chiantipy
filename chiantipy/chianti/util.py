@@ -485,7 +485,7 @@ def qrp(z,u):
     #
     # -----------------------------------------------------------------------
     #
-def elvl3Read(ions, filename=0, getExtended=0, verbose=0,  useTh=0):
+def elvlcRead(ions, filename=0, getExtended=0, verbose=0,  useTh=0):
     """
     a future utility - reads .elvl3 files
     read a chianti energy level file that has 6 energy columns
@@ -581,89 +581,9 @@ def elvl3Read(ions, filename=0, getExtended=0, verbose=0,  useTh=0):
     #
     # -------------------------------------------------------------------------------------
     #
-def elvlcRead(ions, filename = None, verbose=0,  useTh=0):
-    """ read a chianti energy level file and returns
-    {"lvl":lvl,"conf":conf,"term":term,"spin":spin,"l":l,"spd":spd,"j":j
-    ,"mult":mult,"ecm":ecm,"eryd":eryd,"ecmth":ecmth,"erydth":erydth,"ref":ref,"pretty":pretty, 'ionS':ions}
-    if a energy value for ecm or eryd is zero(=unknown), the theoretical values
-    (ecmth and erydth) are inserted
-    """
-    #
-    fstring='i3,i6,a15,i3,i3,a3,f4.1,i3,4f15.2'
-    elvlcFormat=FortranFormat(fstring)
-    #
-    if type(filename) == NoneType:
-        fname=ion2filename(ions)
-        elvlname=fname+'.elvlc'
-    else:
-        elvlname = filename
-        bname = os.path.basename(filename)
-        ions = bname.split('.')[0]
-    if not os.path.isfile(elvlname):
-        print ' elvlc file does not exist:  ',elvlname
-        return {'status':0}
-    status = 1
-    input=open(elvlname,'r')
-    s1=input.readlines()
-    input.close()
-    nlvls=0
-    ndata=2
-    while ndata > 1:
-        s1a=s1[nlvls][:-1]
-        s2=s1a.split()
-        ndata=len(s2)
-        nlvls=nlvls+1
-    nlvls-=1
-    if verbose:
-        print ' nlvls = ', nlvls
-    lvl=[0]*nlvls
-    conf=[0]*nlvls
-    term=[0]*nlvls
-    spin=[0]*nlvls
-    l=[0]*nlvls
-    spd=[0]*nlvls
-    j=[0]*nlvls
-    mult=[0]*nlvls
-    ecm=[0]*nlvls
-    eryd=[0]*nlvls
-    ecmth=[0]*nlvls
-    erydth=[0]*nlvls
-    pretty=[0]*nlvls
-    for i in range(0,nlvls):
-        if verbose:
-            print s1[i][0:115]
-        inpt=FortranLine(s1[i][0:115],elvlcFormat)
-        lvl[i]=inpt[0]
-        conf[i]=inpt[1]
-        term[i]=inpt[2].strip()
-        spin[i]=inpt[3]
-        l[i]=inpt[4]
-        spd[i]=inpt[5].strip()
-        j[i]=inpt[6]
-        mult[i]=inpt[7]
-        ecm[i]=inpt[8]
-        eryd[i]=inpt[9]
-        ecmth[i]=inpt[10]
-        erydth[i]=inpt[11]
-        if ecm[i] == 0.:
-            if useTh:
-                ecm[i] = ecmth[i]
-                eryd[i] = erydth[i]
-        stuff = term[i].strip() + ' %1i%1s%3.1f'%( spin[i], spd[i], j[i])
-        pretty[i] = stuff.strip()
-    ref=[]
-    for i in range(nlvls+1,len(s1)-1):
-        s1a=s1[i][:-1]
-        ref.append(s1a.strip())
-#    self.const.Elvlc={"lvl":lvl,"conf":conf,"term":term,"spin":spin,"l":l,"spd":spd,"j":j
-#            ,"mult":mult,"ecm":ecm,"eryd":eryd,"ecmth":ecmth,"erydth":erydth,"ref":ref}
-    return {"lvl":lvl,"conf":conf,"term":term,"spin":spin,"l":l,"spd":spd,"j":j
-            ,"mult":mult,"ecm":ecm,"eryd":eryd,"ecmth":ecmth,"erydth":erydth,"ref":ref,"pretty":pretty, 'ionS':ions, 'status':status}
-    #
-    # -------------------------------------------------------------------------------------
-    #
-def elvlcWrite(info, outfile=0, addLvl=0):
-    ''' creates a .elvlc in the current directory
+def elvlcWrite(info, outfile=0, addLvl=0, includeRyd=0):
+    '''
+    creates a .elvl3 in the current directory
     info is a dictionary that must contain the following keys
     ionS, the Chianti style name of the ion such as c_4
     conf, an integer denoting the configuration - not too essential
@@ -677,24 +597,45 @@ def elvlcWrite(info, outfile=0, addLvl=0):
     ecmth, the calculated energy from the scattering calculation, in inverse cm
     erydth, the calculated energy from the scattering calculation in Rydbergs
     ref, the references in the literature to the data in the input info
+
     the output filename will be ionS+'.elvlc' unless outfile is specified
     addLvl is to add a constant value to the index of all levels
+    setting includeRyd will also write the Rydberg energies in the extended area, demarked by a comma
     '''
     gname = info['ionS']
     if outfile:
-        elvlcName = outfile
+        elvl3Name = outfile
     else:
-        elvlcName = gname + '.elvlc'
-    print ' elvlc file name = ', elvlcName
-    out = open(elvlcName, 'w')
+        elvlcName = gname + '.elvl3'
+    print ' elvl3 file name = ', elvl3Name
+    #
+    if not info.has_key('ecmx'):
+        info['ecmx'] = np.zeros_like(info['ecm'])
+    if not info.has_key('erydx'):
+        info['erydx'] = np.zeros_like(info['eryd'])
+    if not info.has_key('label'):
+        nlvl = len(info['ecm'])
+        info['label'] = [' ']*nlvl
+    if not info.has_key('eryd'):
+        info['eryd'] = map(lambda x: x*const.invCm2ryd, info['ecm'])
+    if not info.has_key('eryd'):
+        info['erydth'] = map(lambda x: x*const.invCm2ryd, info['ecmth'])
+   #
+    out = open(elvl3Name, 'w')
     for i,  conf in enumerate(info['conf']):
-        mult = int(2.*info['j'][i]+1.)
-        thisTerm = info['term'][i].ljust(14)
-        pstring = '%3i%6s%15s%3i%3i%2s%5.1f%3i%15.3f%15.6f%15.3f%15.6f \n'%(i+1+addLvl, conf, thisTerm, info['spin'][i], info['l'][i], info['spd'][i], info['j'][i], mult, info['ecm'][i], info['eryd'][i], info['ecmth'][i], info['erydth'][i])
-    #i3,a6,a15,2i3,a2,f5.1,i3,f15.3,f15.6,f15.3,f15.6
+        thisTerm = info['term'][i].ljust(29)
+        thisLabel = info['label'][i].ljust(4)
+#        print, ' len of thisTerm = ', len(thisTerm)
+        if includeRyd:
+            pstring = '%7i%30s%5s%5i%5s%5.1f%15.3f%15.3f , %15.6f , %15.6f \n'%(i+1+addLvl, thisTerm, thisLabel, info['spin'][i], info['spd'][i],info['j'][i],  info['ecm'][i], info['ecmth'][i], info['eryd'][i], info['erydth'][i])
+        else:
+            pstring = '%7i%30s%5s%5i%5s%5.1f%15.3f%15.3f \n'%(i+1+addLvl, thisTerm, thisLabel, info['spin'][i], info['spd'][i],info['j'][i],  info['ecm'][i], info['ecmth'][i])
         out.write(pstring)
     out.write(' -1\n')
-    out.write('%filename:  ' + elvlcName + '\n')
+#    out.write('%filename:  ' + os.path.split(elvl3Name)[1] + '\n')
+#    info['ref'].append(' produced as a part of the \'CHIANTI\' atomic database for astrophysical spectroscopy')
+#    today = date.today()
+#    info['ref'].append(' K. Dere (GMU) - ' + today.strftime('%Y %B %d'))
     for one in info['ref']:
         out.write(one+'\n')
     out.write(' -1\n')
