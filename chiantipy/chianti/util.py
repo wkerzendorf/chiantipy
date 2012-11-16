@@ -483,9 +483,104 @@ def qrp(z,u):
     q.set_fill_value(0.)  # I don't know why this is necessary
     return q  #  .set_fill_value(0.)
     #
+    # -----------------------------------------------------------------------
+    #
+def elvl3Read(ions, filename=0, getExtended=0, verbose=0,  useTh=0):
+    """
+    a future utility - reads .elvl3 files
+    read a chianti energy level file that has 6 energy columns
+    and returns
+    {"lvl":lvl,"conf":conf,"term":term,"spin":spin,"l":l,"spd":spd,"j":j
+    ,"mult":mult,"ecm":ecm,"eryd":eryd,"ecmth":ecmth,"erydth":erydth,
+    "ecmx":ecmx,"erydx":erydx,"ref":ref,"pretty":pretty, 'ionS':ions}
+    if a energy value for ecm or eryd is zero(=unknown), the theoretical values
+    (ecmth and erydth) are inserted if useTh is true
+    """
+    #
+    #
+    '%7i%30s%5s%5i%5s%5.1f%15.3f%15.3f \n'
+    #
+    fstring='i7,a30,a5,i5,a5,f5.1,2f15.3'
+    elvlcFormat  = FortranFormat.FortranFormat(fstring)
+    #
+    #
+    if type(filename) == NoneType:
+        fname=ion2filename(ions)
+        elvlname=fname+'.elvlc'
+    else:
+        elvlname = filename
+        bname = os.path.basename(filename)
+        ions = bname.split('.')[0]
+    if not os.path.isfile(elvlname):
+        print ' elvlc file does not exist:  ',elvlname
+        return {'status':0}
+    status = 1
+    input=open(filename,'r')
+    s1=input.readlines()
+    input.close()
+    nlvls=0
+    ndata=2
+    while ndata > 1:
+        s1a=s1[nlvls][:-1]
+        s2=s1a.split()
+        ndata=len(s2)
+        nlvls=nlvls+1
+    nlvls-=1
+    if verbose:
+        print ' nlvls = ', nlvls
+    lvl=[0]*nlvls
+    conf = [0]*nlvls
+    term=[0]*nlvls
+    label = [0]*nlvls
+    spin=[0]*nlvls
+    spd=[0]*nlvls
+    l = ['']*nlvls
+    j = [0]*nlvls
+    ecm=[0]*nlvls
+    ecmth=[0]*nlvls
+    pretty=[0]*nlvls
+    if getExtended:
+        extended = [' ']*nlvls
+    for i in range(0,nlvls):
+        if verbose:
+            print s1[i][0:115]
+        inpt = FortranFormat.FortranLine(s1[i][0:115],elvlcFormat)
+        lvl[i]=inpt[0]
+        term[i]=inpt[1].strip()
+        label[i] = inpt[2]
+        spin[i]=inpt[3]
+        spd[i]=inpt[4].strip()
+        l[i] = const.Spd.index(spd[i])
+        j[i]=inpt[5]
+        ecm[i]=inpt[6]
+        ecmth[i]=inpt[7]
+        if ecm[i] == 0.:
+            if useTh:
+                ecm[i] = ecmth[i]
+                eryd[i] = erydth[i]
+        stuff = term[i].strip() + ' %1i%1s%3.1f'%( spin[i], spd[i], j[i])
+        pretty[i] = stuff.strip()
+        if getExtended:
+            cnt = s1[i].count(',')
+            if cnt > 0:
+                idx = s1[i].index(',')
+                extended[i] = s1[i][idx+1:]
+    eryd = map(lambda x: x*const.invCm2ryd, ecm)
+    erydth = map(lambda x: x*const.invCm2ryd, ecmth)
+    ref=[]
+    for i in range(nlvls+1,len(s1)-1):
+        s1a=s1[i][:-1]
+        ref.append(s1a.strip())
+#    self.const.Elvlc={"lvl":lvl,"conf":conf,"term":term,"spin":spin,"l":l,"spd":spd,"j":j
+#            ,"mult":mult,"ecm":ecm,"eryd":eryd,"ecmth":ecmth,"erydth":erydth,"ref":ref}
+    info = {"lvl":lvl,"conf":conf, "term":term,'label':label, "spin":spin, "spd":spd, "l":l, "j":j
+            ,"ecm":ecm, 'eryd':eryd,'erydth':erydth, "ecmth":ecmth, "ref":ref, "pretty":pretty, 'status':status}
+    if getExtended:
+        info['extended'] = extended
+    return info
+    #
     # -------------------------------------------------------------------------------------
     #
-
 def elvlcRead(ions, filename = None, verbose=0,  useTh=0):
     """ read a chianti energy level file and returns
     {"lvl":lvl,"conf":conf,"term":term,"spin":spin,"l":l,"spd":spd,"j":j
