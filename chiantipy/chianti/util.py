@@ -632,7 +632,7 @@ def elvlcWrite(info, outfile=0, addLvl=0, includeRyd=0):
             pstring = '%7i%30s%5s%5i%5s%5.1f%15.3f%15.3f \n'%(i+1+addLvl, thisTerm, thisLabel, info['spin'][i], info['spd'][i],info['j'][i],  info['ecm'][i], info['ecmth'][i])
         out.write(pstring)
     out.write(' -1\n')
-#    out.write('%filename:  ' + os.path.split(elvl3Name)[1] + '\n')
+    out.write('%filename:  ' + os.path.split(elvl3Name)[1] + '\n')
 #    info['ref'].append(' produced as a part of the \'CHIANTI\' atomic database for astrophysical spectroscopy')
 #    today = date.today()
 #    info['ref'].append(' K. Dere (GMU) - ' + today.strftime('%Y %B %d'))
