@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-4.6.dtd">
 <!-- eric4 project file for project ChiantiPy -->
-<!-- Saved: 2012-08-14, 10:55:26 -->
+<!-- Saved: 2012-11-16, 12:24:58 -->
 <!-- Copyright (C) 2012 Ken Dere, kdere@gmu.edu -->
 <Project version="4.6">
   <Language></Language>
@@ -40,6 +40,7 @@
     <Source>chianti/constants.py</Source>
     <Source>setup.py</Source>
     <Source>chianti/test.py</Source>
+    <Source>chianti/archival.py</Source>
   </Sources>
   <Forms>
   </Forms>
@@ -52,7 +53,7 @@
   <Others>
   </Others>
   <Vcs>
-    <VcsType>Subversion</VcsType>
+    <VcsType>None</VcsType>
     <VcsOptions>
       <dict>
         <key>
