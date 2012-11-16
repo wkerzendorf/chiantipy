@@ -485,7 +485,7 @@ def qrp(z,u):
     #
     # -----------------------------------------------------------------------
     #
-def elvlcRead(ions, filename=0, getExtended=0, verbose=0,  useTh=0):
+def elvlcRead(ions, filename=None, getExtended=0, verbose=0,  useTh=0):
     """
     a future utility - reads .elvl3 files
     read a chianti energy level file that has 6 energy columns
@@ -501,7 +501,7 @@ def elvlcRead(ions, filename=0, getExtended=0, verbose=0,  useTh=0):
     '%7i%30s%5s%5i%5s%5.1f%15.3f%15.3f \n'
     #
     fstring='i7,a30,a5,i5,a5,f5.1,2f15.3'
-    elvlcFormat  = FortranFormat.FortranFormat(fstring)
+    elvlcFormat  = FortranFormat(fstring)
     #
     #
     if type(filename) == NoneType:
@@ -515,7 +515,7 @@ def elvlcRead(ions, filename=0, getExtended=0, verbose=0,  useTh=0):
         print ' elvlc file does not exist:  ',elvlname
         return {'status':0}
     status = 1
-    input=open(filename,'r')
+    input=open(elvlname,'r')
     s1=input.readlines()
     input.close()
     nlvls=0
@@ -535,7 +535,8 @@ def elvlcRead(ions, filename=0, getExtended=0, verbose=0,  useTh=0):
     spin=[0]*nlvls
     spd=[0]*nlvls
     l = ['']*nlvls
-    j = [0]*nlvls
+    j = [0.]*nlvls
+    mult = [0.]*nlvls
     ecm=[0]*nlvls
     ecmth=[0]*nlvls
     pretty=[0]*nlvls
@@ -544,7 +545,7 @@ def elvlcRead(ions, filename=0, getExtended=0, verbose=0,  useTh=0):
     for i in range(0,nlvls):
         if verbose:
             print s1[i][0:115]
-        inpt = FortranFormat.FortranLine(s1[i][0:115],elvlcFormat)
+        inpt = FortranLine(s1[i][0:115],elvlcFormat)
         lvl[i]=inpt[0]
         term[i]=inpt[1].strip()
         label[i] = inpt[2]
@@ -552,6 +553,7 @@ def elvlcRead(ions, filename=0, getExtended=0, verbose=0,  useTh=0):
         spd[i]=inpt[4].strip()
         l[i] = const.Spd.index(spd[i])
         j[i]=inpt[5]
+        mult[i] = 2.*inpt[5] + 1.
         ecm[i]=inpt[6]
         ecmth[i]=inpt[7]
         if ecm[i] == 0.:
@@ -573,8 +575,9 @@ def elvlcRead(ions, filename=0, getExtended=0, verbose=0,  useTh=0):
         ref.append(s1a.strip())
 #    self.const.Elvlc={"lvl":lvl,"conf":conf,"term":term,"spin":spin,"l":l,"spd":spd,"j":j
 #            ,"mult":mult,"ecm":ecm,"eryd":eryd,"ecmth":ecmth,"erydth":erydth,"ref":ref}
-    info = {"lvl":lvl,"conf":conf, "term":term,'label':label, "spin":spin, "spd":spd, "l":l, "j":j
-            ,"ecm":ecm, 'eryd':eryd,'erydth':erydth, "ecmth":ecmth, "ref":ref, "pretty":pretty, 'status':status}
+    info = {"lvl":lvl,"conf":conf, "term":term,'label':label, "spin":spin, "spd":spd, "l":l, "j":j,
+             'mult':mult, "ecm":ecm, 'eryd':eryd,'erydth':erydth, "ecmth":ecmth, "ref":ref,
+             "pretty":pretty, 'status':status}
     if getExtended:
         info['extended'] = extended
     return info
@@ -583,7 +586,8 @@ def elvlcRead(ions, filename=0, getExtended=0, verbose=0,  useTh=0):
     #
 def elvlcWrite(info, outfile=0, addLvl=0, includeRyd=0):
     '''
-    creates a .elvl3 in the current directory
+    for files created after elvlc format change in November 2012
+    creates a .elvlc in the current directory
     info is a dictionary that must contain the following keys
     ionS, the Chianti style name of the ion such as c_4
     conf, an integer denoting the configuration - not too essential
