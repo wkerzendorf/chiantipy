@@ -608,10 +608,10 @@ def elvlcWrite(info, outfile=0, addLvl=0, includeRyd=0):
     '''
     gname = info['ionS']
     if outfile:
-        elvl3Name = outfile
+        elvlcName = outfile
     else:
-        elvlcName = gname + '.elvl3'
-    print ' elvl3 file name = ', elvl3Name
+        elvlcName = gname + '.elvlc'
+    print ' elvlc file name = ', elvlcName
     #
     if not info.has_key('ecmx'):
         info['ecmx'] = np.zeros_like(info['ecm'])
@@ -625,18 +625,18 @@ def elvlcWrite(info, outfile=0, addLvl=0, includeRyd=0):
     if not info.has_key('eryd'):
         info['erydth'] = map(lambda x: x*const.invCm2ryd, info['ecmth'])
    #
-    out = open(elvl3Name, 'w')
+    out = open(elvlcName, 'w')
     for i,  conf in enumerate(info['conf']):
         thisTerm = info['term'][i].ljust(29)
         thisLabel = info['label'][i].ljust(4)
 #        print, ' len of thisTerm = ', len(thisTerm)
         if includeRyd:
-            pstring = '%7i%30s%5s%5i%5s%5.1f%15.3f%15.3f , %15.6f , %15.6f \n'%(i+1+addLvl, thisTerm, thisLabel, info['spin'][i], info['spd'][i],info['j'][i],  info['ecm'][i], info['ecmth'][i], info['eryd'][i], info['erydth'][i])
+            pstring = '%7i%30s%5s%5i%5s%5.1gf15.3f%15.3f , %15.6f , %15.6f \n'%(i+1+addLvl, thisTerm, thisLabel, info['spin'][i], info['spd'][i],info['j'][i],  info['ecm'][i], info['ecmth'][i], info['eryd'][i], info['erydth'][i])
         else:
             pstring = '%7i%30s%5s%5i%5s%5.1f%15.3f%15.3f \n'%(i+1+addLvl, thisTerm, thisLabel, info['spin'][i], info['spd'][i],info['j'][i],  info['ecm'][i], info['ecmth'][i])
         out.write(pstring)
     out.write(' -1\n')
-    out.write('%filename:  ' + os.path.split(elvl3Name)[1] + '\n')
+    out.write('%filename:  ' + os.path.split(elvlcName)[1] + '\n')
 #    info['ref'].append(' produced as a part of the \'CHIANTI\' atomic database for astrophysical spectroscopy')
 #    today = date.today()
 #    info['ref'].append(' K. Dere (GMU) - ' + today.strftime('%Y %B %d'))
