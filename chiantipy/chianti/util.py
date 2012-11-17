@@ -622,7 +622,7 @@ def elvlcWrite(info, outfile=0, addLvl=0, includeRyd=0):
         info['label'] = [' ']*nlvl
     if not info.has_key('eryd'):
         info['eryd'] = map(lambda x: x*const.invCm2ryd, info['ecm'])
-    if not info.has_key('eryd'):
+    if not info.has_key('erydth'):
         info['erydth'] = map(lambda x: x*const.invCm2ryd, info['ecmth'])
    #
     out = open(elvlcName, 'w')
@@ -631,7 +631,7 @@ def elvlcWrite(info, outfile=0, addLvl=0, includeRyd=0):
         thisLabel = info['label'][i].ljust(4)
 #        print, ' len of thisTerm = ', len(thisTerm)
         if includeRyd:
-            pstring = '%7i%30s%5s%5i%5s%5.1gf15.3f%15.3f , %15.6f , %15.6f \n'%(i+1+addLvl, thisTerm, thisLabel, info['spin'][i], info['spd'][i],info['j'][i],  info['ecm'][i], info['ecmth'][i], info['eryd'][i], info['erydth'][i])
+            pstring = '%7i%30s%5s%5i%5s%5.1f%15.3f%15.3f , %15.8f , %15.8f \n'%(i+1+addLvl, thisTerm, thisLabel, info['spin'][i], info['spd'][i],info['j'][i],  info['ecm'][i], info['ecmth'][i], info['eryd'][i], info['erydth'][i])
         else:
             pstring = '%7i%30s%5s%5i%5s%5.1f%15.3f%15.3f \n'%(i+1+addLvl, thisTerm, thisLabel, info['spin'][i], info['spd'][i],info['j'][i],  info['ecm'][i], info['ecmth'][i])
         out.write(pstring)
