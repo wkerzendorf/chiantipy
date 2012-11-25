@@ -577,7 +577,7 @@ def elvlcRead(ions, filename=None, getExtended=0, verbose=0,  useTh=0):
 #            ,"mult":mult,"ecm":ecm,"eryd":eryd,"ecmth":ecmth,"erydth":erydth,"ref":ref}
     info = {"lvl":lvl,"conf":conf, "term":term,'label':label, "spin":spin, "spd":spd, "l":l, "j":j,
              'mult':mult, "ecm":ecm, 'eryd':eryd,'erydth':erydth, "ecmth":ecmth, "ref":ref,
-             "pretty":pretty, 'status':status}
+             "pretty":pretty, 'status':status, 'filename':elvlname}
     if getExtended:
         info['extended'] = extended
     return info
@@ -698,7 +698,7 @@ def wgfaRead(ions, filename=0, elvlcname=0, total=0):
     for i in range(nwvl+1,len(s1)-1):
         s1a=s1[i][:-1]
         ref.append(s1a.strip())
-    Wgfa={"lvl1":lvl1,"lvl2":lvl2,"wvl":wvl,"gf":gf,"avalue":avalue,"ref":ref, 'ionS':ions}
+    Wgfa={"lvl1":lvl1,"lvl2":lvl2,"wvl":wvl,"gf":gf,"avalue":avalue,"ref":ref, 'ionS':ions, 'filename':wgfaname}
     if total:
         avalueLvl = [0.]*max(lvl2)
         for iwvl in range(nwvl):
