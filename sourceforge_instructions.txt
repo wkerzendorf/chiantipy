@@ -1,0 +1,7 @@
+Your cloned repository code in project chiantipy is now ready for use.
+
+Old repository url: http://chiantipy.svn.sourceforge.net/svnroot/chiantipy
+
+New repository checkout command: svn checkout --username=kdere svn+ssh://kdere@svn.code.sf.net/p/chiantipy/code/trunk chiantipy-code
+
+You and any other developers should do a fresh checkout using the new repository location.

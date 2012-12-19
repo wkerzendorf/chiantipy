@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Project SYSTEM "Project-4.6.dtd">
+<!-- eric4 project file for project ChiantiPy -->
+<!-- Saved: 2012-12-16, 16:36:49 -->
+<!-- Copyright (C) 2012 Kenneth Derer,  -->
+<Project version="4.6">
+  <Language>en</Language>
+  <ProgLanguage mixed="0">Python</ProgLanguage>
+  <ProjectType>Qt4</ProjectType>
+  <Description></Description>
+  <Version>0.4</Version>
+  <Author>Kenneth Derer</Author>
+  <Email></Email>
+  <Sources>
+    <Source>chiantipy/setup.py</Source>
+    <Source>chiantipy/__init__.py</Source>
+    <Source>chiantipy/version.py</Source>
+    <Source>chiantipy/chianti/util.py</Source>
+    <Source>chiantipy/chianti/data.py</Source>
+    <Source>chiantipy/chianti/__init__.py</Source>
+    <Source>chiantipy/chianti/ionrec.py</Source>
+    <Source>chiantipy/chianti/FortranFormat.py</Source>
+    <Source>chiantipy/chianti/sources.py</Source>
+    <Source>chiantipy/chianti/mputil.py</Source>
+    <Source>chiantipy/chianti/core/__init__.py</Source>
+    <Source>chiantipy/chianti/core/Spectrum.py</Source>
+    <Source>chiantipy/chianti/core/Ion.py</Source>
+    <Source>chiantipy/chianti/core/Mspectrum.py</Source>
+    <Source>chiantipy/chianti/core/Continuum.py</Source>
+    <Source>chiantipy/chianti/core/RadLoss.py</Source>
+    <Source>chiantipy/chianti/test.py</Source>
+    <Source>chiantipy/chianti/gui_qt/__init__.py</Source>
+    <Source>chiantipy/chianti/gui_qt/ui.py</Source>
+    <Source>chiantipy/chianti/gui_qt/gui.py</Source>
+    <Source>chiantipy/chianti/filters.py</Source>
+    <Source>chiantipy/chianti/constants.py</Source>
+    <Source>chiantipy/chianti/archival.py</Source>
+    <Source>chiantipy/chianti/gui_cl/__init__.py</Source>
+    <Source>chiantipy/chianti/gui_cl/gui.py</Source>
+    <Source>chiantipy/chianti/gui_wx/__init__.py</Source>
+    <Source>chiantipy/chianti/gui_wx/ui.py</Source>
+    <Source>chiantipy/chianti/gui_wx/gui.py</Source>
+    <Source>chiantipy/chianti/version.py</Source>
+    <Source>scripts/wgfaTest.py</Source>
+    <Source>scripts/ioneqMake.py</Source>
+    <Source>__init__.py</Source>
+  </Sources>
+  <Forms>
+  </Forms>
+  <Translations>
+  </Translations>
+  <Resources>
+  </Resources>
+  <Interfaces>
+  </Interfaces>
+  <Others>
+  </Others>
+  <Vcs>
+    <VcsType>Subversion</VcsType>
+    <VcsOptions>
+      <dict>
+        <key>
+          <string>add</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>checkout</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>commit</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>diff</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>export</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>global</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>history</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>log</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>remove</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>status</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>tag</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>update</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+      </dict>
+    </VcsOptions>
+    <VcsOtherData>
+      <dict>
+        <key>
+          <string>standardLayout</string>
+        </key>
+        <value>
+          <bool>True</bool>
+        </value>
+      </dict>
+    </VcsOtherData>
+  </Vcs>
+  <FiletypeAssociations>
+    <FiletypeAssociation pattern="*.ui" type="FORMS" />
+    <FiletypeAssociation pattern="*.idl" type="INTERFACES" />
+    <FiletypeAssociation pattern="*.qm" type="TRANSLATIONS" />
+    <FiletypeAssociation pattern="*.ptl" type="SOURCES" />
+    <FiletypeAssociation pattern="*.pyw" type="SOURCES" />
+    <FiletypeAssociation pattern="*.ui.h" type="FORMS" />
+    <FiletypeAssociation pattern="*.ts" type="TRANSLATIONS" />
+    <FiletypeAssociation pattern="*.py" type="SOURCES" />
+    <FiletypeAssociation pattern="*.qrc" type="RESOURCES" />
+  </FiletypeAssociations>
+</Project>
