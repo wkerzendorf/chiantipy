@@ -1,3 +1,4 @@
+import os
 from FortranFormat import *
 import chianti.constants as const
     #
