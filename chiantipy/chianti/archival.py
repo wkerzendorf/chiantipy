@@ -3,7 +3,7 @@ import chianti.constants as const
     #
     # -------------------------------------------------------------------------------------
     #
-def elvlcRead(ions, filename = None, verbose=0,  useTh=0):
+def elvlcRead(ions, filename = 0, verbose=0,  useTh=0):
     """ read a chianti energy level file and returns
     {"lvl":lvl,"conf":conf,"term":term,"spin":spin,"l":l,"spd":spd,"j":j
     ,"mult":mult,"ecm":ecm,"eryd":eryd,"ecmth":ecmth,"erydth":erydth,"ref":ref,"pretty":pretty, 'ionS':ions}
@@ -14,13 +14,13 @@ def elvlcRead(ions, filename = None, verbose=0,  useTh=0):
     fstring='i3,i6,a15,i3,i3,a3,f4.1,i3,4f15.2'
     elvlcFormat=FortranFormat(fstring)
     #
-    if type(filename) == NoneType:
-        fname=ion2filename(ions)
-        elvlname=fname+'.elvlc'
-    else:
+    if filename:
         elvlname = filename
         bname = os.path.basename(filename)
         ions = bname.split('.')[0]
+    else:
+        fname=ion2filename(ions)
+        elvlname=fname+'.elvlc'
     if not os.path.isfile(elvlname):
         print ' elvlc file does not exist:  ',elvlname
         return {'status':0}
