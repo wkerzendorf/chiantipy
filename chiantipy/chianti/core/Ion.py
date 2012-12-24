@@ -2333,8 +2333,10 @@ class ion:
                 l1 = self.Auto["lvl1"][iauto] -1
                 l2 = self.Auto["lvl2"][iauto] -1
                 if l1 == 0:
-                    rad[l1 + ci + nlvls, l2 + ci] += avalue
-                    rad[l2 + ci,  l2 + ci] -= avalue
+#                    rad[l1 + ci + nlvls, l2 + ci] += avalue
+#                    rad[l2 + ci,  l2 + ci] -= avalue
+                    rad[l2 + ci, l1 + ci + nlvls] += avalue
+                    rad[l1 + ci + nlvls,  l1 + ci + nlvls] -= avalue
 
         #
         self.rad=rad
@@ -2458,14 +2460,17 @@ class ion:
             try:
                 fullpop=np.linalg.solve(popmata,b)
                 pop = fullpop[ci:ci+nlvls]
+                popHigher = fullpop[-1]
             except np.linalg.LinAlgError:
                 pop = np.zeros(nlvls, 'float64')
+                popHigher = 0.
 #                print ' error in matrix inversion, setting populations to zero at T = ', ('%8.2e')%(temperature)
         #
         # ------------------------------------------------------------------------
         #
         elif ndens == 1:
-            pop=np.zeros((ntemp, nlvls),"float64")
+            pop = np.zeros((ntemp, nlvls),"float64")
+            popHigher = np.zeros(ntemp, 'float64')
 #            pop=np.zeros((ntemp,ci + nlvls + rec),"float64")
             for itemp in range(ntemp):
                 popmat=np.copy(rad)
@@ -2554,12 +2559,15 @@ class ion:
                 try:
                     thispop=np.linalg.solve(popmata,b)
                     pop[itemp] = thispop[ci:ci+nlvls]
+                    popHigher[itemp] = thispop[-1]
                 except np.linalg.LinAlgError:
                     pop[itemp] = np.zeros(nlvls, 'float64')
+                    popHIgher[itemp] = 0.
 #                    print ' error in matrix inversion, setting populations to zero at T = ', ('%8.2e')%(temperature[itemp])
             #
         elif ntemp == 1:
             pop=np.zeros((ndens,nlvls),"float64")
+            popHigher = np.zeros(nden, 'float64')
             for idens in range(0,ndens):
                 popmat=np.copy(rad)
                 for isplups in range(0,nsplups):
@@ -2641,12 +2649,15 @@ class ion:
                 try:
                     thispop=np.linalg.solve(popmata,b)
                     pop[idens] = thispop[ci:ci+nlvls]
+                    popHigher[idens] = thispop[-1]
                 except np.linalg.LinAlgError:
                     pop[idens] = np.zeros(nlvls, 'float64')
+                    popHigher[idens] = 0.
 #                    print ' error in matrix inversion, setting populations to zero at eDensity = ', ('%8.2e')%(eDensity[idens])
                 #
         elif ntemp>1  and ntemp==ndens:
             pop=np.zeros((ntemp,nlvls),"float64")
+            popHigher = np.zeros(ntemp, 'float64')
             for itemp in range(0,ntemp):
                 temp=self.Temperature[itemp]
                 popmat=np.copy(rad)
@@ -2731,12 +2742,14 @@ class ion:
                 try:
                     thispop=np.linalg.solve(popmata,b)
                     pop[itemp] = thispop[ci:ci+nlvls]
+                    popHigher[itemp] = thispop[-1]
                 except np.linalg.LinAlgError:
                     pop[itemp] = np.zeros(nlvls, 'float64')
+                    popHigher[itemp] = 0.
 #                    print ' error in matrix inversion, setting populations to zero at T = ', ('%8.2e')%(temperature[itemp])
             #
         pop=np.where(pop >0., pop,0.)
-        self.Population={"temperature":temperature, "eDensity":eDensity, "population":pop, "protonDensity":protonDensity, "ci":ci, "rec":rec, 'popmat':popmat, 'b':b}
+        self.Population={"temperature":temperature, "eDensity":eDensity, "population":pop, "protonDensity":protonDensity, "ci":ci, "rec":rec, 'popmat':popmat, 'b':b, 'popHigher':popHigher}
         #
         return
         #
