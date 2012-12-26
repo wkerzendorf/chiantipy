@@ -2749,7 +2749,7 @@ class ion:
 #                    print ' error in matrix inversion, setting populations to zero at T = ', ('%8.2e')%(temperature[itemp])
             #
         pop=np.where(pop >0., pop,0.)
-        self.Population={"temperature":temperature, "eDensity":eDensity, "population":pop, "protonDensity":protonDensity, "ci":ci, "rec":rec, 'popmat':popmat, 'b':b, 'popHigher':popHigher}
+        self.Population={"temperature":temperature, "eDensity":eDensity, "population":pop, "protonDensity":protonDensity, "ci":ci, "rec":rec, 'popmat':popmat, 'b':b, 'popHigher':popHigher, 'rad':rad}
         #
         return
         #

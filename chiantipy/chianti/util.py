@@ -485,7 +485,7 @@ def qrp(z,u):
     #
     # -----------------------------------------------------------------------
     #
-def elvlcRead(ions, filename=None, getExtended=0, verbose=0,  useTh=0):
+def elvlcRead(ions, filename=None, getExtended=0, verbose=0,  useTh=1):
     """
     a future utility - reads .elvl3 files
     read a chianti energy level file that has 6 energy columns
