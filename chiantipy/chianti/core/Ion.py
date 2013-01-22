@@ -2567,7 +2567,7 @@ class ion:
             #
         elif ntemp == 1:
             pop=np.zeros((ndens,nlvls),"float64")
-            popHigher = np.zeros(nden, 'float64')
+            popHigher = np.zeros(ndens, 'float64')
             for idens in range(0,ndens):
                 popmat=np.copy(rad)
                 for isplups in range(0,nsplups):

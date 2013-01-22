@@ -559,7 +559,6 @@ def elvlcRead(ions, filename=None, getExtended=0, verbose=0,  useTh=1):
         if ecm[i] == 0.:
             if useTh:
                 ecm[i] = ecmth[i]
-                eryd[i] = erydth[i]
         stuff = term[i].strip() + ' %1i%1s%3.1f'%( spin[i], spd[i], j[i])
         pretty[i] = stuff.strip()
         if getExtended:
@@ -725,7 +724,7 @@ def wgfaWrite(info, outfile = 0, minBranch = 0.):
     pretty1 - descriptive text of the lower level (optional)
     pretty2 - descriptive text of the upper level (optiona)
     ref - reference text, a list of strings
-    minBranch:  the transition must have a branching ratio than the specified to be written to the file
+    minBranch:  the transition must have a branching ratio greater than the specified to be written to the file
     '''
     #
 #    gname = info['ionS']
