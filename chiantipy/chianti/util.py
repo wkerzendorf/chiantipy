@@ -589,7 +589,6 @@ def elvlcWrite(info, outfile=0, addLvl=0, includeRyd=0):
     creates a .elvlc in the current directory
     info is a dictionary that must contain the following keys
     ionS, the Chianti style name of the ion such as c_4
-    conf, an integer denoting the configuration - not too essential
     term, a string showing the configuration
     spin, an integer of the spin of the state in LS coupling
     l, an integer of the angular momentum quantum number
@@ -612,10 +611,10 @@ def elvlcWrite(info, outfile=0, addLvl=0, includeRyd=0):
         elvlcName = gname + '.elvlc'
     print ' elvlc file name = ', elvlcName
     #
-    if not info.has_key('ecmx'):
-        info['ecmx'] = np.zeros_like(info['ecm'])
-    if not info.has_key('erydx'):
-        info['erydx'] = np.zeros_like(info['eryd'])
+#    if not info.has_key('ecmx'):
+#        info['ecmx'] = np.zeros_like(info['ecm'])
+#    if not info.has_key('erydx'):
+#        info['erydx'] = np.zeros_like(info['eryd'])
     if not info.has_key('label'):
         nlvl = len(info['ecm'])
         info['label'] = [' ']*nlvl
@@ -625,8 +624,8 @@ def elvlcWrite(info, outfile=0, addLvl=0, includeRyd=0):
         info['erydth'] = map(lambda x: x*const.invCm2ryd, info['ecmth'])
    #
     out = open(elvlcName, 'w')
-    for i,  conf in enumerate(info['conf']):
-        thisTerm = info['term'][i].ljust(29)
+    for i,  aterm in enumerate(info['term']):
+        thisTerm = aterm.ljust(29)
         thisLabel = info['label'][i].ljust(4)
 #        print, ' len of thisTerm = ', len(thisTerm)
         if includeRyd:

@@ -3715,6 +3715,60 @@ class ion:
         #
         # -------------------------------------------------------------------------------------
         #
+    def intensityRatioInterpolate(self,data, scale = 'lin', plot=0, verbose=0):
+        '''
+        to take a set of date and interpolate against the IntensityRatio
+        the scale can be one of 'lin'/'linear' [default], 'loglog', 'logx', 'logy',
+        '''
+        # first, what variable to use
+        if self.IntensityRatio['temperature'].max() > self.IntensityRatio['temperature'].min():
+            x = self.IntensityRatio['ratio']
+            y = self.IntensityRatio['temperature']
+            if verbose:
+                print('using temperature with %i5 values'%(len(x)))
+                print(' number of values')
+        else:
+            x = self.IntensityRatio['ratio']
+            y = self.IntensityRatio['eDensity']
+        #
+        if x[0] > x[-1]:
+            x = sorted(x)
+            sy = []
+            for idx in range(len(y) -1, -1, -1):
+                sy.append(y[idx])
+        #
+        if 'lin' in scale:
+            y2 = interpolate.splrep(x, sy, s=0)
+            interpolatedData = interpolate.splev(data,y2)
+            if plot:
+                pl.plot(sy, x)
+                pl.plot(interpolatedData, data, 'bD')
+        elif scale == 'loglog':
+            y2 = interpolate.splrep(np.log(x), np.log(sy), s=0)
+            interpolatedData = np.exp(interpolate.splev(np.log(data),y2))
+            if plot:
+                pl.loglog(sy, x)
+                pl.loglog(interpolatedData, data, 'bD')
+        elif scale == 'logx':
+            y2 = interpolate.splrep(x, np.log(sy), s=0)
+            interpolatedData = np.exp(interpolate.splev(data,y2))
+            if plot:
+                pl.semilogx(sy, x)
+                pl.semilogx(interpolatedData, data, 'bD')
+        elif scale == 'logy':
+            y2 = interpolate.splrep(np.log(x), sy, s=0)
+            interpolatedData = interpolate.splev(np.log(data),y2)
+            if plot:
+                pl.semilogy(sy, x)
+                pl.semilogy(interpolatedData, data, 'bD')
+        else:
+            print(' scale not understood = %s'%(scale))
+        for i, avalue in enumerate(interpolatedData):
+            print(' data, value = %12.3e %12.3e'%(data[i], avalue))
+        self.IntensityRatioInterpolated = {'data':data, 'value':interpolatedData}
+        #
+        # -------------------------------------------------------------------------------------
+        #
     def ioneqOne(self):
         '''Provide the ionization equilibrium for the selected ion as a function of temperature.
         returned in self.IoneqOne'''
