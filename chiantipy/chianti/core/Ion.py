@@ -1118,6 +1118,7 @@ class ion:
             ups = np.zeros(nsplups,"Float64")
             exRate = np.zeros((nsplups,ntemp),"Float64")
             dexRate = np.zeros((nsplups,ntemp),"Float64")
+        deAll = []
         #
         for isplups in range(nsplups):
             if prot:
@@ -1213,9 +1214,10 @@ class ion:
             if ce:
                 if self.Dielectronic:
                     # the dielectronic ions will eventually be discontinued
-                    de = np.abs((self.Elvlc["eryd"][l2] - self.UpperIp/const.ryd2Ev) - self.Elvlc["eryd"][l1])
+                    de = np.abs((elvlc[l2] - self.UpperIp/const.ryd2Ev) - elvlc[l1])
                 else:
-                    de = np.abs(self.Elvlc["eryd"][l2] - self.Elvlc["eryd"][l1])
+                    de = np.abs(elvlc[l2] - elvlc[l1])
+                deAll.append(de)
 #                print ' ce lvl1 %5i  lvl2 %5i de %10.2e'%(l1, l2, de)
                 ekt = (de*const.ryd2erg)/(const.boltzmann*temp)
                 fmult1 = float(self.Elvlc["mult"][l1])
@@ -1224,13 +1226,13 @@ class ion:
                 exRate[isplups] = const.collision*ups[isplups]*np.exp(-ekt)/(fmult1*np.sqrt(temp))
             elif diel:
 #                print ' diel lvl1 %5i  lvl2 %5i de %10.2e'%(l1, l2, de)
-                de = np.abs((self.Elvlc["eryd"][l2] - self.Ip/const.ryd2Ev) - self.Elvlc["eryd"][l1])
+                de = np.abs((elvlc[l2] - self.Ip/const.ryd2Ev) - elvlc[l1])
                 ekt = (de*const.ryd2erg)/(const.boltzmann*temp)
                 fmult1 = float(self.Elvlc["mult"][l1])
                 fmult2 = float(self.Elvlc["mult"][l2])
                 exRate[isplups] = const.collision*ups[isplups]*np.exp(-ekt)/(fmult1*np.sqrt(temp))
             elif prot:
-                de = np.abs(self.Elvlc["eryd"][l2]-self.Elvlc["eryd"][l1])
+                de = np.abs(elvlc[l2]- elvlc[l1])
                 ekt = (de*1.57888e+5)/temp
                 fmult1 = float(self.Elvlc["mult"][l1])
                 fmult2 = float(self.Elvlc["mult"][l2])
@@ -1244,7 +1246,7 @@ class ion:
         elif diel == 1:
             self.DielUpsilon = {'upsilon':ups, 'temperature':temperature, 'exRate':exRate}
         else:
-            self.Upsilon = {'upsilon':ups, 'temperature':temperature, 'exRate':exRate, 'dexRate':dexRate}
+            self.Upsilon = {'upsilon':ups, 'temperature':temperature, 'exRate':exRate, 'dexRate':dexRate, 'de':deAll}
         #
         # -------------------------------------------------------------------------
         #
@@ -1787,6 +1789,9 @@ class ion:
             if rec:
                 norm[nlvls+ci+rec-1] = 0.
             popmat[nlvls+ci+rec-1]=norm
+#            popmata = np.copy(popmat)
+#            popmata[nlvls+ci+rec-1]=norm
+            popmata[nlvls+ci+rec-1]=norm
             b=np.zeros(nlvls+ci+rec,'float64')
             b[nlvls+ci+rec-1]=1.
 #            print ' norm = ', norm
@@ -2183,7 +2188,7 @@ class ion:
 #                pop[itemp] = thispop[ci:ci+nlvls]
             #
         pop=np.where(pop >0., pop,0.)
-        self.Population={"temperature":temperature,"eDensity":eDensity,"population":pop, "protonDensity":protonDensity, "ci":ci, "rec":rec, 'popmat':popmat}
+        self.Population={"temperature":temperature,"eDensity":eDensity,"population":pop, "protonDensity":protonDensity, "ci":ci, "rec":rec, 'popmat':popmat, 'b':b, 'rad':rad}
         #
         return
         #
@@ -2460,7 +2465,10 @@ class ion:
             try:
                 fullpop=np.linalg.solve(popmata,b)
                 pop = fullpop[ci:ci+nlvls]
-                popHigher = fullpop[-1]
+                if rec:
+                    popHigher = fullpop[-1]
+                else:
+                    popHigher = 0.
             except np.linalg.LinAlgError:
                 pop = np.zeros(nlvls, 'float64')
                 popHigher = 0.
@@ -2749,7 +2757,7 @@ class ion:
 #                    print ' error in matrix inversion, setting populations to zero at T = ', ('%8.2e')%(temperature[itemp])
             #
         pop=np.where(pop >0., pop,0.)
-        self.Population={"temperature":temperature, "eDensity":eDensity, "population":pop, "protonDensity":protonDensity, "ci":ci, "rec":rec, 'popmat':popmat, 'b':b, 'popHigher':popHigher, 'rad':rad}
+        self.Population={"temperature":temperature, "eDensity":eDensity, "population":pop, "protonDensity":protonDensity, "ci":ci, "rec":rec, 'popmat':popmata, 'b':b, 'popHigher':popHigher, 'rad':rad}
         #
         return
         #
