@@ -1662,7 +1662,6 @@ class ion:
                     rad[l2+ci,l2+ci] -= self.Wgfa["avalue"][iwgfa]*stemFactor
 
         #
-        self.rad=rad
         #
         if self.Nsplups:
             self.upsilonDescale()
@@ -2188,7 +2187,7 @@ class ion:
 #                pop[itemp] = thispop[ci:ci+nlvls]
             #
         pop=np.where(pop >0., pop,0.)
-        self.Population={"temperature":temperature,"eDensity":eDensity,"population":pop, "protonDensity":protonDensity, "ci":ci, "rec":rec, 'popmat':popmat, 'b':b, 'rad':rad}
+        self.Population={"temperature":temperature,"eDensity":eDensity,"population":pop, "protonDensity":protonDensity, "ci":ci, "rec":rec}
         #
         return
         #
