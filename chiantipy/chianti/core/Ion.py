@@ -748,7 +748,7 @@ class ion:
                         index += 1
                 if realgood.sum() == 1:
                     midRec = np.exp(interpolate.splev(np.log(midT),y2))
-                    newRAte[index] = midRec
+                    newRate[index] = midRec
                     index += 1
                 elif realgood.sum() > 1:
                     midRec = np.exp(interpolate.splev(np.log(midT),y2))

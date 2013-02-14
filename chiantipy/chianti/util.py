@@ -485,7 +485,7 @@ def qrp(z,u):
     #
     # -----------------------------------------------------------------------
     #
-def elvlcRead(ions, filename=None, getExtended=0, verbose=0,  useTh=1):
+def elvlcRead(ions, filename=0, getExtended=0, verbose=0,  useTh=1):
     """
     a future utility - reads .elvl3 files
     read a chianti energy level file that has 6 energy columns
@@ -504,13 +504,13 @@ def elvlcRead(ions, filename=None, getExtended=0, verbose=0,  useTh=1):
     elvlcFormat  = FortranFormat(fstring)
     #
     #
-    if type(filename) == NoneType:
-        fname=ion2filename(ions)
-        elvlname=fname+'.elvlc'
-    else:
+    if filename:
         elvlname = filename
         bname = os.path.basename(filename)
         ions = bname.split('.')[0]
+    else:
+        fname=ion2filename(ions)
+        elvlname=fname+'.elvlc'
     if not os.path.isfile(elvlname):
         print ' elvlc file does not exist:  ',elvlname
         return {'status':0}
@@ -887,7 +887,7 @@ def splomRead(ions, filename=None):
     #
     # --------------------------------------------------
     #
-def splupsRead(ions, filename=None, prot=0, ci=0,  diel=0):
+def splupsRead(ions, filename=0, prot=0, ci=0,  diel=0):
     """
     read a chianti splups file and return
     {"lvl1":lvl1,"lvl2":lvl2,"ttype":ttype,"gf":gf,"de":de,"cups":cups,"bsplups":bsplups,"ref":ref}
@@ -896,7 +896,9 @@ def splupsRead(ions, filename=None, prot=0, ci=0,  diel=0):
     if diel > 0, then reads dielsplups file
     """
     #
-    if type(filename) == NoneType:
+    if filename:
+        splupsname = filename
+    else:
         fname=ion2filename(ions)
         if prot:
             splupsname=fname+'.psplups'
@@ -906,8 +908,6 @@ def splupsRead(ions, filename=None, prot=0, ci=0,  diel=0):
             splupsname=fname+'.dielsplups'
         else:
             splupsname=fname+'.splups'
-    else:
-        splupsname = filename
     if not os.path.exists(splupsname):
         if prot:
             return None
@@ -972,12 +972,12 @@ def splupsRead(ions, filename=None, prot=0, ci=0,  diel=0):
 #            self.Psplups={"lvl1":lvl1,"lvl2":lvl2,"ttype":ttype,"gf":gf,"de":de,"cups":cups
 #                ,"nspl":nspl,"splups":splups,"ref":ref}
             return {"lvl1":lvl1,"lvl2":lvl2,"ttype":ttype,"gf":gf,"de":de,"cups":cups
-                ,"nspl":nspl,"splups":splups,"ref":ref}
+                ,"nspl":nspl,"splups":splups,"ref":ref, 'filename':splupsname}
         else:
 #            self.Splups={"lvl1":lvl1,"lvl2":lvl2,"ttype":ttype,"gf":gf,"de":de,"cups":cups
 #                ,"nspl":nspl,"splups":splups,"ref":ref}
             return {"lvl1":lvl1,"lvl2":lvl2,"ttype":ttype,"gf":gf,"de":de,"cups":cups
-                ,"nspl":nspl,"splups":splups,"ref":ref}
+                ,"nspl":nspl,"splups":splups,"ref":ref, 'filename':splupsname}
     #
     # -------------------------------------------------------------------------------------
     #
