@@ -655,11 +655,16 @@ def wgfaRead(ions, filename=0, elvlcname=0, total=0):
     #
     if filename:
         wgfaname = filename
+        elvlcname = filename.replace('wgfa', 'elvlc')
     else:
         fname=ion2filename(ions)
         wgfaname=fname+'.wgfa'
-    if elvlcname:
-        elvlc=elvlcRead('', filename=elvlcname)
+        elvlcname = fname + '.elvlc'
+    #
+    if os.path.isfile(elvlcname):
+        elvlc = elvlcRead('', elvlcname)
+    else:
+        elvlc = 0
     input=open(wgfaname,'r')
     s1=input.readlines()
     dum=input.close()

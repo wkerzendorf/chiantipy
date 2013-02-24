@@ -2991,6 +2991,10 @@ class ion:
         l1 = np.asarray(self.Wgfa['lvl1'], 'int64')
         l2 = np.asarray(self.Wgfa["lvl2"], 'int64')
         avalue = np.asarray(self.Wgfa["avalue"], 'float64')
+        if self.Wgfa.has_key('pretty1'):
+            p1 = np.asarray(self.Wgfa['pretty1'], 'string')
+        if self.Wgfa.has_key('pretty2'):
+            p2 = np.asarray(self.Wgfa['pretty2'], 'string')
         #
         # make sure there are lines in the wavelength range, if specified
 
@@ -3000,6 +3004,10 @@ class ion:
             l2 = l2[realgood]
             wvl = wvl[realgood]
             avalue = avalue[realgood]
+            if Wgfa.has_key('pretty1'):
+                pretty1 = p1[realgood]
+            if Wgfa.has_key('pretty2'):
+                pretty2 = p2[realgood]
         #
         # two-photon decays have wvl=0 and nonzero avalues
 #        zed = wvl.count(0.)
@@ -3079,7 +3087,12 @@ class ion:
 #            l2 = l2[idx]
         lvl1 = l1.tolist()
         lvl2 = l2.tolist()
-        self.Emiss = {"wvl":wvl, "emiss":em, "plotLabels":plotLabels, 'lvl1':lvl1, 'lvl2':lvl2, 'avalue':avalue, 'obs':obs}
+        Emiss = {"wvl":wvl, "emiss":em, "plotLabels":plotLabels, 'lvl1':lvl1, 'lvl2':lvl2, 'avalue':avalue, 'obs':obs}
+        if self.Wgfa.has_key('pretty1'):
+            Emiss['pretty1'] = p1
+        if self.Wgfa.has_key('pretty2'):
+            Emiss['pretty2'] = p2
+        self.Emiss = Emiss
         return
         #
         # ---------------------------------------------------------------------------
@@ -3373,13 +3386,19 @@ class ion:
         includes elemental abundance and ionization fraction."""
         # emiss ={"wvl":wvl, "emiss":em, "plotLabels":plotLabels}
         #
-        self.emiss(wvlRange = wvlRange, allLines=allLines)
-        emiss = self.Emiss
+        if not hasattr(self, 'Emiss'):
+            self.emiss(wvlRange = wvlRange, allLines=allLines)
+            emiss = self.Emiss
+        else:
+            emiss = self.Emiss
         if 'errorMessage'  in emiss.keys():
             self.Intensity = {'errorMessage': self.Spectroscopic+' no lines in this wavelength region'}
             return
         em = emiss['emiss']
         wvl = emiss['wvl']
+        lvl1 = emiss['lvl1']
+        lvl2 = emiss['lvl2']
+        obs = emiss['obs']
         if hasattr(self, 'Abundance'):
             ab=self.Abundance
         else:
@@ -3401,10 +3420,12 @@ class ion:
             nwvl=len(em)
             ntempden=1
             intensity = ab*thisIoneq*em
-        self.Intensity = {'intensity':intensity, 'wvl':wvl}
-        #
-        # -------------------------------------------------------------------------------------
-        #
+        Intensity = {'intensity':intensity, 'wvl':wvl, 'lvl1':lvl1, 'lvl2':lvl2, 'obs':obs}
+        if emiss.has_key('pretty1'):
+            Intensity['pretty1'] = emiss['pretty1']
+        if emiss.has_key('pretty2'):
+            Intensity['pretty2'] = emiss['pretty2']
+        self.Intensity = Intensity
         #
         # ---------------------------------------------------------------------------
         #
