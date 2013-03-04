@@ -3764,6 +3764,8 @@ class ion:
             sy = []
             for idx in range(len(y) -1, -1, -1):
                 sy.append(y[idx])
+        else:
+            sy = y
         #
         if 'lin' in scale:
             y2 = interpolate.splrep(x, sy, s=0)
