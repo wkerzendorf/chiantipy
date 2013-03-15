@@ -3004,9 +3004,9 @@ class ion:
             l2 = l2[realgood]
             wvl = wvl[realgood]
             avalue = avalue[realgood]
-            if Wgfa.has_key('pretty1'):
+            if self.Wgfa.has_key('pretty1'):
                 pretty1 = p1[realgood]
-            if Wgfa.has_key('pretty2'):
+            if self.Wgfa.has_key('pretty2'):
                 pretty2 = p2[realgood]
         #
         # two-photon decays have wvl=0 and nonzero avalues
