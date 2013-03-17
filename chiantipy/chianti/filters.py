@@ -7,9 +7,9 @@ that is found in the LICENSE file
 
 '''
 import numpy as np
-import types
-def gaussianR(wvl,wvl0, factor=0):
-    '''a gaussian filter where factor is the resolving power, so that the gaussian width (standard deviation)
+def gaussianR(wvl,wvl0, factor=1000.):
+    '''
+    a gaussian filter where factor is the resolving power, so that the gaussian width (standard deviation)
     is given by wvl0/factor'''
     if factor:
         std = wvl0/factor
@@ -17,12 +17,12 @@ def gaussianR(wvl,wvl0, factor=0):
         print ' the resolving power of the gaussianR filter is undefined'
         return None
     wvl = np.asarray(wvl, 'float64')
-#    dwvl = wvl - np.roll(wvl, 1)
-#    dwvl[0] = dwvl[1]
     return np.exp(-0.5*((wvl - wvl0)/std)**2)/(np.sqrt(2.*np.pi)*std)
 
 def gaussian(wvl,wvl0, factor=0):
-    '''a gaussian filter where factor is the gaussian width (standard deviation)'''
+    '''
+    a gaussian filter where factor is the gaussian width (standard deviation)
+    '''
     if factor:
         std = factor
     else:
@@ -68,9 +68,9 @@ def lorentz(wvl, wvl0, factor=0):
     return np.abs(ltz/(dwvl*ltz.sum()))
     #
 def moffat(wvl, wvl0, factor=2.5):
-    '''the moffat profile with parameters suited to Chandra Letg spectra'''
-    if not factor:
-        factor = 2.5
+    '''
+    the moffat profile with parameters suited to Chandra Letg spectra
+    '''
     wvl = np.asarray(wvl, 'float64')
     dwvl = np.abs(wvl[1] - wvl[0])
     moffat = 1./(1.+((wvl - wvl0)/0.0275)**2)**factor
