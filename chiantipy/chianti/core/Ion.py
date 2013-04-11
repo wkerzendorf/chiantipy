@@ -1653,7 +1653,7 @@ class ion:
                     de = const.invCm2Erg*(self.Elvlc['ecm'][l2] - self.Elvlc['ecm'][l1])
                     dekt = de/(const.boltzmann*self.RadTemperature)
                     # photoexcitation
-                    phexFactor = dilute*(self.Elvlc['mult'][l2]/self.Elvlc['mult'][l1])/(np.exp(dekt) -1.)
+                    phexFactor = dilute*(float(self.Elvlc['mult'][l2])/float(self.Elvlc['mult'][l1]))/(np.exp(dekt) -1.)
                     rad[l2+ci,l1+ci] += self.Wgfa["avalue"][iwgfa]*phexFactor
                     rad[l1+ci,l1+ci] -= self.Wgfa["avalue"][iwgfa]*phexFactor
                     # stimulated emission
