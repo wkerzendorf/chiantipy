@@ -2327,7 +2327,7 @@ class ion:
                     rad[l2+ci,l1+ci] += self.Wgfa["avalue"][iwgfa]*phexFactor
                     rad[l1+ci,l1+ci] -= self.Wgfa["avalue"][iwgfa]*phexFactor
                     # stimulated emission
-                    stemFactor = dilute/(1. - np.exp(-dekt))
+                    stemFactor = dilute/(np.exp(-dekt) - 1.)
                     rad[l1+ci,l2+ci] += self.Wgfa["avalue"][iwgfa]*stemFactor
                     rad[l2+ci,l2+ci] -= self.Wgfa["avalue"][iwgfa]*stemFactor
         if hasattr(self, 'Auto'):
